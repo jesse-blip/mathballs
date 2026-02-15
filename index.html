@@ -2,134 +2,81 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Python Math Ball Sandbox</title>
-    
+    <title>Math Ball Sandbox</title>
     <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css" />
     <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
-
     <style>
-        body {
-            background-color: #1a1a1a;
-            color: white;
-            font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
+        body { background: #1a1a1a; color: white; font-family: monospace; text-align: center; padding-top: 50px; }
+        .setup-box { background: #333; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: inline-block; }
+        input { background: #000; color: #0f0; border: 1px solid #555; padding: 5px; width: 150px; text-align: center; }
+        #damage-display { font-size: 2.5rem; color: #00ff00; margin: 20px; min-height: 80px; }
+        .ball-row { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .ball { 
+            width: 70px; height: 70px; border-radius: 50%; border: 3px solid white;
+            background: #ff5722; color: white; cursor: pointer; font-weight: bold;
         }
-
-        #display-container {
-            background: #333;
-            padding: 30px;
-            border-radius: 20px;
-            border: 4px solid #555;
-            text-align: center;
-            min-width: 300px;
-            margin-bottom: 40px;
-        }
-
-        #damage-text {
-            font-size: 24px;
-            color: #00ff00;
-            word-wrap: break-word;
-        }
-
-        .ball-row {
-            display: flex;
-            gap: 15px;
-        }
-
-        .ball {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            border: 3px solid #fff;
-            background: #ff5722;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.1s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .ball:active {
-            transform: scale(0.9);
-            background: #e64a19;
-        }
-
-        .error {
-            color: #ff0000 !important;
-            font-weight: bold;
-            animation: blink 0.5s infinite;
-        }
-
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
+        .ball:disabled { background: #555; cursor: not-allowed; opacity: 0.5; }
+        .error { color: red !important; animation: blink 0.5s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="display-container">
-        <div id="damage-text">INITIALIZING...</div>
-        <div id="digit-count" style="font-size: 14px; margin-top: 10px; color: #888;"></div>
+    <div class="setup-box">
+        <label>TARGET HEALTH:</label><br>
+        <input type="number" id="target-hp" value="1000000">
+        <p style="font-size: 12px; color: #888;">(Change this before you start clicking)</p>
     </div>
 
+    <div id="damage-display">LOADING ENGINE...</div>
+    <div id="digit-count"></div>
+
     <div class="ball-row">
-        <button class="ball" py-click="multiply(2)">2x</button>
-        <button class="ball" py-click="multiply(3)">3x</button>
-        <button class="ball" py-click="multiply(4)">4x</button>
-        <button class="ball" py-click="multiply(5)">5x</button>
-        <button class="ball" py-click="multiply(6)">6x</button>
+        <button class="ball" id="b2" py-click="hit(2)" disabled>2x</button>
+        <button class="ball" id="b3" py-click="hit(3)" disabled>3x</button>
+        <button class="ball" id="b4" py-click="hit(4)" disabled>4x</button>
+        <button class="ball" id="b5" py-click="hit(5)" disabled>5x</button>
+        <button class="ball" id="b6" py-click="hit(6)" disabled>6x</button>
     </div>
 
     <script type="py">
         from pyscript import document
 
-        # Starting state
         damage = 10
-        is_error = False
 
-        def multiply(value):
-            global damage, is_error
+        def hit(multiplier):
+            global damage
             
-            if is_error:
-                return
+            # Get the target health from the input box
+            try:
+                target_hp = int(document.querySelector("#target-hp").value)
+            except:
+                target_hp = 1000000
 
-            # The Multiplication Logic
-            damage *= int(value)
-            
-            # Convert to string to check length
+            damage *= int(multiplier)
             d_str = str(damage)
-            length = len(d_str)
+            
+            display = document.querySelector("#damage-display")
+            count = document.querySelector("#digit-count")
 
-            display = document.querySelector("#damage-text")
-            count_display = document.querySelector("#digit-count")
-
-            # Update the UI
-            if length > 20000:
+            # Check if Big Ball is destroyed
+            if damage >= target_hp:
                 display.innerText = "DAMAGE: ERROR"
                 display.classList.add("error")
-                count_display.innerText = "SYSTEM CRASH: CAPACITY EXCEEDED"
-                is_error = True
-            elif length < 15:
+                count.innerText = f"TARGET DESTROYED AT {len(d_str)} DIGITS"
+            elif len(d_str) < 15:
                 display.innerText = f"DAMAGE: {damage}"
-                count_display.innerText = f"Digits: {length}"
+                count.innerText = f"Health Remaining: {target_hp - damage}"
             else:
-                # TikTok style formatting
-                display.innerText = f"DAMAGE: {d_str[:12]}..."
-                count_display.innerText = f"TOTAL DIGITS: {length}"
+                display.innerText = f"DAMAGE: {d_str[:10]}..."
+                count.innerText = f"TOTAL DIGITS: {len(d_str)}"
 
-        # Set initial display once Python is loaded
-        document.querySelector("#damage-text").innerText = "DAMAGE: 10"
-        document.querySelector("#digit-count").innerText = "Digits: 2"
+        # THIS FIXES THE "UNDEFINED" ERROR:
+        # We only enable the buttons once the Python code is fully loaded
+        for i in range(2, 7):
+            document.querySelector(f"#b{i}").disabled = False
+        
+        document.querySelector("#damage-display").innerText = "DAMAGE: 10"
     </script>
-
 </body>
 </html>
