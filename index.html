@@ -48,7 +48,8 @@
         let gameState = {
             ballValue: 0,
             collisions: 0,
-            multiplier: 1
+            multiplier: 1,
+            damageMultiplier: 1
         };
 
         // Ball selection
@@ -78,6 +79,7 @@
             gameState.ballValue = parseInt(numberInput);
             gameState.collisions = 0;
             gameState.multiplier = selectedMultiplier;
+            gameState.damageMultiplier = selectedMultiplier; // Start with base multiplier
 
             document.getElementById('menuSection').style.display = 'none';
             document.getElementById('gameArea').style.display = 'block';
@@ -195,8 +197,10 @@
                 if (dist < minDist && !smallBall.inCollision) {
                     smallBall.inCollision = true;
 
-                    // Apply damage
-                    gameState.ballValue -= gameState.multiplier;
+                    // EXPONENTIAL DAMAGE: multiply by the multiplier each hit
+                    const damage = gameState.damageMultiplier;
+                    gameState.ballValue -= damage;
+                    gameState.damageMultiplier *= gameState.multiplier; // Increase damage for next hit
                     gameState.collisions++;
                     updateGameInfo();
 
