@@ -3,284 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mathballs Game</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Python Math Ball Sandbox</title>
+    
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css" />
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #display-container {
+            background: #333;
+            padding: 30px;
+            border-radius: 20px;
+            border: 4px solid #555;
+            text-align: center;
+            min-width: 300px;
+            margin-bottom: 40px;
+        }
+
+        #damage-text {
+            font-size: 24px;
+            color: #00ff00;
+            word-wrap: break-word;
+        }
+
+        .ball-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .ball {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            background: #ff5722;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ball:active {
+            transform: scale(0.9);
+            background: #e64a19;
+        }
+
+        .error {
+            color: #ff0000 !important;
+            font-weight: bold;
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎮 MATHBALLS</h1>
-        
-        <div class="menu-section" id="menuSection">
-            <h2>Select a Damage Ball</h2>
-            <div class="ball-buttons">
-                <button class="ball-btn" data-multiplier="2">Doubler<br><small>2x</small></button>
-                <button class="ball-btn" data-multiplier="3">Tripler<br><small>3x</small></button>
-                <button class="ball-btn" data-multiplier="4">Quadrupler<br><small>4x</small></button>
-                <button class="ball-btn" data-multiplier="5">Quintupler<br><small>5x</small></button>
-                <button class="ball-btn" data-multiplier="6">Sextupler<br><small>6x</small></button>
-            </div>
 
-            <div class="input-section">
-                <label for="numberInput">Enter Starting Number:</label>
-                <input type="number" id="numberInput" placeholder="e.g., 1000000" value="1000000">
-                <button id="startBtn">START GAME</button>
-            </div>
-
-            <div class="menu-area" id="menuMessage">
-                Select a ball and enter a number to begin!
-            </div>
-        </div>
-
-        <div class="game-area" id="gameArea" style="display: none;">
-            <div class="game-info">
-                <p>Big Ball Value: <span id="ballValue">0</span></p>
-                <p>Damage Ball: <span id="damageType">2x</span></p>
-                <p>Collisions: <span id="collisionCount">0</span></p>
-                <button id="restartBtn">RESTART</button>
-            </div>
-            <canvas id="gameCanvas"></canvas>
-        </div>
+    <div id="display-container">
+        <div id="damage-text">INITIALIZING...</div>
+        <div id="digit-count" style="font-size: 14px; margin-top: 10px; color: #888;"></div>
     </div>
 
-    <script>
-        let selectedMultiplier = null;
-        let gameRunning = false;
-        let gameState = {
-            ballValue: 0,
-            collisions: 0,
-            multiplier: 1,
-            damageMultiplier: 1
-        };
+    <div class="ball-row">
+        <button class="ball" py-click="multiply(2)">2x</button>
+        <button class="ball" py-click="multiply(3)">3x</button>
+        <button class="ball" py-click="multiply(4)">4x</button>
+        <button class="ball" py-click="multiply(5)">5x</button>
+        <button class="ball" py-click="multiply(6)">6x</button>
+    </div>
 
-        // Ball selection
-        document.querySelectorAll('.ball-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.ball-btn').forEach(b => b.classList.remove('selected'));
-                this.classList.add('selected');
-                selectedMultiplier = parseInt(this.dataset.multiplier);
-            });
-        });
+    <script type="py">
+        from pyscript import document
 
-        // Start game
-        document.getElementById('startBtn').addEventListener('click', startGame);
+        # Starting state
+        damage = 10
+        is_error = False
 
-        function startGame() {
-            if (!selectedMultiplier) {
-                alert('Please select a damage ball!');
-                return;
-            }
+        def multiply(value):
+            global damage, is_error
+            
+            if is_error:
+                return
 
-            const numberInput = document.getElementById('numberInput').value;
-            if (!numberInput || numberInput <= 0) {
-                alert('Please enter a valid starting number!');
-                return;
-            }
+            # The Multiplication Logic
+            damage *= int(value)
+            
+            # Convert to string to check length
+            d_str = str(damage)
+            length = len(d_str)
 
-            gameState.ballValue = parseInt(numberInput);
-            gameState.collisions = 0;
-            gameState.multiplier = selectedMultiplier;
-            gameState.damageMultiplier = selectedMultiplier; // Start with base multiplier
+            display = document.querySelector("#damage-text")
+            count_display = document.querySelector("#digit-count")
 
-            document.getElementById('menuSection').style.display = 'none';
-            document.getElementById('gameArea').style.display = 'block';
+            # Update the UI
+            if length > 20000:
+                display.innerText = "DAMAGE: ERROR"
+                display.classList.add("error")
+                count_display.innerText = "SYSTEM CRASH: CAPACITY EXCEEDED"
+                is_error = True
+            elif length < 15:
+                display.innerText = f"DAMAGE: {damage}"
+                count_display.innerText = f"Digits: {length}"
+            else:
+                # TikTok style formatting
+                display.innerText = f"DAMAGE: {d_str[:12]}..."
+                count_display.innerText = f"TOTAL DIGITS: {length}"
 
-            updateGameInfo();
-            startPhysicsGame();
-        }
-
-        document.getElementById('restartBtn').addEventListener('click', () => {
-            document.getElementById('menuSection').style.display = 'block';
-            document.getElementById('gameArea').style.display = 'none';
-            document.querySelectorAll('.ball-btn').forEach(b => b.classList.remove('selected'));
-            selectedMultiplier = null;
-            gameRunning = false;
-        });
-
-        function updateGameInfo() {
-            document.getElementById('ballValue').textContent = gameState.ballValue.toLocaleString();
-            document.getElementById('damageType').textContent = gameState.multiplier + 'x';
-            document.getElementById('collisionCount').textContent = gameState.collisions;
-        }
-
-        function startPhysicsGame() {
-            const canvas = document.getElementById('gameCanvas');
-            const ctx = canvas.getContext('2d');
-
-            canvas.width = 800;
-            canvas.height = 400;
-
-            gameRunning = true;
-
-            const bigBall = {
-                x: canvas.width / 2,
-                y: canvas.height / 2,
-                radius: 80,
-                vx: 0,
-                vy: 0,
-                prevX: canvas.width / 2,
-                prevY: canvas.height / 2,
-                mass: 10
-            };
-
-            const smallBall = {
-                x: 100,
-                y: 100,
-                radius: 20,
-                vx: 4,
-                vy: 3,
-                prevX: 100,
-                prevY: 100,
-                mass: 1,
-                inCollision: false
-            };
-
-            function distance(x1, y1, x2, y2) {
-                return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-            }
-
-            function update() {
-                if (!gameRunning) return;
-
-                // Store previous positions
-                bigBall.prevX = bigBall.x;
-                bigBall.prevY = bigBall.y;
-                smallBall.prevX = smallBall.x;
-                smallBall.prevY = smallBall.y;
-
-                // Move balls (no gravity)
-                smallBall.x += smallBall.vx;
-                smallBall.y += smallBall.vy;
-                bigBall.x += bigBall.vx;
-                bigBall.y += bigBall.vy;
-
-                // Small ball bounces off walls
-                if (smallBall.x - smallBall.radius < 0) {
-                    smallBall.x = smallBall.radius;
-                    smallBall.vx *= -1;
-                }
-                if (smallBall.x + smallBall.radius > canvas.width) {
-                    smallBall.x = canvas.width - smallBall.radius;
-                    smallBall.vx *= -1;
-                }
-                if (smallBall.y - smallBall.radius < 0) {
-                    smallBall.y = smallBall.radius;
-                    smallBall.vy *= -1;
-                }
-                if (smallBall.y + smallBall.radius > canvas.height) {
-                    smallBall.y = canvas.height - smallBall.radius;
-                    smallBall.vy *= -1;
-                }
-
-                // Big ball bounces off walls
-                if (bigBall.x - bigBall.radius < 0) {
-                    bigBall.x = bigBall.radius;
-                    bigBall.vx *= -0.9;
-                }
-                if (bigBall.x + bigBall.radius > canvas.width) {
-                    bigBall.x = canvas.width - bigBall.radius;
-                    bigBall.vx *= -0.9;
-                }
-                if (bigBall.y - bigBall.radius < 0) {
-                    bigBall.y = bigBall.radius;
-                    bigBall.vy *= -0.9;
-                }
-                if (bigBall.y + bigBall.radius > canvas.height) {
-                    bigBall.y = canvas.height - bigBall.radius;
-                    bigBall.vy *= -0.9;
-                }
-
-                // Collision detection
-                const dist = distance(bigBall.x, bigBall.y, smallBall.x, smallBall.y);
-                const minDist = bigBall.radius + smallBall.radius;
-
-                // Only process collision if not already in collision AND balls are touching
-                if (dist < minDist && !smallBall.inCollision) {
-                    smallBall.inCollision = true;
-
-                    // EXPONENTIAL DAMAGE: multiply by the multiplier each hit
-                    const damage = gameState.damageMultiplier;
-                    gameState.ballValue -= damage;
-                    gameState.damageMultiplier *= gameState.multiplier; // Increase damage for next hit
-                    gameState.collisions++;
-                    updateGameInfo();
-
-                    if (gameState.ballValue <= 0) {
-                        gameState.ballValue = 0;
-                        updateGameInfo();
-                        gameRunning = false;
-                        setTimeout(() => {
-                            alert(`Game Over! Destroyed in ${gameState.collisions} collisions!`);
-                            document.getElementById('restartBtn').click();
-                        }, 500);
-                        return;
-                    }
-
-                    // Calculate collision response
-                    const dx = smallBall.x - bigBall.x;
-                    const dy = smallBall.y - bigBall.y;
-                    const angle = Math.atan2(dy, dx);
-
-                    // Push small ball away with strong force
-                    smallBall.vx = Math.cos(angle) * 8;
-                    smallBall.vy = Math.sin(angle) * 8;
-
-                    // Push big ball away
-                    bigBall.vx = -Math.cos(angle) * 1.5;
-                    bigBall.vy = -Math.sin(angle) * 1.5;
-
-                    // Separate balls to prevent overlap
-                    const overlap = minDist - dist;
-                    const separationX = Math.cos(angle) * (overlap + 2);
-                    const separationY = Math.sin(angle) * (overlap + 2);
-
-                    smallBall.x += separationX;
-                    smallBall.y += separationY;
-                    bigBall.x -= separationX * 0.3;
-                    bigBall.y -= separationY * 0.3;
-                }
-
-                // Reset collision flag when balls separate
-                if (dist > minDist + 5) {
-                    smallBall.inCollision = false;
-                }
-
-                // Draw background
-                ctx.fillStyle = '#1a1a2e';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                // Draw big ball
-                ctx.fillStyle = '#667eea';
-                ctx.beginPath();
-                ctx.arc(bigBall.x, bigBall.y, bigBall.radius, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Draw number on big ball
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 30px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(gameState.ballValue.toLocaleString(), bigBall.x, bigBall.y);
-
-                // Draw small ball
-                ctx.fillStyle = '#f5576c';
-                ctx.beginPath();
-                ctx.arc(smallBall.x, smallBall.y, smallBall.radius, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Draw multiplier on small ball
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 12px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(gameState.multiplier + 'x', smallBall.x, smallBall.y);
-
-                if (gameRunning) {
-                    requestAnimationFrame(update);
-                }
-            }
-
-            update();
-        }
+        # Set initial display once Python is loaded
+        document.querySelector("#damage-text").innerText = "DAMAGE: 10"
+        document.querySelector("#digit-count").innerText = "Digits: 2"
     </script>
+
 </body>
 </html>
