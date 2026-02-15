@@ -79,7 +79,6 @@
             gameState.collisions = 0;
             gameState.multiplier = selectedMultiplier;
 
-            // Hide menu, show game
             document.getElementById('menuSection').style.display = 'none';
             document.getElementById('gameArea').style.display = 'block';
 
@@ -105,13 +104,11 @@
             const canvas = document.getElementById('gameCanvas');
             const ctx = canvas.getContext('2d');
 
-            // Set canvas size
             canvas.width = 800;
             canvas.height = 400;
 
             gameRunning = true;
 
-            // Big ball (number ball)
             const bigBall = {
                 x: canvas.width / 2,
                 y: canvas.height / 2,
@@ -121,7 +118,6 @@
                 mass: 10
             };
 
-            // Small ball (damage ball)
             const smallBall = {
                 x: 100,
                 y: 100,
@@ -131,128 +127,75 @@
                 mass: 1
             };
 
-            function distance(x1, y1, x2, y2) {
-                return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-            }
-
-            function checkCollision(ball1, ball2) {
-                const dist = distance(ball1.x, ball1.y, ball2.x, ball2.y);
-                return dist < ball1.radius + ball2.radius;
-            }
-
             let lastCollisionTime = 0;
 
-            function handleCollision(ball1, ball2) {
-                const now = Date.now();
-                // Prevent multiple collisions in rapid succession
-                if (now - lastCollisionTime < 100) return;
-                lastCollisionTime = now;
-
-                // Apply damage
-                gameState.ballValue -= gameState.multiplier;
-                gameState.collisions++;
-                updateGameInfo();
-
-                if (gameState.ballValue <= 0) {
-                    gameState.ballValue = 0;
-                    updateGameInfo();
-                    gameRunning = false;
-                    setTimeout(() => {
-                        alert(`Game Over! The big ball was destroyed in ${gameState.collisions} collisions!`);
-                        document.getElementById('restartBtn').click();
-                    }, 500);
-                }
-
-                // Calculate collision vector
-                const dx = ball2.x - ball1.x;
-                const dy = ball2.y - ball1.y;
-                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                const nx = dx / dist; // Normal vector X
-                const ny = dy / dist; // Normal vector Y
-
-                // Separate balls to prevent overlap
-                const overlap = ball1.radius + ball2.radius - dist;
-                const separationX = nx * overlap * 0.5;
-                const separationY = ny * overlap * 0.5;
-
-                ball1.x -= separationX;
-                ball1.y -= separationY;
-                ball2.x += separationX;
-                ball2.y += separationY;
-
-                // Elastic collision with momentum transfer
-                const dvx = ball1.vx - ball2.vx;
-                const dvy = ball1.vy - ball2.vy;
-                const dotProduct = dvx * nx + dvy * ny;
-
-                // Only collide if balls are moving towards each other
-                if (dotProduct > 0) {
-                    // Collision impulse
-                    const impulse = (2 * dotProduct) / (ball1.mass + ball2.mass);
-
-                    // Apply impulse to both balls
-                    ball1.vx -= impulse * ball2.mass * nx;
-                    ball1.vy -= impulse * ball2.mass * ny;
-                    ball2.vx += impulse * ball1.mass * nx;
-                    ball2.vy += impulse * ball1.mass * ny;
-
-                    // Add bounce effect - reverse small ball velocity
-                    ball2.vx *= -1.2;
-                    ball2.vy *= -1.2;
-                }
+            function distance(x1, y1, x2, y2) {
+                return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
             }
 
             function update() {
                 if (!gameRunning) return;
 
-                // NO GRAVITY - update positions directly
-                bigBall.x += bigBall.vx;
-                bigBall.y += bigBall.vy;
+                // Move balls (no gravity)
                 smallBall.x += smallBall.vx;
                 smallBall.y += smallBall.vy;
+                bigBall.x += bigBall.vx;
+                bigBall.y += bigBall.vy;
 
-                // Bounce big ball off walls with friction
-                if (bigBall.x - bigBall.radius < 0) {
-                    bigBall.x = bigBall.radius;
-                    bigBall.vx *= -0.95;
-                }
-                if (bigBall.x + bigBall.radius > canvas.width) {
-                    bigBall.x = canvas.width - bigBall.radius;
-                    bigBall.vx *= -0.95;
-                }
-                if (bigBall.y - bigBall.radius < 0) {
-                    bigBall.y = bigBall.radius;
-                    bigBall.vy *= -0.95;
-                }
-                if (bigBall.y + bigBall.radius > canvas.height) {
-                    bigBall.y = canvas.height - bigBall.radius;
-                    bigBall.vy *= -0.95;
-                }
-
-                // Bounce small ball off walls
-                if (smallBall.x - smallBall.radius < 0) {
-                    smallBall.x = smallBall.radius;
+                // Small ball bounces off walls
+                if (smallBall.x - smallBall.radius < 0 || smallBall.x + smallBall.radius > canvas.width) {
                     smallBall.vx *= -1;
                 }
-                if (smallBall.x + smallBall.radius > canvas.width) {
-                    smallBall.x = canvas.width - smallBall.radius;
-                    smallBall.vx *= -1;
-                }
-                if (smallBall.y - smallBall.radius < 0) {
-                    smallBall.y = smallBall.radius;
-                    smallBall.vy *= -1;
-                }
-                if (smallBall.y + smallBall.radius > canvas.height) {
-                    smallBall.y = canvas.height - smallBall.radius;
+                if (smallBall.y - smallBall.radius < 0 || smallBall.y + smallBall.radius > canvas.height) {
                     smallBall.vy *= -1;
                 }
 
-                // Check collision
-                if (checkCollision(bigBall, smallBall)) {
-                    handleCollision(bigBall, smallBall);
+                // Big ball bounces off walls
+                if (bigBall.x - bigBall.radius < 0 || bigBall.x + bigBall.radius > canvas.width) {
+                    bigBall.vx *= -0.9;
+                }
+                if (bigBall.y - bigBall.radius < 0 || bigBall.y + bigBall.radius > canvas.height) {
+                    bigBall.vy *= -0.9;
                 }
 
-                // Draw
+                // Collision detection
+                const dist = distance(bigBall.x, bigBall.y, smallBall.x, smallBall.y);
+                const now = Date.now();
+
+                if (dist < bigBall.radius + smallBall.radius && now - lastCollisionTime > 100) {
+                    lastCollisionTime = now;
+
+                    // Apply damage
+                    gameState.ballValue -= gameState.multiplier;
+                    gameState.collisions++;
+                    updateGameInfo();
+
+                    if (gameState.ballValue <= 0) {
+                        gameState.ballValue = 0;
+                        updateGameInfo();
+                        gameRunning = false;
+                        setTimeout(() => {
+                            alert(`Game Over! Destroyed in ${gameState.collisions} collisions!`);
+                            document.getElementById('restartBtn').click();
+                        }, 500);
+                        return;
+                    }
+
+                    // Calculate collision response
+                    const dx = smallBall.x - bigBall.x;
+                    const dy = smallBall.y - bigBall.y;
+                    const angle = Math.atan2(dy, dx);
+
+                    // Push small ball away
+                    smallBall.vx = Math.cos(angle) * 8;
+                    smallBall.vy = Math.sin(angle) * 8;
+
+                    // Push big ball away
+                    bigBall.vx = -Math.cos(angle) * 2;
+                    bigBall.vy = -Math.sin(angle) * 2;
+                }
+
+                // Draw background
                 ctx.fillStyle = '#1a1a2e';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -262,7 +205,7 @@
                 ctx.arc(bigBall.x, bigBall.y, bigBall.radius, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Draw big ball number
+                // Draw number on big ball
                 ctx.fillStyle = '#fff';
                 ctx.font = 'bold 30px Arial';
                 ctx.textAlign = 'center';
@@ -275,7 +218,7 @@
                 ctx.arc(smallBall.x, smallBall.y, smallBall.radius, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Draw small ball multiplier
+                // Draw multiplier on small ball
                 ctx.fillStyle = '#fff';
                 ctx.font = 'bold 12px Arial';
                 ctx.textAlign = 'center';
