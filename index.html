@@ -3,257 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mathballs Game</title>
-    <link rel="stylesheet" href="style.css">
-    <script async src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+    <title>Physics Simulation</title>
+    <style>
+        canvas {
+            background: #f0f0f0;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎮 MATHBALLS</h1>
-        
-        <div class="menu-section" id="menuSection">
-            <h2>Select a Damage Ball</h2>
-            <div class="ball-buttons">
-                <button class="ball-btn" data-multiplier="2">Doubler<br><small>2x</small></button>
-                <button class="ball-btn" data-multiplier="3">Tripler<br><small>3x</small></button>
-                <button class="ball-btn" data-multiplier="4">Quadrupler<br><small>4x</small></button>
-                <button class="ball-btn" data-multiplier="5">Quintupler<br><small>5x</small></button>
-                <button class="ball-btn" data-multiplier="6">Sextupler<br><small>6x</small></button>
-            </div>
-
-            <div class="input-section">
-                <label for="numberInput">Enter Starting Number:</label>
-                <input type="number" id="numberInput" placeholder="e.g., 1000000" value="1000000">
-                <button id="startBtn">START GAME</button>
-            </div>
-
-            <div class="menu-area" id="menuMessage">
-                Select a ball and enter a number to begin!
-            </div>
-        </div>
-
-        <div class="game-area" id="gameArea" style="display: none;">
-            <div class="game-info">
-                <p>Big Ball Value: <span id="ballValue">0</span></p>
-                <p>Damage Ball: <span id="damageType">2x</span></p>
-                <p>Collisions: <span id="collisionCount">0</span></p>
-                <button id="restartBtn">RESTART</button>
-            </div>
-            <canvas id="gameCanvas"></canvas>
-        </div>
-    </div>
-
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
     <script>
-        let selectedMultiplier = null;
-        let gameRunning = false;
-        let gameState = {
-            ballValue: 0,
-            collisions: 0,
-            multiplier: 1
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const bigBall = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 30,
+            color: 'blue',
+            dx: 0,
+            dy: 0,
+            friction: 0.99,
+            speed: 1
         };
 
-        // Ball selection
-        document.querySelectorAll('.ball-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.ball-btn').forEach(b => b.classList.remove('selected'));
-                this.classList.add('selected');
-                selectedMultiplier = parseInt(this.dataset.multiplier);
-            });
-        });
+        const damageBall = {
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            radius: 10,
+            color: 'red',
+            dx: 0,
+            dy: 0,
+        };
 
-        // Start game
-        document.getElementById('startBtn').addEventListener('click', startGame);
-
-        async function startGame() {
-            if (!selectedMultiplier) {
-                alert('Please select a damage ball!');
-                return;
-            }
-
-            const numberInput = document.getElementById('numberInput').value;
-            if (!numberInput || numberInput <= 0) {
-                alert('Please enter a valid starting number!');
-                return;
-            }
-
-            gameState.ballValue = parseInt(numberInput);
-            gameState.collisions = 0;
-            gameState.multiplier = selectedMultiplier;
-
-            // Hide menu, show game
-            document.getElementById('menuSection').style.display = 'none';
-            document.getElementById('gameArea').style.display = 'block';
-
-            updateGameInfo();
-            startPhysicsGame();
+        function drawBall(ball) {
+            ctx.fillStyle = ball.color;
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
         }
 
-        document.getElementById('restartBtn').addEventListener('click', () => {
-            document.getElementById('menuSection').style.display = 'block';
-            document.getElementById('gameArea').style.display = 'none';
-            document.querySelectorAll('.ball-btn').forEach(b => b.classList.remove('selected'));
-            selectedMultiplier = null;
-            gameRunning = false;
-        });
+        function update() {
+            // Move big ball with realistic physics
+            bigBall.dx += (Math.random() - 0.5) * bigBall.speed;
+            bigBall.dy += (Math.random() - 0.5) * bigBall.speed;
+            bigBall.dx *= bigBall.friction;
+            bigBall.dy *= bigBall.friction;
+            bigBall.x += bigBall.dx;
+            bigBall.y += bigBall.dy;
 
-        function updateGameInfo() {
-            document.getElementById('ballValue').textContent = gameState.ballValue.toLocaleString();
-            document.getElementById('damageType').textContent = gameState.multiplier + 'x';
-            document.getElementById('collisionCount').textContent = gameState.collisions;
+            // Bounce damage ball immediately on collision
+            if (Math.abs(bigBall.x - damageBall.x) < bigBall.radius + damageBall.radius &&
+                Math.abs(bigBall.y - damageBall.y) < bigBall.radius + damageBall.radius) {
+                damageBall.dx = (Math.random() - 0.5) * 10;
+                damageBall.dy = (Math.random() - 0.5) * 10;
+            }
+
+            damageBall.x += damageBall.dx;
+            damageBall.y += damageBall.dy;
+
+            // Bounce the damage ball off the walls
+            if (damageBall.x + damageBall.radius > canvas.width || damageBall.x - damageBall.radius < 0) {
+                damageBall.dx *= -1;
+            }
+            if (damageBall.y + damageBall.radius > canvas.height || damageBall.y - damageBall.radius < 0) {
+                damageBall.dy *= -1;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBall(bigBall);
+            drawBall(damageBall);
         }
 
-        function startPhysicsGame() {
-            const canvas = document.getElementById('gameCanvas');
-            const ctx = canvas.getContext('2d');
-
-            // Set canvas size
-            canvas.width = 800;
-            canvas.height = 400;
-
-            gameRunning = true;
-
-            // Big ball (number ball)
-            const bigBall = {
-                x: canvas.width / 2,
-                y: canvas.height / 2,
-                radius: 80,
-                vx: 0,
-                vy: 0,
-                mass: 100
-            };
-
-            // Small ball (damage ball)
-            const smallBall = {
-                x: 100,
-                y: 100,
-                radius: 20,
-                vx: 5,
-                vy: 3,
-                mass: 1
-            };
-
-            function distance(x1, y1, x2, y2) {
-                return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-            }
-
-            function checkCollision(ball1, ball2) {
-                const dist = distance(ball1.x, ball1.y, ball2.x, ball2.y);
-                return dist < ball1.radius + ball2.radius;
-            }
-
-            function handleCollision(ball1, ball2) {
-                // Apply damage
-                gameState.ballValue -= gameState.multiplier;
-                gameState.collisions++;
-                updateGameInfo();
-
-                if (gameState.ballValue <= 0) {
-                    gameState.ballValue = 0;
-                    updateGameInfo();
-                    gameRunning = false;
-                    setTimeout(() => {
-                        alert(`Game Over! The big ball was destroyed in ${gameState.collisions} collisions!`);
-                        document.getElementById('restartBtn').click();
-                    }, 500);
-                }
-
-                // Push balls apart
-                const dx = ball2.x - ball1.x;
-                const dy = ball2.y - ball1.y;
-                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                const overlap = ball1.radius + ball2.radius - dist;
-                const moveX = (overlap / 2) * (dx / dist);
-                const moveY = (overlap / 2) * (dy / dist);
-
-                ball2.x += moveX;
-                ball2.y += moveY;
-                ball1.x -= moveX;
-                ball1.y -= moveY;
-
-                // Elastic collision
-                const vx = ball2.vx - ball1.vx;
-                const vy = ball2.vy - ball1.vy;
-                const dot = vx * dx + vy * dy;
-
-                if (dot > 0) {
-                    const impulse = (2 / (ball1.mass + ball2.mass)) * dot / (dist * dist);
-                    ball1.vx += impulse * dx * ball2.mass;
-                    ball1.vy += impulse * dy * ball2.mass;
-                    ball2.vx -= impulse * dx * ball1.mass;
-                    ball2.vy -= impulse * dy * ball1.mass;
-                }
-            }
-
-            function update() {
-                if (!gameRunning) return;
-
-                // Apply gravity
-                smallBall.vy += 0.2;
-
-                // Update positions
-                smallBall.x += smallBall.vx;
-                smallBall.y += smallBall.vy;
-
-                // Bounce off walls
-                if (smallBall.x - smallBall.radius < 0) {
-                    smallBall.x = smallBall.radius;
-                    smallBall.vx *= -0.9;
-                }
-                if (smallBall.x + smallBall.radius > canvas.width) {
-                    smallBall.x = canvas.width - smallBall.radius;
-                    smallBall.vx *= -0.9;
-                }
-                if (smallBall.y - smallBall.radius < 0) {
-                    smallBall.y = smallBall.radius;
-                    smallBall.vy *= -0.9;
-                }
-                if (smallBall.y + smallBall.radius > canvas.height) {
-                    smallBall.y = canvas.height - smallBall.radius;
-                    smallBall.vy *= -0.9;
-                }
-
-                // Check collision
-                if (checkCollision(bigBall, smallBall)) {
-                    handleCollision(bigBall, smallBall);
-                }
-
-                // Draw
-                ctx.fillStyle = '#1a1a2e';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                // Draw big ball
-                ctx.fillStyle = '#667eea';
-                ctx.beginPath();
-                ctx.arc(bigBall.x, bigBall.y, bigBall.radius, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Draw big ball number
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 30px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(gameState.ballValue.toLocaleString(), bigBall.x, bigBall.y);
-
-                // Draw small ball
-                ctx.fillStyle = '#f5576c';
-                ctx.beginPath();
-                ctx.arc(smallBall.x, smallBall.y, smallBall.radius, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Draw small ball multiplier
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 12px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(gameState.multiplier + 'x', smallBall.x, smallBall.y);
-
-                if (gameRunning) {
-                    requestAnimationFrame(update);
-                }
-            }
-
-            update();
-        }
+        setInterval(update, 1000 / 60);
     </script>
 </body>
 </html>
