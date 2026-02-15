@@ -115,6 +115,8 @@
                 radius: 80,
                 vx: 0,
                 vy: 0,
+                prevX: canvas.width / 2,
+                prevY: canvas.height / 2,
                 mass: 10
             };
 
@@ -124,10 +126,11 @@
                 radius: 20,
                 vx: 4,
                 vy: 3,
-                mass: 1
+                prevX: 100,
+                prevY: 100,
+                mass: 1,
+                inCollision: false
             };
-
-            let lastCollisionTime = 0;
 
             function distance(x1, y1, x2, y2) {
                 return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
@@ -136,6 +139,12 @@
             function update() {
                 if (!gameRunning) return;
 
+                // Store previous positions
+                bigBall.prevX = bigBall.x;
+                bigBall.prevY = bigBall.y;
+                smallBall.prevX = smallBall.x;
+                smallBall.prevY = smallBall.y;
+
                 // Move balls (no gravity)
                 smallBall.x += smallBall.vx;
                 smallBall.y += smallBall.vy;
@@ -143,27 +152,48 @@
                 bigBall.y += bigBall.vy;
 
                 // Small ball bounces off walls
-                if (smallBall.x - smallBall.radius < 0 || smallBall.x + smallBall.radius > canvas.width) {
+                if (smallBall.x - smallBall.radius < 0) {
+                    smallBall.x = smallBall.radius;
                     smallBall.vx *= -1;
                 }
-                if (smallBall.y - smallBall.radius < 0 || smallBall.y + smallBall.radius > canvas.height) {
+                if (smallBall.x + smallBall.radius > canvas.width) {
+                    smallBall.x = canvas.width - smallBall.radius;
+                    smallBall.vx *= -1;
+                }
+                if (smallBall.y - smallBall.radius < 0) {
+                    smallBall.y = smallBall.radius;
+                    smallBall.vy *= -1;
+                }
+                if (smallBall.y + smallBall.radius > canvas.height) {
+                    smallBall.y = canvas.height - smallBall.radius;
                     smallBall.vy *= -1;
                 }
 
                 // Big ball bounces off walls
-                if (bigBall.x - bigBall.radius < 0 || bigBall.x + bigBall.radius > canvas.width) {
+                if (bigBall.x - bigBall.radius < 0) {
+                    bigBall.x = bigBall.radius;
                     bigBall.vx *= -0.9;
                 }
-                if (bigBall.y - bigBall.radius < 0 || bigBall.y + bigBall.radius > canvas.height) {
+                if (bigBall.x + bigBall.radius > canvas.width) {
+                    bigBall.x = canvas.width - bigBall.radius;
+                    bigBall.vx *= -0.9;
+                }
+                if (bigBall.y - bigBall.radius < 0) {
+                    bigBall.y = bigBall.radius;
+                    bigBall.vy *= -0.9;
+                }
+                if (bigBall.y + bigBall.radius > canvas.height) {
+                    bigBall.y = canvas.height - bigBall.radius;
                     bigBall.vy *= -0.9;
                 }
 
                 // Collision detection
                 const dist = distance(bigBall.x, bigBall.y, smallBall.x, smallBall.y);
-                const now = Date.now();
+                const minDist = bigBall.radius + smallBall.radius;
 
-                if (dist < bigBall.radius + smallBall.radius && now - lastCollisionTime > 100) {
-                    lastCollisionTime = now;
+                // Only process collision if not already in collision AND balls are touching
+                if (dist < minDist && !smallBall.inCollision) {
+                    smallBall.inCollision = true;
 
                     // Apply damage
                     gameState.ballValue -= gameState.multiplier;
@@ -186,13 +216,28 @@
                     const dy = smallBall.y - bigBall.y;
                     const angle = Math.atan2(dy, dx);
 
-                    // Push small ball away
+                    // Push small ball away with strong force
                     smallBall.vx = Math.cos(angle) * 8;
                     smallBall.vy = Math.sin(angle) * 8;
 
                     // Push big ball away
-                    bigBall.vx = -Math.cos(angle) * 2;
-                    bigBall.vy = -Math.sin(angle) * 2;
+                    bigBall.vx = -Math.cos(angle) * 1.5;
+                    bigBall.vy = -Math.sin(angle) * 1.5;
+
+                    // Separate balls to prevent overlap
+                    const overlap = minDist - dist;
+                    const separationX = Math.cos(angle) * (overlap + 2);
+                    const separationY = Math.sin(angle) * (overlap + 2);
+
+                    smallBall.x += separationX;
+                    smallBall.y += separationY;
+                    bigBall.x -= separationX * 0.3;
+                    bigBall.y -= separationY * 0.3;
+                }
+
+                // Reset collision flag when balls separate
+                if (dist > minDist + 5) {
+                    smallBall.inCollision = false;
                 }
 
                 // Draw background
