@@ -1,47 +1,53 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Ultimate Math Simulation</title>
+    <title>Googol Challenge Simulation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0f0f12; --panel: #1e1e24; --accent: #00ff88; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: 'Orbitron', sans-serif; overflow: hidden; }
+        :root { --bg-paper: #f1efdb; --border: #000; --text-main: #333; }
+        body { background: var(--bg-paper); color: var(--text-main); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: 'Roboto Condensed', sans-serif; overflow: hidden; }
         
         /* SCREEN SYSTEM */
-        .screen { display: none; flex-direction: column; align-items: center; width: 100%; height: 100vh; justify-content: center; transition: 0.5s; }
+        .screen { display: none; flex-direction: column; align-items: center; width: 100%; height: 100vh; justify-content: center; }
         .active-screen { display: flex; }
 
-        /* LAB UI */
-        .config-panel { background: var(--panel); padding: 40px; border-radius: 30px; box-shadow: 0 0 50px rgba(0,0,0,0.8); width: 950px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; border: 2px solid #333; }
-        .setup-side { display: flex; flex-direction: column; gap: 15px; }
+        /* LAB UI (MATCHING YOUR STYLE) */
+        .config-panel { background: white; padding: 30px; border: 4px solid var(--border); border-radius: 10px; width: 800px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; box-shadow: 10px 10px 0px rgba(0,0,0,0.1); }
+        .setup-side { display: flex; flex-direction: column; gap: 10px; }
+        .preview-side { background: #fff; border: 2px solid #ccc; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         
-        .preview-side { background: #000; border-radius: 20px; border: 2px solid var(--accent); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 20px var(--accent); }
-        #preview-target { position: absolute; background: #222; border-radius: 50%; border: 3px solid #444; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #555; transition: 0.2s; }
-        #preview-ball { position: absolute; border-radius: 50%; border: 2px solid #fff; transition: 0.2s; }
+        #preview-target { position: absolute; background: #cccccc; border-radius: 50%; border: 3px solid #666; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 0.8; word-break: break-all; padding: 10px; box-sizing: border-box; overflow: hidden; font-size: 8px; color: #fff; }
+        #preview-ball { position: absolute; border-radius: 50%; border: 2px solid #000; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; }
 
-        /* MULTIPLIER GRID (ALL BALLS) */
-        .ball-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
-        .ball-select { aspect-ratio: 1/1; border-radius: 50%; border: 3px solid transparent; cursor: pointer; color: white; font-weight: bold; font-size: 12px; display: flex; align-items: center; justify-content: center; opacity: 0.4; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .ball-select:hover { opacity: 0.8; transform: scale(1.05); }
-        .ball-select.selected { opacity: 1; border-color: #fff; transform: scale(1.15); box-shadow: 0 0 20px rgba(255,255,255,0.4); }
+        .ball-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+        .ball-select { aspect-ratio: 1/1; border-radius: 50%; border: 2px solid transparent; cursor: pointer; color: white; font-weight: bold; font-size: 10px; display: flex; align-items: center; justify-content: center; opacity: 0.6; }
+        .ball-select.selected { opacity: 1; border-color: #000; transform: scale(1.1); }
 
-        .input-box { background: #111; border: 2px solid #444; color: var(--accent); padding: 12px; border-radius: 8px; width: 100%; font-family: monospace; font-size: 1.1rem; }
-        .start-btn { grid-column: span 2; padding: 20px; background: var(--accent); color: #000; border: none; border-radius: 15px; font-size: 1.8rem; font-weight: 900; cursor: pointer; transition: 0.3s; }
-        .start-btn:hover { background: #00cc6e; transform: scale(1.02); }
+        .start-btn { grid-column: span 2; padding: 15px; background: #ffcc00; color: #000; border: 4px solid #000; font-size: 1.5rem; cursor: pointer; font-weight: 900; }
 
-        /* ARENA UI */
-        #game-screen { position: relative; }
-        #timer-box { position: absolute; top: 20px; left: 20px; font-family: 'Courier New', monospace; font-size: 3.5rem; font-weight: 900; background: rgba(0,0,0,0.9); padding: 15px 25px; border-radius: 15px; border: 3px solid var(--accent); color: var(--accent); text-shadow: 0 0 15px var(--accent); z-index: 100; }
-        #arena { width: 900px; height: 600px; background: radial-gradient(circle, #111, #000); border: 15px solid #222; position: relative; overflow: hidden; }
+        /* GAME SCREEN (EXACT REPLICA) */
+        .header-text { font-size: 2.2rem; text-align: center; margin-bottom: 20px; color: #444; width: 90%; line-height: 1.1; }
+        .red-text { color: #cc0000; -webkit-text-stroke: 1px black; }
         
-        #target { position: absolute; background: #333; border-radius: 50%; border: 5px solid #555; display: flex; align-items: center; justify-content: center; text-align: center; color: #fff; z-index: 2; }
-        #active-ball { position: absolute; border-radius: 50%; border: 2px solid #fff; color: white; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 3; box-shadow: 0 0 20px rgba(255,255,255,0.3); }
-
-        .particle { position: absolute; border-radius: 50%; pointer-events: none; z-index: 5; }
-        .dmg-popup { position: absolute; color: #ff3333; font-weight: 900; font-family: 'Courier New', monospace; animation: fadeUp 1.3s forwards; white-space: nowrap; pointer-events: none; z-index: 10; font-size: 24px; text-shadow: 2px 2px #000; }
+        #arena { width: 600px; height: 600px; background: white; border: 4px solid #000; position: relative; overflow: hidden; }
         
-        @keyframes fadeUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-180px) scale(1.2); } }
-        @keyframes shake { 0% { transform: translate(1px, 1px); } 20% { transform: translate(-3px, 0px); } 40% { transform: translate(3px, 2px); } 60% { transform: translate(-3px, -1px); } 80% { transform: translate(-1px, 1px); } 100% { transform: translate(0, 0); } }
-        .shake { animation: shake 0.2s; }
+        /* The Big Ball Style */
+        #target { 
+            position: absolute; background: #cccccc; border-radius: 50%; border: 2px solid #666; 
+            display: flex; align-items: center; justify-content: center; text-align: center; 
+            z-index: 2; overflow: hidden; padding: 15px; box-sizing: border-box;
+            color: white; -webkit-text-stroke: 1px rgba(0,0,0,0.3); font-family: monospace;
+            line-height: 0.9; letter-spacing: -1px; word-break: break-all;
+        }
+
+        /* The Player Ball Style */
+        #active-ball { position: absolute; border-radius: 50%; border: 2px solid #000; color: white; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 24px; }
+
+        #bottom-damage { margin-top: 10px; font-size: 2.5rem; color: #ffcc00; -webkit-text-stroke: 2px black; font-weight: 900; }
+
+        .particle { position: absolute; border-radius: 50%; pointer-events: none; }
+        .dmg-popup { position: absolute; color: #ff3333; font-weight: 900; animation: fadeUp 1s forwards; pointer-events: none; z-index: 10; font-size: 20px; }
+        @keyframes fadeUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
 <body>
@@ -49,52 +55,61 @@
 <div id="start-screen" class="screen active-screen">
     <div class="config-panel">
         <div class="setup-side">
-            <h1 style="margin:0; font-size: 2.5rem; color:var(--accent);">VOID ENGINE</h1>
-            <label>TARGET HP <input type="text" id="hp-input" class="input-box" value="10^100"></label>
-            <label>TIME LIMIT (SECONDS) <input type="number" id="time-limit" class="input-box" value="45"></label>
-            
+            <h1>SIM SETUP</h1>
+            <label>HP: <input type="text" id="hp-input" value="10^100" style="width:100%"></label>
+            <label>TIME: <input type="number" id="time-limit" value="58.1" step="0.1" style="width:100%"></label>
             <div class="ball-grid">
-                <div class="ball-select selected" style="background:#ff5722" onclick="pick(this,'mult',2,'2x')">2x</div>
-                <div class="ball-select" style="background:#ff9800" onclick="pick(this,'mult',3,'3x')">3x</div>
-                <div class="ball-select" style="background:#ffeb3b; color:#000" onclick="pick(this,'mult',4,'4x')">4x</div>
-                <div class="ball-select" style="background:#4caf50" onclick="pick(this,'mult',5,'5x')">5x</div>
-                <div class="ball-select" style="background:#2196f3" onclick="pick(this,'mult',6,'6x')">6x</div>
-                <div class="ball-select" style="background:#3f51b5" onclick="pick(this,'mult',7,'7x')">7x</div>
-                <div class="ball-select" style="background:#9c27b0" onclick="pick(this,'mult',8,'8x')">8x</div>
-                <div class="ball-select" style="background:#e91e63" onclick="pick(this,'mult',9,'9x')">9x</div>
-                <div class="ball-select" style="background:#607d8b" onclick="pick(this,'mult',10,'10x')">10x</div>
-                <div class="ball-select" style="background:#000; border:1px solid #fff" onclick="pick(this,'rooter',0,'√x')">√x</div>
-                <div class="ball-select" style="background:#f44336" onclick="pick(this,'halver',0,'x/2')">x/2</div>
-                <div class="ball-select" style="background:#d32f2f" onclick="pick(this,'quarter',0,'x/4')">x/4</div>
-                <div class="ball-select" style="background:#009688" onclick="pick(this,'reverser',0,'x/y')">x/y</div>
+                <div class="ball-select selected" style="background:red" onclick="pick(this,'mult',2,'x2')">x2</div>
+                <div class="ball-select" style="background:red" onclick="pick(this,'mult',10,'x10')">x10</div>
+                <div class="ball-select" style="background:red" onclick="pick(this,'mult',0,'⚡')">⚡</div>
+                <div class="ball-select" style="background:black" onclick="pick(this,'rooter',0,'√x')">√x</div>
+                <div class="ball-select" style="background:#cc0000" onclick="pick(this,'halver',0,'x/2')">x/2</div>
             </div>
-
-            <label>TARGET RADIUS <input type="range" min="30" max="220" value="80" id="slide-target" oninput="updatePreview()"></label>
-            <label>BALL RADIUS <input type="range" min="10" max="100" value="25" id="slide-ball" oninput="updatePreview()"></label>
+            <label>BIG SIZE: <input type="range" min="50" max="250" value="180" id="slide-target" oninput="updatePreview()"></label>
+            <label>BALL SIZE: <input type="range" min="20" max="100" value="60" id="slide-ball" oninput="updatePreview()"></label>
         </div>
-
         <div class="preview-side">
-            <div id="preview-target">HP</div>
-            <div id="preview-ball"></div>
+            <div id="preview-target">999999999999999999999</div>
+            <div id="preview-ball">x2</div>
         </div>
-
-        <button class="start-btn" onclick="startGame()">LAUNCH CORE</button>
+        <button class="start-btn" onclick="startGame()">START CHALLENGE</button>
     </div>
 </div>
 
 <div id="game-screen" class="screen">
-    <div id="timer-box">00.000</div>
+    <div class="header-text">
+        Can <span class="red-text" id="display-name">DOUBLER</span> <span id="display-val">x2</span> Deal 1 <span id="display-unit">Googol</span> Damage in <span id="display-time">58.1</span> Seconds?
+    </div>
     <div id="arena">
         <div id="target"><div id="t-hp"></div></div>
         <div id="active-ball"></div>
     </div>
-    <button style="margin-top:20px; background:none; border:1px solid #444; color:#666; cursor:pointer; padding:10px 20px;" onclick="location.reload()">EMERGENCY ABORT</button>
+    <div id="bottom-damage">DAMAGE : 0</div>
 </div>
 
 <script>
-let currentHP = 0n, timeLeft = 0, lastFrame = 0, gameRunning = false;
-const ball = { x: 50, y: 50, dx: 0, dy: 0, type: 'mult', val: 2n, label: '2x', color: '#ff5722', radius: 25, hitCount: 1n, pwr: 2n };
-const target = { x: 350, y: 200, dx: 2.5, dy: 2.5, radius: 80 };
+// --- AUDIO SYSTEM ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(freq, type, vol, decay) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + decay);
+    osc.start();
+    osc.stop(audioCtx.currentTime + decay);
+}
+
+const playClack = () => playSound(800, 'sine', 0.1, 0.05); // Wall Hit
+const playThump = () => playSound(150, 'triangle', 0.5, 0.2); // Collision
+
+// --- GAME LOGIC ---
+let currentHP = 0n, timeLeft = 0, lastFrame = 0, gameRunning = false, totalDmg = 0n;
+const ball = { x: 50, y: 50, dx: 0, dy: 0, type: 'mult', val: 2n, label: 'x2', color: 'red', radius: 30, pwr: 2n };
+const target = { x: 200, y: 300, dx: 2, dy: 2, radius: 90 };
 
 function updatePreview() {
     const tR = document.getElementById('slide-target').value;
@@ -103,9 +118,7 @@ function updatePreview() {
     const pb = document.getElementById('preview-ball');
     pt.style.width = pt.style.height = (tR * 2) + "px";
     pb.style.width = pb.style.height = (bR * 2) + "px";
-    pb.style.background = ball.color;
-    pb.innerText = ball.label;
-    pb.style.left = "40px";
+    pb.style.background = ball.color; pb.innerText = ball.label;
 }
 
 function pick(el, type, val, label) {
@@ -115,50 +128,29 @@ function pick(el, type, val, label) {
     updatePreview();
 }
 
-function parseInput(i) {
-    i = i.replace(/\s/g,'');
-    return i.includes('^') ? BigInt(i.split('^')[0])**BigInt(i.split('^')[1]) : BigInt(i);
-}
-
-function explode(x, y, color, count=50) {
-    const arena = document.getElementById('arena');
-    arena.classList.add('shake');
-    setTimeout(() => arena.classList.remove('shake'), 200);
-
-    for(let i=0; i<count; i++) {
-        const p = document.createElement('div');
-        p.className = 'particle';
-        p.style.background = color;
-        p.style.width = p.style.height = Math.random()*15+"px";
-        p.style.left = x+"px"; p.style.top = y+"px";
-        const angle = Math.random()*Math.PI*2, dist = 50 + Math.random()*250;
-        arena.appendChild(p);
-        p.animate([
-            {transform:'translate(0,0) scale(1)', opacity:1}, 
-            {transform:`translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) scale(0)`, opacity:0}
-        ], {duration: 1200, easing: 'cubic-bezier(0, .5, .5, 1)'});
-        setTimeout(()=>p.remove(), 1200);
-    }
-}
-
 function startGame() {
-    currentHP = parseInput(document.getElementById('hp-input').value);
+    const rawHP = document.getElementById('hp-input').value;
+    currentHP = rawHP.includes('^') ? BigInt(rawHP.split('^')[0])**BigInt(rawHP.split('^')[1]) : BigInt(rawHP);
     timeLeft = parseFloat(document.getElementById('time-limit').value) * 1000;
     target.radius = parseInt(document.getElementById('slide-target').value);
     ball.radius = parseInt(document.getElementById('slide-ball').value);
-    ball.pwr = ball.val; ball.hitCount = 1n;
+    ball.pwr = ball.val || 1n; totalDmg = 0n;
 
-    const tEl = document.getElementById('target');
-    tEl.style.width = tEl.style.height = (target.radius * 2) + "px";
-    const bEl = document.getElementById('active-ball');
-    bEl.style.width = bEl.style.height = (ball.radius * 2) + "px";
-    bEl.style.background = ball.color; bEl.innerText = ball.label;
+    // Update Header
+    document.getElementById('display-name').innerText = ball.label === '⚡' ? 'POWER' : 'DOUBLER';
+    document.getElementById('display-val').innerText = ball.label;
+    document.getElementById('display-time').innerText = (timeLeft/1000).toFixed(1);
+    document.getElementById('display-unit').innerText = currentHP.toString().length > 50 ? "Googol" : "Quintillion";
+
+    document.getElementById('target').style.width = document.getElementById('target').style.height = (target.radius * 2) + "px";
+    document.getElementById('active-ball').style.width = document.getElementById('active-ball').style.height = (ball.radius * 2) + "px";
+    document.getElementById('active-ball').style.background = ball.color;
+    document.getElementById('active-ball').innerText = ball.label;
 
     document.getElementById('start-screen').classList.remove('active-screen');
     document.getElementById('game-screen').classList.add('active-screen');
     
-    let angle = Math.random()*Math.PI*2;
-    ball.dx = Math.cos(angle)*11; ball.dy = Math.sin(angle)*11;
+    ball.dx = 8; ball.dy = 8;
     gameRunning = true; lastFrame = performance.now();
     updateHPDisplay();
     requestAnimationFrame(run);
@@ -167,21 +159,9 @@ function startGame() {
 function updateHPDisplay() {
     let s = currentHP.toString();
     const hpEl = document.getElementById('t-hp');
-    hpEl.innerText = s.length > 20 ? "10^"+(s.length-1) : s;
-    hpEl.style.fontSize = Math.max(10, (target.radius / 5)) + "px";
-
-    if(currentHP <= 0n && gameRunning) {
-        gameRunning = false;
-        explode(target.x + target.radius, target.y + target.radius, '#fff', 100);
-        document.getElementById('target').style.display = 'none';
-        setTimeout(() => alert("CORE CRITICAL: TARGET DESTROYED"), 200);
-    }
-}
-
-function bigIntSqrt(v) {
-    if(v<2n) return v;
-    let x = v/2n + 1n, y = (x+v/x)/2n;
-    while(y<x){x=y;y=(x+v/x)/2n;} return x;
+    hpEl.innerText = s; // Always full number wrapping
+    hpEl.style.fontSize = Math.max(6, (target.radius / 8)) + "px";
+    document.getElementById('bottom-damage').innerText = "DAMAGE : " + totalDmg.toString().substring(0,6);
 }
 
 function run(now) {
@@ -189,26 +169,23 @@ function run(now) {
     let dt = now - lastFrame; lastFrame = now;
     timeLeft -= dt;
 
-    if(timeLeft <= 0) {
-        gameRunning = false; timeLeft = 0;
-        explode(ball.x + ball.radius, ball.y + ball.radius, ball.color, 80);
-        document.getElementById('active-ball').style.display = 'none';
-        setTimeout(() => alert("SYSTEM FAILURE: BALL OVERHEATED"), 200);
+    if(timeLeft <= 0 || currentHP <= 0n) {
+        gameRunning = false;
+        alert(currentHP <= 0n ? "CHALLENGE COMPLETE!" : "TIME EXPIRED");
+        location.reload();
     }
-
-    document.getElementById('timer-box').innerText = (timeLeft/1000).toFixed(3);
 
     // TARGET MOTION
     target.x += target.dx; target.y += target.dy;
-    if(target.x <= 0 || target.x >= (900-target.radius*2)) target.dx *= -1;
-    if(target.y <= 0 || target.y >= (600-target.radius*2)) target.dy *= -1;
+    if(target.x <= 0 || target.x >= (600-target.radius*2)) { target.dx *= -1; playClack(); }
+    if(target.y <= 0 || target.y >= (600-target.radius*2)) { target.dy *= -1; playClack(); }
     document.getElementById('target').style.left = target.x + 'px';
     document.getElementById('target').style.top = target.y + 'px';
 
     // BALL MOTION
     ball.x += ball.dx; ball.y += ball.dy;
-    if(ball.x <= 0 || ball.x >= (900-ball.radius*2)) ball.dx *= -1;
-    if(ball.y <= 0 || ball.y >= (600-ball.radius*2)) ball.dy *= -1;
+    if(ball.x <= 0 || ball.x >= (600-ball.radius*2)) { ball.dx *= -1; playClack(); }
+    if(ball.y <= 0 || ball.y >= (600-ball.radius*2)) { ball.dy *= -1; playClack(); }
 
     // COLLISION
     let dx = (ball.x + ball.radius) - (target.x + target.radius);
@@ -216,31 +193,18 @@ function run(now) {
     let distance = Math.sqrt(dx*dx + dy*dy);
     
     if (distance < (ball.radius + target.radius)) {
-        let dmg = 0n;
-        if(ball.type==='mult'){ dmg = ball.pwr; ball.pwr *= ball.val; }
-        else if(ball.type==='halver') dmg = currentHP - (currentHP/2n);
-        else if(ball.type==='quarter') dmg = currentHP - (currentHP/4n);
-        else if(ball.type==='reverser') { dmg = currentHP - (currentHP/(ball.hitCount+1n)); ball.hitCount++; }
-        else if(ball.type==='rooter') dmg = (currentHP<=1n)?currentHP : currentHP - bigIntSqrt(currentHP);
-
-        // POPUP
-        const pop = document.createElement('div');
-        pop.className = 'dmg-popup'; pop.innerText = "-" + dmg.toString();
-        pop.style.left = (ball.x + ball.radius) + "px"; pop.style.top = ball.y + "px";
-        document.getElementById('arena').appendChild(pop);
-        setTimeout(()=>pop.remove(), 1300);
-
-        // SHAKE EFFECT
-        document.getElementById('arena').classList.add('shake');
-        setTimeout(() => document.getElementById('arena').classList.remove('shake'), 100);
-
-        currentHP -= dmg; if(currentHP < 0n) currentHP = 0n;
+        playThump();
+        let dmg = ball.type==='mult' ? (ball.pwr || 1n) : currentHP/2n;
+        if(ball.type==='mult' && ball.val > 0n) ball.pwr *= ball.val;
+        
+        currentHP -= dmg; totalDmg += dmg;
+        if(currentHP < 0n) currentHP = 0n;
         updateHPDisplay();
         
         let nx = dx/distance, ny = dy/distance;
         let dot = ball.dx*nx + ball.dy*ny;
-        ball.dx -= 2.05*dot*nx; ball.dy -= 2.05*dot*ny; // Slight boost bounce
-        ball.x += nx*12; ball.y += ny*12;
+        ball.dx -= 2*dot*nx; ball.dy -= 2*dot*ny;
+        ball.x += nx*10; ball.y += ny*10;
     }
 
     document.getElementById('active-ball').style.left = ball.x + 'px';
