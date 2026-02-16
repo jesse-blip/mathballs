@@ -1,48 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Math Simulation - Full Physics</title>
+    <title>Math Simulation - Power Input</title>
     <style>
-        body { background: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; }
         
         #stats { text-align: center; margin-bottom: 15px; }
-        #dmg-display { font-size: 3rem; font-weight: 900; color: #222; margin: 5px; min-height: 60px; font-family: monospace; }
+        /* Big Display is now just the Ball's Current Value */
+        #ball-val-display { font-size: 3.5rem; font-weight: 900; color: #222; margin: 5px; min-height: 70px; font-family: monospace; }
 
-        /* The Box Perimeters */
         #arena { 
             width: 450px; height: 450px; background: white; 
             border: 12px solid #222; position: relative; overflow: hidden; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
-        /* The Big Ball (Target) */
         #target {
             position: absolute; width: 110px; height: 110px; background: #cccccc; 
             border-radius: 50%; border: 5px solid #444; display: flex; 
             align-items: center; justify-content: center; font-weight: bold; 
             text-align: center; font-size: 16px; padding: 10px; box-sizing: border-box;
-            word-break: break-all; transition: background 0.1s;
+            word-break: break-all;
         }
 
-        /* The Damage Ball */
         #active-ball {
             position: absolute; width: 55px; height: 55px; border-radius: 50%; 
             border: 3px solid #000; color: white; font-weight: bold; 
             display: none; align-items: center; justify-content: center; font-size: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        /* Bottom Menu */
         #menu { margin-top: 25px; display: flex; gap: 12px; padding: 15px; background: #333; border-radius: 12px; }
-        .menu-btn { 
-            width: 60px; height: 60px; border-radius: 50%; cursor: pointer; 
-            border: 2px solid white; color: white; font-weight: bold; font-size: 16px;
-            transition: transform 0.1s;
-        }
-        .menu-btn:active { transform: scale(0.9); }
+        .menu-btn { width: 60px; height: 60px; border-radius: 50%; cursor: pointer; border: 2px solid white; color: white; font-weight: bold; }
 
         input { 
-            padding: 8px; text-align: center; width: 280px; border: 3px solid #333; 
+            padding: 8px; text-align: center; width: 320px; border: 3px solid #333; 
             border-radius: 6px; font-family: monospace; font-size: 1.2rem; font-weight: bold;
         }
     </style>
@@ -50,8 +40,8 @@
 <body>
 
 <div id="stats">
-    <input type="text" id="hp-input" value="1000000000000" oninput="manualReset()">
-    <div id="dmg-display">0</div>
+    <input type="text" id="hp-input" value="10^12" oninput="manualReset()">
+    <div id="ball-val-display">0</div>
 </div>
 
 <div id="arena">
@@ -70,44 +60,42 @@
 </div>
 
 <script>
-// --- CORE DATA ---
-let totalDamage = 0n;
-const ballSpeed = 7.5;
+let ballSpeed = 7.5;
 const targetObj = { x: 170, y: 170, dx: 1.5, dy: 1.5, radius: 55 };
 const ballObj = { x: 0, y: 0, dx: 0, dy: 0, active: false, currentPower: 0n, multiplier: 0n, radius: 27.5 };
 
-// --- RESET LOGIC ---
-function manualReset() {
-    totalDamage = 0n;
-    document.getElementById('dmg-display').innerText = "0";
-    targetObj.x = 170;
-    targetObj.y = 170;
-    targetObj.dx = 1.5;
-    targetObj.dy = 1.5;
-    updateHPDisplay(getTargetMaxHP());
+// --- POWER PARSER ---
+function parsePowerInput(input) {
+    input = input.replace(/\s/g, '');
+    if (input.includes('^')) {
+        let parts = input.split('^');
+        let base = BigInt(parts[0]);
+        let exponent = parseInt(parts[1]);
+        if (isNaN(exponent)) return 0n;
+        return base ** BigInt(exponent);
+    }
+    try { return BigInt(input.replace(/,/g, '')); } catch(e) { return 0n; }
 }
 
-function getTargetMaxHP() {
-    const val = document.getElementById('hp-input').value.replace(/,/g, '');
-    try { return BigInt(val); } catch(e) { return 0n; }
+function manualReset() {
+    document.getElementById('ball-val-display').innerText = "0";
+    targetObj.x = 170; targetObj.y = 170;
+    targetObj.dx = 1.5; targetObj.dy = 1.5;
+    updateHPDisplay(parsePowerInput(document.getElementById('hp-input').value));
 }
 
 function updateHPDisplay(val) {
     let s = val.toString();
-    document.getElementById('t-hp').innerText = s.length > 14 ? "10^" + s.length : val.toLocaleString();
+    document.getElementById('t-hp').innerText = s.length > 14 ? "10^" + (s.length - 1) : val.toLocaleString();
 }
 
-// --- BALL SELECTOR ---
 function setBall(m, color) {
-    manualReset(); // Hard reset on new ball choice
-    
+    manualReset();
     ballObj.active = true;
     ballObj.multiplier = BigInt(m);
     ballObj.currentPower = BigInt(m);
-    ballObj.x = 30; 
-    ballObj.y = 30;
+    ballObj.x = 30; ballObj.y = 30;
     
-    // Initial Random Direction
     let angle = Math.random() * Math.PI * 2;
     ballObj.dx = Math.cos(angle) * ballSpeed;
     ballObj.dy = Math.sin(angle) * ballSpeed;
@@ -117,81 +105,66 @@ function setBall(m, color) {
     el.style.background = color;
     el.innerText = m + "x";
     
-    document.getElementById('dmg-display').innerText = ballObj.currentPower.toString();
+    document.getElementById('ball-val-display').innerText = ballObj.currentPower.toString();
 }
 
-// --- PHYSICS ENGINE ---
 function run() {
-    // 1. Move Big Ball
     targetObj.x += targetObj.dx;
     targetObj.y += targetObj.dy;
 
-    // Arena Bounds for Big Ball (450 - 110 = 340)
     if(targetObj.x <= 0 || targetObj.x >= 340) targetObj.dx *= -1;
     if(targetObj.y <= 0 || targetObj.y >= 340) targetObj.dy *= -1;
     
-    const tEl = document.getElementById('target');
-    tEl.style.left = targetObj.x + 'px';
-    tEl.style.top = targetObj.y + 'px';
+    document.getElementById('target').style.left = targetObj.x + 'px';
+    document.getElementById('target').style.top = targetObj.y + 'px';
 
     if(ballObj.active) {
         ballObj.x += ballObj.dx;
         ballObj.y += ballObj.dy;
         
-        // Arena Bounds for Damage Ball (450 - 55 = 395)
         if(ballObj.x <= 0 || ballObj.x >= 395) ballObj.dx *= -1;
         if(ballObj.y <= 0 || ballObj.y >= 395) ballObj.dy *= -1;
 
-        // Circle-to-Circle Collision Math
-        let bcX = ballObj.x + ballObj.radius;
-        let bcY = ballObj.y + ballObj.radius;
-        let tcX = targetObj.x + targetObj.radius;
-        let tcY = targetObj.y + targetObj.radius;
+        let bcX = ballObj.x + 27.5;
+        let bcY = ballObj.y + 27.5;
+        let tcX = targetObj.x + 55;
+        let tcY = targetObj.y + 55;
 
         let dx = bcX - tcX;
         let dy = bcY - tcY;
         let distance = Math.sqrt(dx * dx + dy * dy);
-        let minDistance = ballObj.radius + targetObj.radius;
 
-        if (distance < minDistance) {
-            // MATH: Update Damage and decrease HP
-            let currentHitValue = ballObj.currentPower;
-            totalDamage = currentHitValue; // Using the power as the display value
+        if (distance < 82.5) {
+            let currentVal = ballObj.currentPower;
+            
+            // UI Update: Ball's value (2, 4, 8 sequence)
+            let vStr = currentVal.toString();
+            document.getElementById('ball-val-display').innerText = vStr.length > 15 ? "10^" + (vStr.length - 1) : vStr;
 
-            const maxHP = getTargetMaxHP();
-            let remaining = maxHP - currentHitValue;
+            // Health Logic
+            const maxHP = parsePowerInput(document.getElementById('hp-input').value);
+            let remaining = maxHP - currentVal;
             updateHPDisplay(remaining > 0n ? remaining : 0n);
 
-            // Display current power (2, 4, 8 sequence)
-            let pStr = currentHitValue.toString();
-            document.getElementById('dmg-display').innerText = pStr.length > 15 ? "10^" + pStr.length : pStr;
-
-            // Prepare for next hit
+            // Preparation for next hit
             ballObj.currentPower = ballObj.currentPower * ballObj.multiplier;
 
-            // PHYSICS: Impact Vectors
+            // Physics Impact
             let nx = dx / distance; 
             let ny = dy / distance; 
+            targetObj.dx -= nx * 2; 
+            targetObj.dy -= ny * 2;
 
-            // Influence Big Ball Direction (Permanently)
-            targetObj.dx -= nx * 1.8; 
-            targetObj.dy -= ny * 1.8;
-
-            // Reflect Small Ball
             let dot = ballObj.dx * nx + ballObj.dy * ny;
             ballObj.dx = (ballObj.dx - 2 * dot * nx);
             ballObj.dy = (ballObj.dy - 2 * dot * ny);
             
-            // Randomize bounce angle slightly
             let angleShift = (Math.random() - 0.5) * 0.4;
             let newAngle = Math.atan2(ballObj.dy, ballObj.dx) + angleShift;
             ballObj.dx = Math.cos(newAngle) * ballSpeed;
             ballObj.dy = Math.sin(newAngle) * ballSpeed;
 
-            // ANTI-STUCK: Teleport out of overlap
-            let overlap = minDistance - distance;
-            ballObj.x += nx * (overlap + 3); 
-            ballObj.y += ny * (overlap + 3);
+            ballObj.x += nx * 5; ballObj.y += ny * 5;
         }
 
         const bEl = document.getElementById('active-ball');
@@ -200,7 +173,6 @@ function run() {
     }
     requestAnimationFrame(run);
 }
-
 run();
 </script>
 </body>
