@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>OG Math Challenge</title>
+    <title>Infinite Scale Challenge</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@900&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #f1efdb; --red: #cc0000; --gold: #ffcc00; --gray: #cccccc; }
@@ -22,7 +22,9 @@
         .active { display: flex; }
 
         .header { text-align: center; font-size: 2.2rem; width: 850px; margin-bottom: 10px; line-height: 1; text-transform: uppercase; }
-        .outline-red { color: var(--red); -webkit-text-stroke: 1.5px black; font-size: 2.8rem; }
+        
+        /* Dynamic Color Class */
+        #h-ball { -webkit-text-stroke: 1.5px black; font-size: 2.8rem; }
 
         #arena { width: 600px; height: 750px; background: #fff; border: 8px solid #000; position: relative; overflow: hidden; }
         #big-ball { position: absolute; background: var(--gray); border-radius: 50%; border: 2px solid #555; display: flex; align-items: center; justify-content: center; text-align: center; z-index: 2; overflow: hidden; }
@@ -36,7 +38,7 @@
         #damage-label { margin-top: 10px; font-size: 3.2rem; color: var(--gold); -webkit-text-stroke: 2px black; font-weight: 900; }
         
         .particle { position: absolute; border-radius: 50%; pointer-events: none; z-index: 5; }
-        .dmg-pop { position: absolute; color: #ff3333; font-weight: 900; pointer-events: none; z-index: 10; -webkit-text-stroke: 1px #fff; animation: floatUp 0.8s forwards; font-size: 28px; }
+        .dmg-pop { position: absolute; font-weight: 900; pointer-events: none; z-index: 10; -webkit-text-stroke: 1px #fff; animation: floatUp 0.8s forwards; font-size: 28px; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
     </style>
 </head>
@@ -69,13 +71,13 @@
             <label>PLAYER R</label><input type="range" min="15" max="100" value="40" id="sz-b" oninput="pre()">
         </div>
         <div class="preview-col"><div id="pre-t" style="background:#ccc; border-radius:50%"></div><div id="pre-b" style="border-radius:50%; border:3px solid #000; position:absolute; left:20px;"></div></div>
-        <button class="btn-start" onclick="go()">START OG CHALLENGE</button>
+        <button class="btn-start" onclick="go()">START CHALLENGE</button>
     </div>
 </div>
 
 <div id="screen-game" class="screen">
     <div class="header">
-        Can <span class="outline-red" id="h-ball">BALL</span> <span id="h-sub">x2</span> Deal 1 <span id="h-unit">Googol</span> Damage in <span id="h-tm">58.1</span>s?
+        Can <span id="h-ball">BALL</span> <span id="h-sub">x2</span> Deal 1 <span id="h-unit">Unit</span> Damage in <span id="h-tm">58.1</span>s?
     </div>
     <div id="arena">
         <div id="big-ball"><div id="hp-txt"></div></div>
@@ -88,6 +90,8 @@
 let hp = 0n, time = 0, last = 0, running = false;
 const p = { x: 50, y: 50, dx: 14, dy: 14, r: 40, type: 'mult', val: 2n, lbl: 'x2', col: '#ff0000', pwr: 2n, hits: 1n, name: "Doubler" };
 const t = { x: 250, y: 300, dx: 2, dy: 2, r: 120, mass: 6 };
+
+const ILLIONS = ["", "Thousand", "Million", "Billion", "Trillion", "Quadrillion", "Quintillion", "Sextillion", "Septillion", "Octillion", "Nonillion", "Decillion", "Undecillion", "Duodecillion", "Tredecillion", "Quattuordecillion", "Quindecillion", "Sexdecillion", "Septendecillion", "Octodecillion", "Novemdecillion", "Vigintillion"];
 
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
 function play(f, v, d) {
@@ -123,10 +127,15 @@ function sel(el, type, val, lbl) {
 
 function format(n) {
     const s = n.toString();
+    if (s.length > 300) return "Infinity";
     if (s.length > 100) return (n / 10n**100n) + " Googol";
-    if (s.length > 18) return (n / 10n**18n) + " Quintillion";
-    if (s.length > 12) return (n / 10n**12n) + " Trillion";
-    return s;
+    
+    let tier = Math.floor((s.length - 1) / 3);
+    if (tier < 1) return s;
+    
+    let name = ILLIONS[tier] || "Unfathomable";
+    let base = n / 10n**BigInt(tier * 3);
+    return base + " " + name;
 }
 
 function go() {
@@ -136,9 +145,13 @@ function go() {
     t.r = parseInt(document.getElementById('sz-t').value); p.r = parseInt(document.getElementById('sz-b').value);
     p.pwr = p.val || 1n; running = true; p.hits = 1n;
 
-    document.getElementById('h-ball').innerText = p.name.toUpperCase();
+    // Set Header Colors to Ball Colors
+    const hBall = document.getElementById('h-ball');
+    hBall.innerText = p.name.toUpperCase();
+    hBall.style.color = p.col;
+
     document.getElementById('h-sub').innerText = p.lbl;
-    document.getElementById('h-unit').innerText = hp.toString().length > 50 ? "Googol" : "Quintillion";
+    document.getElementById('h-unit').innerText = format(hp).split(' ').slice(1).join(' ') || "Damage";
     document.getElementById('tiny-ball').style.background = p.col; 
     document.getElementById('tiny-ball').innerText = p.lbl;
 
@@ -165,8 +178,9 @@ function loop() {
     if (t.x <= 0 || t.x >= 600 - t.r*2) { t.dx *= -1; t.x = t.x <= 0 ? 1 : 599 - t.r*2; }
     if (t.y <= 0 || t.y >= 750 - t.r*2) { t.dy *= -1; t.y = t.y <= 0 ? 1 : 749 - t.r*2; }
     const bb = document.getElementById('big-ball');
-    bb.style.width = bb.style.height = (t.r*2)+"px";
     bb.style.left = t.x+"px"; bb.style.top = t.y+"px";
+    bb.style.width = bb.style.height = (t.r*2)+"px";
+    
     document.getElementById('hp-txt').innerText = hp.toString();
     document.getElementById('hp-txt').style.fontSize = Math.max(8, t.r/6) + "px";
 
@@ -174,8 +188,8 @@ function loop() {
     if (p.x <= 0 || p.x >= 600 - p.r*2) { p.dx *= -1; p.x = p.x <= 0 ? 1 : 599 - p.r*2; play(800, 0.1, 0.1); }
     if (p.y <= 0 || p.y >= 750 - p.r*2) { p.dy *= -1; p.y = p.y <= 0 ? 1 : 749 - p.r*2; play(800, 0.1, 0.1); }
     const tb = document.getElementById('tiny-ball');
-    tb.style.width = tb.style.height = (p.r*2)+"px";
     tb.style.left = p.x+"px"; tb.style.top = p.y+"px";
+    tb.style.width = tb.style.height = (p.r*2)+"px";
 
     const dx = (p.x+p.r) - (t.x+t.r); const dy = (p.y+p.r) - (t.y+t.r);
     const dist = Math.sqrt(dx*dx + dy*dy);
@@ -196,6 +210,7 @@ function loop() {
         
         const pop = document.createElement('div'); pop.className = 'dmg-pop';
         pop.innerText = "-" + format(dmg); pop.style.left = p.x+"px"; pop.style.top = p.y+"px";
+        pop.style.color = p.col;
         document.getElementById('arena').appendChild(pop); setTimeout(()=>pop.remove(), 800);
 
         const nx = dx/dist; const ny = dy/dist;
