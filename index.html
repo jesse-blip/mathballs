@@ -1,72 +1,148 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Math Ball Sandbox</title>
+    <title>Bouncing Math Battle</title>
     <style>
-        body { background: #1a1a1a; color: white; font-family: 'Courier New', monospace; text-align: center; padding-top: 50px; }
-        .setup-box { background: #333; padding: 20px; border-radius: 10px; border: 2px solid #555; display: inline-block; margin-bottom: 20px; }
-        input { background: #000; color: #0f0; border: 1px solid #555; padding: 8px; width: 200px; text-align: center; font-size: 1.2rem; }
-        #damage-display { font-size: 3rem; color: #00ff00; margin: 30px 0; min-height: 100px; text-shadow: 0 0 10px #00ff00; }
-        .ball-row { display: flex; justify-content: center; gap: 15px; }
-        .ball { 
-            width: 80px; height: 80px; border-radius: 50%; border: 4px solid white;
-            background: #ff5722; color: white; cursor: pointer; font-size: 1.5rem; font-weight: bold;
-            transition: transform 0.1s;
-        }
-        .ball:active { transform: scale(0.9); background: #e64a19; }
-        .error { color: #ff0000 !important; text-shadow: 0 0 20px #ff0000; animation: shake 0.2s infinite; }
+        body { background: #050505; color: white; font-family: sans-serif; margin: 0; overflow: hidden; text-align: center; }
+        #ui { position: absolute; top: 10px; width: 100%; pointer-events: none; }
+        .stat-box { background: rgba(0,0,0,0.7); border: 1px solid #333; padding: 10px; display: inline-block; pointer-events: auto; border-radius: 10px; }
+        input { background: #000; color: #0f0; border: 1px solid #555; text-align: center; width: 150px; }
+        #damage-text { font-size: 2.5rem; color: #00ffff; font-family: monospace; text-shadow: 0 0 10px #00ffff; margin: 10px; }
+        canvas { display: block; }
+        .error-screen { animation: shake 0.1s infinite; color: red !important; text-shadow: 0 0 20px red !important; }
         @keyframes shake { 0% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(2px, -2px); } }
     </style>
 </head>
 <body>
 
-    <div class="setup-box">
-        <label>SET BIG BALL HEALTH:</label><br><br>
-        <input type="text" id="target-hp" value="1000000000">
+<div id="ui">
+    <div class="stat-box">
+        TARGET HP: <input type="text" id="target-hp" value="1000000000000"><br>
+        <div id="damage-text">DAMAGE: 10</div>
+        <div id="digit-count">Digits: 2</div>
     </div>
+</div>
 
-    <div id="damage-display">DAMAGE: 10</div>
-    <div id="digit-count" style="color: #888;">Digits: 2</div>
+<canvas id="gameCanvas"></canvas>
 
-    <div class="ball-row">
-        <button class="ball" onclick="hit(2)">2x</button>
-        <button class="ball" onclick="hit(3)">3x</button>
-        <button class="ball" onclick="hit(4)">4x</button>
-        <button class="ball" onclick="hit(5)">5x</button>
-        <button class="ball" onclick="hit(6)">6x</button>
-    </div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-    <script>
-        // "n" at the end of numbers tells JavaScript to use "Infinite Math" mode (BigInt)
-        let damage = 10n; 
+let damage = 10n;
+let isError = false;
 
-        function hit(multiplier) {
-            // Get health from input and convert to BigInt
-            let rawHp = document.getElementById("target-hp").value;
-            let targetHp = BigInt(rawHp.replace(/,/g, '')); // Clean out commas if user types them
+// The Big Ball (Target)
+const target = { x: canvas.width/2, y: canvas.height/2, radius: 80, color: '#bc13fe' };
 
-            // Multiply
-            damage = damage * BigInt(multiplier);
-            
-            let dStr = damage.toString();
-            let display = document.getElementById("damage-display");
-            let count = document.getElementById("digit-count");
+// The 5 Bouncing Balls
+const ballTypes = [
+    { val: 2, color: '#00d2ff', label: '2x' },
+    { val: 3, color: '#ff00ff', label: '3x' },
+    { val: 4, color: '#33ff00', label: '4x' },
+    { val: 5, color: '#ffea00', label: '5x' },
+    { val: 6, color: '#ff5722', label: '6x' }
+];
 
-            // CHECK FOR ERROR (Target Destroyed)
-            if (damage >= targetHp) {
-                display.innerText = "DAMAGE: ERROR";
-                display.classList.add("error");
-                count.innerText = "BIG BALL DESTROYED AT " + dStr.length + " DIGITS";
-            } else {
-                // Formatting the display
-                if (dStr.length < 15) {
-                    display.innerText = "DAMAGE: " + dStr;
-                } else {
-                    display.innerText = "DAMAGE: " + dStr.substring(0, 12) + "...";
-                }
-                count.innerText = "Digits: " + dStr.length;
-            }
+class Ball {
+    constructor(type) {
+        this.type = type;
+        this.radius = 30;
+        this.x = Math.random() * (canvas.width - 60) + 30;
+        this.y = Math.random() * (canvas.height - 60) + 30;
+        this.dx = (Math.random() - 0.5) * 8;
+        this.dy = (Math.random() - 0.5) * 8;
+    }
+
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+        ctx.fillStyle = this.type.color;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = this.type.color;
+        ctx.fill();
+        ctx.closePath();
+        
+        ctx.fillStyle = "white";
+        ctx.font = "bold 16px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(this.type.label, this.x, this.y + 6);
+        ctx.shadowBlur = 0;
+    }
+
+    update() {
+        if (isError) return;
+
+        // Bounce off walls
+        if (this.x + this.radius > canvas.width || this.x - this.radius < 0) this.dx *= -1;
+        if (this.y + this.radius > canvas.height || this.y - this.radius < 0) this.dy *= -1;
+
+        // Collision with Big Ball
+        const dist = Math.hypot(this.x - target.x, this.y - target.y);
+        if (dist < this.radius + target.radius) {
+            this.handleHit();
+            // Bounce away
+            this.dx *= -1.1; // Speed up slightly on hit
+            this.dy *= -1.1;
+            // Push out to prevent getting stuck
+            this.x += this.dx * 2;
+            this.y += this.dy * 2;
         }
-    </script>
+
+        this.x += this.dx;
+        this.y += this.dy;
+        this.draw();
+    }
+
+    handleHit() {
+        damage *= BigInt(this.type.val);
+        const dStr = damage.toString();
+        const targetHp = BigInt(document.getElementById('target-hp').value.replace(/,/g,''));
+        
+        const txt = document.getElementById('damage-text');
+        const cnt = document.getElementById('digit-count');
+
+        if (damage >= targetHp) {
+            isError = true;
+            txt.innerText = "DAMAGE: ERROR";
+            txt.classList.add('error-screen');
+            cnt.innerText = "SYSTEM OVERLOAD: " + dStr.length + " DIGITS";
+        } else {
+            txt.innerText = dStr.length < 15 ? "DAMAGE: " + dStr : "DAMAGE: " + dStr.substring(0,10) + "...";
+            cnt.innerText = "Digits: " + dStr.length;
+        }
+    }
+}
+
+const balls = ballTypes.map(t => new Ball(t));
+
+function animate() {
+    ctx.fillStyle = 'rgba(5, 5, 5, 0.3)'; // Trail effect
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Big Ball
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, target.radius, 0, Math.PI*2);
+    ctx.fillStyle = isError ? 'red' : target.color;
+    ctx.shadowBlur = isError ? 50 : 30;
+    ctx.shadowColor = isError ? 'red' : target.color;
+    ctx.fill();
+    ctx.closePath();
+
+    balls.forEach(b => b.update());
+    requestAnimationFrame(animate);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    target.x = canvas.width/2;
+    target.y = canvas.height/2;
+});
+</script>
 </body>
 </html>
