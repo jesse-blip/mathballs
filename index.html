@@ -1,24 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Math Simulation - Pro Edition</title>
+    <title>Math Simulation - Fixed Quarter</title>
     <style>
         body { background: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
-        
         #controls { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
         #ball-val-display { font-size: 2.5rem; font-weight: 900; color: #222; margin-bottom: 5px; font-family: monospace; }
-        
         #arena { width: 500px; height: 500px; background: white; border: 12px solid #222; position: relative; overflow: hidden; cursor: crosshair; }
         #target { position: absolute; width: 110px; height: 110px; background: #cccccc; border-radius: 50%; border: 5px solid #444; display: flex; align-items: center; justify-content: center; font-weight: bold; text-align: center; font-size: 16px; padding: 10px; box-sizing: border-box; word-break: break-all; z-index: 2; }
         #active-ball { position: absolute; width: 55px; height: 55px; border-radius: 50%; border: 3px solid #000; color: white; font-weight: bold; display: none; align-items: center; justify-content: center; font-size: 16px; z-index: 3; }
-
         .dmg-popup { position: absolute; color: #ff0000; font-weight: 900; font-family: monospace; pointer-events: none; animation: fadeUp 1s forwards; z-index: 10; font-size: 20px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
         @keyframes fadeUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
-
         #menu { margin-top: 20px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 15px; background: #333; border-radius: 12px; }
         .menu-btn { width: 65px; height: 65px; border-radius: 50%; cursor: pointer; border: 2px solid white; color: white; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
-        .menu-btn:active { transform: scale(0.9); }
-
         .hp-tools { display: flex; gap: 10px; align-items: center; }
         input[type="text"] { padding: 8px; text-align: center; width: 200px; border: 2px solid #333; border-radius: 6px; font-weight: bold; }
         .preset-btn { padding: 5px 10px; background: #444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
@@ -36,7 +30,7 @@
     </div>
 </div>
 
-<div id="arena" id="arena">
+<div id="arena">
     <div id="target"><div id="t-hp"></div></div>
     <div id="active-ball"></div>
 </div>
@@ -47,7 +41,6 @@
     <button class="menu-btn" style="background:#4caf50" onclick="setBall('mult', 4, '#4caf50', '4x')">4x</button>
     <button class="menu-btn" style="background:#ffeb3b; color:black" onclick="setBall('mult', 5, '#ffeb3b', '5x')">5x</button>
     <button class="menu-btn" style="background:#673ab7" onclick="setBall('mult', 6, '#673ab7', '6x')">6x</button>
-    
     <button class="menu-btn" style="background:#000" onclick="setBall('rooter', 0, '#000', '√x')">√x</button>
     <button class="menu-btn" style="background:#f44336" onclick="setBall('halver', 0, '#f44336', 'x/2')">x/2</button>
     <button class="menu-btn" style="background:#ff9800" onclick="setBall('quarter', 0, '#ff9800', 'x/4')">x/4</button>
@@ -60,10 +53,7 @@ let ballSpeed = 8;
 const targetObj = { x: 190, y: 190, dx: 1.5, dy: 1.5, radius: 55 };
 const ballObj = { x: 0, y: 0, dx: 0, dy: 0, active: false, type: '', val: 0n, hitCount: 1n, currentPower: 0n };
 
-function setHP(val) {
-    document.getElementById('hp-input').value = val;
-    manualReset();
-}
+function setHP(val) { document.getElementById('hp-input').value = val; manualReset(); }
 
 function parsePowerInput(input) {
     input = input.replace(/\s/g, '');
@@ -117,9 +107,7 @@ function setBall(type, val, color, label) {
     ballObj.dx = Math.cos(angle) * ballSpeed;
     ballObj.dy = Math.sin(angle) * ballSpeed;
     const el = document.getElementById('active-ball');
-    el.style.display = 'flex';
-    el.style.background = color;
-    el.innerText = label;
+    el.style.display = 'flex'; el.style.background = color; el.innerText = label;
 }
 
 function run() {
@@ -145,11 +133,11 @@ function run() {
                 damageDealt = ballObj.currentPower;
                 ballObj.currentPower *= ballObj.val;
             } else if (ballObj.type === 'halver') {
-                damageDealt = currentHP / 2n;
+                damageDealt = currentHP - (currentHP / 2n);
             } else if (ballObj.type === 'quarter') {
-                damageDealt = currentHP / 4n;
+                damageDealt = currentHP - (currentHP / 4n);
             } else if (ballObj.type === 'reverser') {
-                damageDealt = currentHP / (ballObj.hitCount + 1n); // Prevent insta-kill by shifting hitCount
+                damageDealt = currentHP - (currentHP / (ballObj.hitCount + 1n));
                 ballObj.hitCount++;
             } else if (ballObj.type === 'rooter') {
                 if (currentHP <= 1n) damageDealt = currentHP;
@@ -169,6 +157,11 @@ function run() {
             let dot = ballObj.dx * nx + ballObj.dy * ny;
             ballObj.dx = (ballObj.dx - 2 * dot * nx);
             ballObj.dy = (ballObj.dy - 2 * dot * ny);
+            
+            let angleShift = (Math.random() - 0.5) * 0.4;
+            let newAngle = Math.atan2(ballObj.dy, ballObj.dx) + angleShift;
+            ballObj.dx = Math.cos(newAngle) * ballSpeed;
+            ballObj.dy = Math.sin(newAngle) * ballSpeed;
             ballObj.x += nx * 8; ballObj.y += ny * 8;
         }
         document.getElementById('active-ball').style.left = ballObj.x + 'px';
