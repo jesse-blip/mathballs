@@ -1,30 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Math Simulation - V5</title>
+    <title>Math Simulation - Clean</title>
     <style>
         body { background: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; }
         #stats { text-align: center; margin-bottom: 10px; }
-        #dmg-display { font-size: 2.5rem; font-weight: bold; color: #333; margin: 5px; }
+        #dmg-display { font-size: 2.5rem; font-weight: bold; color: #333; margin: 5px; min-height: 50px;}
         #arena { width: 400px; height: 400px; background: white; border: 10px solid #222; position: relative; overflow: hidden; }
-        #target { position: absolute; width: 100px; height: 100px; background: #bbb; border-radius: 50%; border: 4px solid #444; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; text-align: center; }
-        #active-ball { position: absolute; width: 50px; height: 50px; border-radius: 50%; border: 3px solid #000; color: white; font-weight: bold; display: none; align-items: center; justify-content: center; font-size: 18px; text-align: center; }
+        
+        #target { 
+            position: absolute; width: 100px; height: 100px; background: #bbb; 
+            border-radius: 50%; border: 4px solid #444; display: flex; 
+            align-items: center; justify-content: center; font-weight: bold; 
+            text-align: center; font-size: 14px; padding: 5px; box-sizing: border-box;
+            word-break: break-all;
+        }
+        
+        #active-ball { 
+            position: absolute; width: 50px; height: 50px; border-radius: 50%; 
+            border: 3px solid #000; color: white; font-weight: bold; display: none; 
+            align-items: center; justify-content: center; font-size: 18px; 
+        }
+
         #menu { margin-top: 20px; display: flex; gap: 10px; padding: 10px; background: #333; border-radius: 8px; }
         .menu-btn { width: 50px; height: 50px; border-radius: 50%; cursor: pointer; border: 2px solid white; color: white; font-weight: bold; }
-        input { padding: 5px; text-align: center; width: 220px; border: 2px solid #333; border-radius: 4px; font-family: monospace; }
+        input { padding: 5px; text-align: center; width: 220px; border: 2px solid #333; border-radius: 4px; font-family: monospace; font-size: 1.1rem;}
     </style>
 </head>
 <body>
 
 <div id="stats">
-    TARGET HP: <input type="text" id="hp-input" value="1000000000000">
+    <input type="text" id="hp-input" value="1000000000000" oninput="resetAll()">
     <div id="dmg-display">0</div>
 </div>
 
 <div id="arena">
     <div id="target">
-        <div>BIG BALL</div>
-        <div id="t-hp">HP: 1T</div>
+        <div id="t-hp">1,000,000,000,000</div>
     </div>
     <div id="active-ball"></div>
 </div>
@@ -43,11 +55,33 @@ const ballSpeed = 7;
 const target = { x: 150, y: 150, dx: 1.5, dy: 1.5, radius: 50 };
 const ball = { x: 0, y: 0, dx: 0, dy: 0, active: false, currentPower: 0n, multiplier: 0n, radius: 25 };
 
+function resetAll() {
+    totalDamage = 0n;
+    document.getElementById('dmg-display').innerText = "0";
+    
+    // Reset Big Ball position and speed
+    target.x = 150;
+    target.y = 150;
+    target.dx = 1.5;
+    target.dy = 1.5;
+
+    const hpVal = document.getElementById('hp-input').value.replace(/,/g, '');
+    try {
+        document.getElementById('t-hp').innerText = BigInt(hpVal).toLocaleString();
+    } catch(e) {
+        document.getElementById('t-hp').innerText = "0";
+    }
+}
+
 function setBall(m, color) {
+    resetAll(); // Reset everything when a new ball is picked
+    
     ball.active = true;
     ball.multiplier = BigInt(m);
-    ball.currentPower = BigInt(m); // Start at face value
-    ball.x = 20; ball.y = 20;
+    ball.currentPower = BigInt(m);
+    ball.x = 20; 
+    ball.y = 20;
+    
     let angle = Math.random() * Math.PI * 2;
     ball.dx = Math.cos(angle) * ballSpeed;
     ball.dy = Math.sin(angle) * ballSpeed;
@@ -55,11 +89,10 @@ function setBall(m, color) {
     const el = document.getElementById('active-ball');
     el.style.display = 'flex';
     el.style.background = color;
-    el.innerText = m + "x"; // Always shows just the multiplier
+    el.innerText = m + "x";
 }
 
 function run() {
-    // 1. Move Big Ball - No friction, constant speed
     target.x += target.dx;
     target.y += target.dy;
 
@@ -82,23 +115,19 @@ function run() {
         let minDistance = ball.radius + target.radius;
 
         if (distance < minDistance) {
-            // MATH FIX: Pure multiplication
             totalDamage += ball.currentPower;
             ball.currentPower = ball.currentPower * ball.multiplier;
 
             let nx = dx / distance; 
             let ny = dy / distance; 
 
-            // PHYSICS FIX: Influence Big Ball permanently
-            target.dx -= nx * 1.2; 
-            target.dy -= ny * 1.2;
+            target.dx -= nx * 1.5; 
+            target.dy -= ny * 1.5;
 
-            // Reflect small ball
             let dot = ball.dx * nx + ball.dy * ny;
             ball.dx = (ball.dx - 2 * dot * nx);
             ball.dy = (ball.dy - 2 * dot * ny);
             
-            // Random bounce
             let angleShift = (Math.random() - 0.5) * 0.5;
             let newAngle = Math.atan2(ball.dy, ball.dx) + angleShift;
             ball.dx = Math.cos(newAngle) * ballSpeed;
@@ -108,12 +137,15 @@ function run() {
             ball.x += nx * (overlap + 2); 
             ball.y += ny * (overlap + 2);
 
-            // UI
             const dStr = totalDamage.toString();
             document.getElementById('dmg-display').innerText = dStr.length > 15 ? "10^" + dStr.length : dStr;
+            
             const targetMaxHP = BigInt(document.getElementById('hp-input').value.replace(/,/g, ''));
             let remaining = targetMaxHP - totalDamage;
-            document.getElementById('t-hp').innerText = "HP: " + (remaining > 0n ? remaining.toLocaleString() : "0");
+            
+            // Format remaining HP
+            let remStr = remaining > 0n ? remaining.toString() : "0";
+            document.getElementById('t-hp').innerText = remStr.length > 12 ? "10^" + remStr.length : remaining.toLocaleString();
         }
 
         const bEl = document.getElementById('active-ball');
