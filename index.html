@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Math Simulation - Fixed Quarter</title>
+    <title>Math Simulation - Full Number Popups</title>
     <style>
         body { background: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         #controls { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
@@ -9,8 +9,23 @@
         #arena { width: 500px; height: 500px; background: white; border: 12px solid #222; position: relative; overflow: hidden; cursor: crosshair; }
         #target { position: absolute; width: 110px; height: 110px; background: #cccccc; border-radius: 50%; border: 5px solid #444; display: flex; align-items: center; justify-content: center; font-weight: bold; text-align: center; font-size: 16px; padding: 10px; box-sizing: border-box; word-break: break-all; z-index: 2; }
         #active-ball { position: absolute; width: 55px; height: 55px; border-radius: 50%; border: 3px solid #000; color: white; font-weight: bold; display: none; align-items: center; justify-content: center; font-size: 16px; z-index: 3; }
-        .dmg-popup { position: absolute; color: #ff0000; font-weight: 900; font-family: monospace; pointer-events: none; animation: fadeUp 1s forwards; z-index: 10; font-size: 20px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
-        @keyframes fadeUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
+
+        /* Popups now show the full number and don't wrap */
+        .dmg-popup { 
+            position: absolute; 
+            color: #ff0000; 
+            font-weight: 900; 
+            font-family: 'Courier New', monospace; 
+            pointer-events: none; 
+            animation: fadeUp 1.2s forwards; 
+            z-index: 10; 
+            font-size: 18px; 
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+            white-space: nowrap; 
+        }
+
+        @keyframes fadeUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
+
         #menu { margin-top: 20px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 15px; background: #333; border-radius: 12px; }
         .menu-btn { width: 65px; height: 65px; border-radius: 50%; cursor: pointer; border: 2px solid white; color: white; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
         .hp-tools { display: flex; gap: 10px; align-items: center; }
@@ -87,12 +102,12 @@ function bigIntSqrt(value) {
 function createPopup(dmg) {
     const popup = document.createElement('div');
     popup.className = 'dmg-popup';
-    let s = dmg.toString();
-    popup.innerText = "-" + (s.length > 6 ? "10^" + (s.length-1) : s);
-    popup.style.left = (ballObj.x + 20) + 'px';
+    // Logic changed here: Always shows the full string
+    popup.innerText = "-" + dmg.toString();
+    popup.style.left = (ballObj.x + 10) + 'px';
     popup.style.top = (ballObj.y) + 'px';
     document.getElementById('arena').appendChild(popup);
-    setTimeout(() => popup.remove(), 1000);
+    setTimeout(() => popup.remove(), 1200);
 }
 
 function setBall(type, val, color, label) {
@@ -157,7 +172,6 @@ function run() {
             let dot = ballObj.dx * nx + ballObj.dy * ny;
             ballObj.dx = (ballObj.dx - 2 * dot * nx);
             ballObj.dy = (ballObj.dy - 2 * dot * ny);
-            
             let angleShift = (Math.random() - 0.5) * 0.4;
             let newAngle = Math.atan2(ballObj.dy, ballObj.dx) + angleShift;
             ballObj.dx = Math.cos(newAngle) * ballSpeed;
