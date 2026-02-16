@@ -1,82 +1,72 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Math Ball Sandbox</title>
-    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css" />
-    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
     <style>
-        body { background: #1a1a1a; color: white; font-family: monospace; text-align: center; padding-top: 50px; }
-        .setup-box { background: #333; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: inline-block; }
-        input { background: #000; color: #0f0; border: 1px solid #555; padding: 5px; width: 150px; text-align: center; }
-        #damage-display { font-size: 2.5rem; color: #00ff00; margin: 20px; min-height: 80px; }
-        .ball-row { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        body { background: #1a1a1a; color: white; font-family: 'Courier New', monospace; text-align: center; padding-top: 50px; }
+        .setup-box { background: #333; padding: 20px; border-radius: 10px; border: 2px solid #555; display: inline-block; margin-bottom: 20px; }
+        input { background: #000; color: #0f0; border: 1px solid #555; padding: 8px; width: 200px; text-align: center; font-size: 1.2rem; }
+        #damage-display { font-size: 3rem; color: #00ff00; margin: 30px 0; min-height: 100px; text-shadow: 0 0 10px #00ff00; }
+        .ball-row { display: flex; justify-content: center; gap: 15px; }
         .ball { 
-            width: 70px; height: 70px; border-radius: 50%; border: 3px solid white;
-            background: #ff5722; color: white; cursor: pointer; font-weight: bold;
+            width: 80px; height: 80px; border-radius: 50%; border: 4px solid white;
+            background: #ff5722; color: white; cursor: pointer; font-size: 1.5rem; font-weight: bold;
+            transition: transform 0.1s;
         }
-        .ball:disabled { background: #555; cursor: not-allowed; opacity: 0.5; }
-        .error { color: red !important; animation: blink 0.5s infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
+        .ball:active { transform: scale(0.9); background: #e64a19; }
+        .error { color: #ff0000 !important; text-shadow: 0 0 20px #ff0000; animation: shake 0.2s infinite; }
+        @keyframes shake { 0% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(2px, -2px); } }
     </style>
 </head>
 <body>
 
     <div class="setup-box">
-        <label>TARGET HEALTH:</label><br>
-        <input type="number" id="target-hp" value="1000000">
-        <p style="font-size: 12px; color: #888;">(Change this before you start clicking)</p>
+        <label>SET BIG BALL HEALTH:</label><br><br>
+        <input type="text" id="target-hp" value="1000000000">
     </div>
 
-    <div id="damage-display">LOADING ENGINE...</div>
-    <div id="digit-count"></div>
+    <div id="damage-display">DAMAGE: 10</div>
+    <div id="digit-count" style="color: #888;">Digits: 2</div>
 
     <div class="ball-row">
-        <button class="ball" id="b2" py-click="hit(2)" disabled>2x</button>
-        <button class="ball" id="b3" py-click="hit(3)" disabled>3x</button>
-        <button class="ball" id="b4" py-click="hit(4)" disabled>4x</button>
-        <button class="ball" id="b5" py-click="hit(5)" disabled>5x</button>
-        <button class="ball" id="b6" py-click="hit(6)" disabled>6x</button>
+        <button class="ball" onclick="hit(2)">2x</button>
+        <button class="ball" onclick="hit(3)">3x</button>
+        <button class="ball" onclick="hit(4)">4x</button>
+        <button class="ball" onclick="hit(5)">5x</button>
+        <button class="ball" onclick="hit(6)">6x</button>
     </div>
 
-    <script type="py">
-        from pyscript import document
+    <script>
+        // "n" at the end of numbers tells JavaScript to use "Infinite Math" mode (BigInt)
+        let damage = 10n; 
 
-        damage = 10
+        function hit(multiplier) {
+            // Get health from input and convert to BigInt
+            let rawHp = document.getElementById("target-hp").value;
+            let targetHp = BigInt(rawHp.replace(/,/g, '')); // Clean out commas if user types them
 
-        def hit(multiplier):
-            global damage
+            // Multiply
+            damage = damage * BigInt(multiplier);
             
-            # Get the target health from the input box
-            try:
-                target_hp = int(document.querySelector("#target-hp").value)
-            except:
-                target_hp = 1000000
+            let dStr = damage.toString();
+            let display = document.getElementById("damage-display");
+            let count = document.getElementById("digit-count");
 
-            damage *= int(multiplier)
-            d_str = str(damage)
-            
-            display = document.querySelector("#damage-display")
-            count = document.querySelector("#digit-count")
-
-            # Check if Big Ball is destroyed
-            if damage >= target_hp:
-                display.innerText = "DAMAGE: ERROR"
-                display.classList.add("error")
-                count.innerText = f"TARGET DESTROYED AT {len(d_str)} DIGITS"
-            elif len(d_str) < 15:
-                display.innerText = f"DAMAGE: {damage}"
-                count.innerText = f"Health Remaining: {target_hp - damage}"
-            else:
-                display.innerText = f"DAMAGE: {d_str[:10]}..."
-                count.innerText = f"TOTAL DIGITS: {len(d_str)}"
-
-        # THIS FIXES THE "UNDEFINED" ERROR:
-        # We only enable the buttons once the Python code is fully loaded
-        for i in range(2, 7):
-            document.querySelector(f"#b{i}").disabled = False
-        
-        document.querySelector("#damage-display").innerText = "DAMAGE: 10"
+            // CHECK FOR ERROR (Target Destroyed)
+            if (damage >= targetHp) {
+                display.innerText = "DAMAGE: ERROR";
+                display.classList.add("error");
+                count.innerText = "BIG BALL DESTROYED AT " + dStr.length + " DIGITS";
+            } else {
+                // Formatting the display
+                if (dStr.length < 15) {
+                    display.innerText = "DAMAGE: " + dStr;
+                } else {
+                    display.innerText = "DAMAGE: " + dStr.substring(0, 12) + "...";
+                }
+                count.innerText = "Digits: " + dStr.length;
+            }
+        }
     </script>
 </body>
 </html>
