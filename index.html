@@ -1,132 +1,129 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Math Sandbox Simulation</title>
+    <title>Math Battle Pro</title>
     <style>
-        body { background: #f0f0f0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: Arial, sans-serif; }
+        body { background: #121212; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         
-        /* The Square Arena from your image */
+        /* The Arena - Perfectly Square */
         #arena { 
-            width: 500px; height: 500px; background: white; border: 8px solid #333; 
-            position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+            width: 500px; height: 500px; background: #ffffff; border: 10px solid #222; 
+            position: relative; overflow: hidden; border-radius: 4px;
         }
 
-        /* The Big Ball (Rooter/Target) */
+        /* The Big Ball (Rooter) */
         #target {
-            position: absolute; width: 120px; height: 120px; background: #bbb; 
-            border-radius: 50%; border: 4px solid #555; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; text-align: center; font-weight: bold; font-size: 14px;
+            position: absolute; width: 130px; height: 130px; background: #cfcfcf; 
+            border-radius: 50%; border: 5px solid #444; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; font-weight: 900; color: #222;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1); pointer-events: none;
         }
 
-        /* The Small Bouncing Balls */
+        /* Small Balls */
         .ball {
-            position: absolute; width: 50px; height: 50px; border-radius: 50%; 
-            border: 3px solid #000; color: white; font-weight: bold; 
-            display: flex; align-items: center; justify-content: center;
+            position: absolute; width: 55px; height: 55px; border-radius: 50%; 
+            border: 3px solid #000; color: white; font-weight: bold; font-size: 18px;
+            display: flex; align-items: center; justify-content: center; pointer-events: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
-        /* Ball Selector Menu */
-        #menu { margin-top: 20px; display: flex; gap: 10px; background: #333; padding: 15px; border-radius: 10px; }
-        .menu-btn { 
-            width: 50px; height: 50px; border-radius: 50%; cursor: pointer; 
-            border: 2px solid white; color: white; font-weight: bold; 
-        }
+        /* UI Styling */
+        #controls { margin-top: 15px; display: flex; gap: 8px; background: #222; padding: 12px; border-radius: 12px; }
+        .spawn-btn { width: 55px; height: 55px; border-radius: 50%; cursor: pointer; border: 2px solid white; color: white; font-weight: 800; transition: 0.1s; }
+        .spawn-btn:hover { transform: scale(1.1); }
+        
+        #stats { color: white; text-align: center; margin-bottom: 10px; }
+        #dmg { font-size: 2.5rem; color: #ff5722; font-weight: 900; margin: 0; }
+        input { background: #333; color: white; border: 1px solid #555; padding: 5px; border-radius: 4px; text-align: center; }
 
-        /* UI Elements */
-        #ui-top { margin-bottom: 10px; text-align: center; }
-        .error { animation: shake 0.1s infinite; background: red !important; }
-        @keyframes shake { 0% { transform: translate(2px,2px); } 50% { transform: translate(-2px,-2px); } 100% { transform: translate(2px,-2px); } }
+        .crash { animation: shake 0.05s infinite; background: #ff0000 !important; border-color: #700 !important; }
+        @keyframes shake { 0% { transform: translate(3px, 3px); } 100% { transform: translate(-3px, -3px); } }
     </style>
 </head>
 <body>
 
-<div id="ui-top">
-    SET TARGET HP: <input type="text" id="hp-input" value="1000000000">
-    <h2 id="dmg-display">DAMAGE: 10</h2>
+<div id="stats">
+    <p>TARGET HP: <input type="text" id="hp-input" value="1000000"></p>
+    <h1 id="dmg">10</h1>
 </div>
 
 <div id="arena">
     <div id="target">
-        <div id="t-label">ROOTER</div>
-        <div id="t-hp">HP: 1B</div>
+        <span>ROOTER</span>
+        <span id="t-hp" style="font-size: 12px;">HP: 1M</span>
     </div>
 </div>
 
-<div id="menu">
-    <button class="menu-btn" style="background:#ff5722" onclick="spawnBall(2, '#ff5722')">2x</button>
-    <button class="menu-btn" style="background:#2196f3" onclick="spawnBall(3, '#2196f3')">3x</button>
-    <button class="menu-btn" style="background:#4caf50" onclick="spawnBall(4, '#4caf50')">4x</button>
-    <button class="menu-btn" style="background:#ffeb3b; color: black" onclick="spawnBall(5, '#ffeb3b')">5x</button>
-    <button class="menu-btn" style="background:#9c27b0" onclick="spawnBall(6, '#9c27b0')">6x</button>
+<div id="controls">
+    <button class="spawn-btn" style="background:#ff5722" onclick="addBall(2, '#ff5722')">2x</button>
+    <button class="spawn-btn" style="background:#2196f3" onclick="addBall(3, '#2196f3')">3x</button>
+    <button class="spawn-btn" style="background:#4caf50" onclick="addBall(4, '#4caf50')">4x</button>
+    <button class="spawn-btn" style="background:#ffeb3b; color:black" onclick="addBall(5, '#ffeb3b')">5x</button>
+    <button class="spawn-btn" style="background:#9c27b0" onclick="addBall(6, '#9c27b0')">6x</button>
 </div>
 
 <script>
 let damage = 10n;
-let isError = false;
-const arena = document.getElementById('arena');
-const targetEl = document.getElementById('target');
+let isDead = false;
 const balls = [];
+const target = { x: 185, y: 185, dx: 2, dy: 2, radius: 65 };
 
-// Target Movement Logic
-let tx = 200, ty = 200, tdx = 2, tdy = 2;
-
-function spawnBall(multiplier, color) {
-    if(isError) return;
-    const ball = {
-        el: document.createElement('div'),
-        x: Math.random() * 400, y: Math.random() * 400,
-        dx: (Math.random() - 0.5) * 10, dy: (Math.random() - 0.5) * 10,
-        mult: BigInt(multiplier)
-    };
-    ball.el.className = 'ball';
-    ball.el.style.background = color;
-    ball.el.innerText = multiplier + 'x';
-    arena.appendChild(ball.el);
-    balls.push(ball);
+function addBall(m, c) {
+    if (isDead) return;
+    const b = { x: Math.random()*400, y: 20, dx: (Math.random()-0.5)*12, dy: 5, m: BigInt(m), color: c };
+    const el = document.createElement('div');
+    el.className = 'ball';
+    el.style.background = c;
+    el.innerText = m + 'x';
+    document.getElementById('arena').appendChild(el);
+    b.el = el;
+    balls.push(b);
 }
 
-function update() {
-    if(isError) return;
+function run() {
+    if (isDead) return;
 
-    // Move Big Ball (Target)
-    tx += tdx; ty += tdy;
-    if(tx < 0 || tx > 380) tdx *= -1;
-    if(ty < 0 || ty > 380) tdy *= -1;
-    targetEl.style.left = tx + 'px';
-    targetEl.style.top = ty + 'px';
+    // Move Rooter (The Big Ball)
+    target.x += target.dx; target.y += target.dy;
+    if (target.x < 0 || target.x > 360) target.dx *= -1;
+    if (target.y < 0 || target.y > 360) target.dy *= -1;
+    const tEl = document.getElementById('target');
+    tEl.style.left = target.x + 'px';
+    tEl.style.top = target.y + 'px';
 
-    const targetHp = BigInt(document.getElementById('hp-input').value);
-    document.getElementById('t-hp').innerText = "HP: " + targetHp.toLocaleString();
+    const hpVal = BigInt(document.getElementById('hp-input').value || 0);
+    document.getElementById('t-hp').innerText = "HP: " + hpVal.toLocaleString();
 
-    // Move Small Balls
     balls.forEach(b => {
         b.x += b.dx; b.y += b.dy;
-        if(b.x < 0 || b.x > 450) b.dx *= -1;
-        if(b.y < 0 || b.y > 450) b.dy *= -1;
+        // Bounce off walls
+        if (b.x < 0 || b.x > 435) b.dx *= -1;
+        if (b.y < 0 || b.y > 435) b.dy *= -1;
 
-        // Collision Check
-        let dist = Math.hypot((b.x+25) - (tx+60), (b.y+25) - (ty+60));
-        if(dist < 85) {
-            damage *= b.mult;
-            b.dx *= -1.05; b.dy *= -1.05; // Bounce and speed up
+        // Collision Logic
+        let dist = Math.hypot((b.x+27) - (target.x+65), (b.y+27) - (target.y+65));
+        if (dist < 92) {
+            damage *= b.m;
+            // Physics Kick
+            b.dx *= -1.02; b.dy *= -1.02;
+            b.x += b.dx * 2; b.y += b.dy * 2;
             
-            // Update UI
-            document.getElementById('dmg-display').innerText = "DAMAGE: " + (damage.toString().length > 15 ? "10^" + damage.toString().length : damage.toString());
-            
-            if(damage >= targetHp) {
-                isError = true;
-                document.getElementById('arena').classList.add('error');
-                document.getElementById('dmg-display').innerText = "DAMAGE: ERROR";
+            // UI Update
+            const dStr = damage.toString();
+            document.getElementById('dmg').innerText = dStr.length > 12 ? "10^" + dStr.length : dStr;
+
+            if (damage >= hpVal) {
+                isDead = true;
+                document.getElementById('arena').classList.add('crash');
+                document.getElementById('dmg').innerText = "ERROR";
             }
         }
         b.el.style.left = b.x + 'px';
         b.el.style.top = b.y + 'px';
     });
-
-    requestAnimationFrame(update);
+    requestAnimationFrame(run);
 }
-
-update();
+run();
 </script>
 </body>
 </html>
