@@ -1,36 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Math Simulation - Clean</title>
+    <title>Math Simulation - Full Physics</title>
     <style>
-        body { background: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; }
-        #stats { text-align: center; margin-bottom: 10px; }
-        #dmg-display { font-size: 2.5rem; font-weight: bold; color: #333; margin: 5px; min-height: 50px;}
-        #arena { width: 400px; height: 400px; background: white; border: 10px solid #222; position: relative; overflow: hidden; }
+        body { background: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
-        #target { 
-            position: absolute; width: 100px; height: 100px; background: #bbb; 
-            border-radius: 50%; border: 4px solid #444; display: flex; 
-            align-items: center; justify-content: center; font-weight: bold; 
-            text-align: center; font-size: 14px; padding: 5px; box-sizing: border-box;
-            word-break: break-all;
-        }
-        
-        #active-ball { 
-            position: absolute; width: 50px; height: 50px; border-radius: 50%; 
-            border: 3px solid #000; color: white; font-weight: bold; display: none; 
-            align-items: center; justify-content: center; font-size: 18px; 
+        #stats { text-align: center; margin-bottom: 15px; }
+        #dmg-display { font-size: 3rem; font-weight: 900; color: #222; margin: 5px; min-height: 60px; font-family: monospace; }
+
+        /* The Box Perimeters */
+        #arena { 
+            width: 450px; height: 450px; background: white; 
+            border: 12px solid #222; position: relative; overflow: hidden; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
-        #menu { margin-top: 20px; display: flex; gap: 10px; padding: 10px; background: #333; border-radius: 8px; }
-        .menu-btn { width: 50px; height: 50px; border-radius: 50%; cursor: pointer; border: 2px solid white; color: white; font-weight: bold; }
-        input { padding: 5px; text-align: center; width: 220px; border: 2px solid #333; border-radius: 4px; font-family: monospace; font-size: 1.1rem;}
+        /* The Big Ball (Target) */
+        #target {
+            position: absolute; width: 110px; height: 110px; background: #cccccc; 
+            border-radius: 50%; border: 5px solid #444; display: flex; 
+            align-items: center; justify-content: center; font-weight: bold; 
+            text-align: center; font-size: 16px; padding: 10px; box-sizing: border-box;
+            word-break: break-all; transition: background 0.1s;
+        }
+
+        /* The Damage Ball */
+        #active-ball {
+            position: absolute; width: 55px; height: 55px; border-radius: 50%; 
+            border: 3px solid #000; color: white; font-weight: bold; 
+            display: none; align-items: center; justify-content: center; font-size: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Bottom Menu */
+        #menu { margin-top: 25px; display: flex; gap: 12px; padding: 15px; background: #333; border-radius: 12px; }
+        .menu-btn { 
+            width: 60px; height: 60px; border-radius: 50%; cursor: pointer; 
+            border: 2px solid white; color: white; font-weight: bold; font-size: 16px;
+            transition: transform 0.1s;
+        }
+        .menu-btn:active { transform: scale(0.9); }
+
+        input { 
+            padding: 8px; text-align: center; width: 280px; border: 3px solid #333; 
+            border-radius: 6px; font-family: monospace; font-size: 1.2rem; font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
 <div id="stats">
-    <input type="text" id="hp-input" value="1000000000000" oninput="resetAll()">
+    <input type="text" id="hp-input" value="1000000000000" oninput="manualReset()">
     <div id="dmg-display">0</div>
 </div>
 
@@ -50,110 +70,137 @@
 </div>
 
 <script>
+// --- CORE DATA ---
 let totalDamage = 0n;
-const ballSpeed = 7;
-const target = { x: 150, y: 150, dx: 1.5, dy: 1.5, radius: 50 };
-const ball = { x: 0, y: 0, dx: 0, dy: 0, active: false, currentPower: 0n, multiplier: 0n, radius: 25 };
+const ballSpeed = 7.5;
+const targetObj = { x: 170, y: 170, dx: 1.5, dy: 1.5, radius: 55 };
+const ballObj = { x: 0, y: 0, dx: 0, dy: 0, active: false, currentPower: 0n, multiplier: 0n, radius: 27.5 };
 
-function resetAll() {
+// --- RESET LOGIC ---
+function manualReset() {
     totalDamage = 0n;
     document.getElementById('dmg-display').innerText = "0";
-    
-    // Reset Big Ball position and speed
-    target.x = 150;
-    target.y = 150;
-    target.dx = 1.5;
-    target.dy = 1.5;
-
-    const hpVal = document.getElementById('hp-input').value.replace(/,/g, '');
-    try {
-        document.getElementById('t-hp').innerText = BigInt(hpVal).toLocaleString();
-    } catch(e) {
-        document.getElementById('t-hp').innerText = "0";
-    }
+    targetObj.x = 170;
+    targetObj.y = 170;
+    targetObj.dx = 1.5;
+    targetObj.dy = 1.5;
+    updateHPDisplay(getTargetMaxHP());
 }
 
+function getTargetMaxHP() {
+    const val = document.getElementById('hp-input').value.replace(/,/g, '');
+    try { return BigInt(val); } catch(e) { return 0n; }
+}
+
+function updateHPDisplay(val) {
+    let s = val.toString();
+    document.getElementById('t-hp').innerText = s.length > 14 ? "10^" + s.length : val.toLocaleString();
+}
+
+// --- BALL SELECTOR ---
 function setBall(m, color) {
-    resetAll(); // Reset everything when a new ball is picked
+    manualReset(); // Hard reset on new ball choice
     
-    ball.active = true;
-    ball.multiplier = BigInt(m);
-    ball.currentPower = BigInt(m);
-    ball.x = 20; 
-    ball.y = 20;
+    ballObj.active = true;
+    ballObj.multiplier = BigInt(m);
+    ballObj.currentPower = BigInt(m);
+    ballObj.x = 30; 
+    ballObj.y = 30;
     
+    // Initial Random Direction
     let angle = Math.random() * Math.PI * 2;
-    ball.dx = Math.cos(angle) * ballSpeed;
-    ball.dy = Math.sin(angle) * ballSpeed;
+    ballObj.dx = Math.cos(angle) * ballSpeed;
+    ballObj.dy = Math.sin(angle) * ballSpeed;
     
     const el = document.getElementById('active-ball');
     el.style.display = 'flex';
     el.style.background = color;
     el.innerText = m + "x";
+    
+    document.getElementById('dmg-display').innerText = ballObj.currentPower.toString();
 }
 
+// --- PHYSICS ENGINE ---
 function run() {
-    target.x += target.dx;
-    target.y += target.dy;
+    // 1. Move Big Ball
+    targetObj.x += targetObj.dx;
+    targetObj.y += targetObj.dy;
 
-    if(target.x <= 0 || target.x >= 300) target.dx *= -1;
-    if(target.y <= 0 || target.y >= 300) target.dy *= -1;
+    // Arena Bounds for Big Ball (450 - 110 = 340)
+    if(targetObj.x <= 0 || targetObj.x >= 340) targetObj.dx *= -1;
+    if(targetObj.y <= 0 || targetObj.y >= 340) targetObj.dy *= -1;
     
     const tEl = document.getElementById('target');
-    tEl.style.left = target.x + 'px';
-    tEl.style.top = target.y + 'px';
+    tEl.style.left = targetObj.x + 'px';
+    tEl.style.top = targetObj.y + 'px';
 
-    if(ball.active) {
-        ball.x += ball.dx; ball.y += ball.dy;
+    if(ballObj.active) {
+        ballObj.x += ballObj.dx;
+        ballObj.y += ballObj.dy;
         
-        if(ball.x <= 0 || ball.x >= 350) ball.dx *= -1;
-        if(ball.y <= 0 || ball.y >= 350) ball.dy *= -1;
+        // Arena Bounds for Damage Ball (450 - 55 = 395)
+        if(ballObj.x <= 0 || ballObj.x >= 395) ballObj.dx *= -1;
+        if(ballObj.y <= 0 || ballObj.y >= 395) ballObj.dy *= -1;
 
-        let dx = (ball.x + ball.radius) - (target.x + target.radius);
-        let dy = (ball.y + ball.radius) - (target.y + target.radius);
+        // Circle-to-Circle Collision Math
+        let bcX = ballObj.x + ballObj.radius;
+        let bcY = ballObj.y + ballObj.radius;
+        let tcX = targetObj.x + targetObj.radius;
+        let tcY = targetObj.y + targetObj.radius;
+
+        let dx = bcX - tcX;
+        let dy = bcY - tcY;
         let distance = Math.sqrt(dx * dx + dy * dy);
-        let minDistance = ball.radius + target.radius;
+        let minDistance = ballObj.radius + targetObj.radius;
 
         if (distance < minDistance) {
-            totalDamage += ball.currentPower;
-            ball.currentPower = ball.currentPower * ball.multiplier;
+            // MATH: Update Damage and decrease HP
+            let currentHitValue = ballObj.currentPower;
+            totalDamage = currentHitValue; // Using the power as the display value
 
+            const maxHP = getTargetMaxHP();
+            let remaining = maxHP - currentHitValue;
+            updateHPDisplay(remaining > 0n ? remaining : 0n);
+
+            // Display current power (2, 4, 8 sequence)
+            let pStr = currentHitValue.toString();
+            document.getElementById('dmg-display').innerText = pStr.length > 15 ? "10^" + pStr.length : pStr;
+
+            // Prepare for next hit
+            ballObj.currentPower = ballObj.currentPower * ballObj.multiplier;
+
+            // PHYSICS: Impact Vectors
             let nx = dx / distance; 
             let ny = dy / distance; 
 
-            target.dx -= nx * 1.5; 
-            target.dy -= ny * 1.5;
+            // Influence Big Ball Direction (Permanently)
+            targetObj.dx -= nx * 1.8; 
+            targetObj.dy -= ny * 1.8;
 
-            let dot = ball.dx * nx + ball.dy * ny;
-            ball.dx = (ball.dx - 2 * dot * nx);
-            ball.dy = (ball.dy - 2 * dot * ny);
+            // Reflect Small Ball
+            let dot = ballObj.dx * nx + ballObj.dy * ny;
+            ballObj.dx = (ballObj.dx - 2 * dot * nx);
+            ballObj.dy = (ballObj.dy - 2 * dot * ny);
             
-            let angleShift = (Math.random() - 0.5) * 0.5;
-            let newAngle = Math.atan2(ball.dy, ball.dx) + angleShift;
-            ball.dx = Math.cos(newAngle) * ballSpeed;
-            ball.dy = Math.sin(newAngle) * ballSpeed;
+            // Randomize bounce angle slightly
+            let angleShift = (Math.random() - 0.5) * 0.4;
+            let newAngle = Math.atan2(ballObj.dy, ballObj.dx) + angleShift;
+            ballObj.dx = Math.cos(newAngle) * ballSpeed;
+            ballObj.dy = Math.sin(newAngle) * ballSpeed;
 
+            // ANTI-STUCK: Teleport out of overlap
             let overlap = minDistance - distance;
-            ball.x += nx * (overlap + 2); 
-            ball.y += ny * (overlap + 2);
-
-            const dStr = totalDamage.toString();
-            document.getElementById('dmg-display').innerText = dStr.length > 15 ? "10^" + dStr.length : dStr;
-            
-            const targetMaxHP = BigInt(document.getElementById('hp-input').value.replace(/,/g, ''));
-            let remaining = targetMaxHP - totalDamage;
-            
-            // Format remaining HP
-            let remStr = remaining > 0n ? remaining.toString() : "0";
-            document.getElementById('t-hp').innerText = remStr.length > 12 ? "10^" + remStr.length : remaining.toLocaleString();
+            ballObj.x += nx * (overlap + 3); 
+            ballObj.y += ny * (overlap + 3);
         }
 
         const bEl = document.getElementById('active-ball');
-        bEl.style.left = ball.x + 'px';
-        bEl.style.top = ball.y + 'px';
+        bEl.style.left = ballObj.x + 'px';
+        bEl.style.top = ballObj.y + 'px';
     }
     requestAnimationFrame(run);
 }
+
 run();
 </script>
 </body>
