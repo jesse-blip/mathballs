@@ -1,41 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Math Simulation - Full Number Display</title>
+    <title>Math Simulation - Size Controls & More Balls</title>
     <style>
-        body { background: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
-        #controls { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
-        #ball-val-display { font-size: 2.5rem; font-weight: 900; color: #222; margin-bottom: 5px; font-family: monospace; }
+        body { background: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; padding: 20px; box-sizing: border-box; }
         
-        #arena { width: 550px; height: 550px; background: white; border: 12px solid #222; position: relative; overflow: hidden; }
+        #controls { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 10px; display: flex; flex-direction: column; gap: 12px; align-items: center; width: 550px; }
+        #ball-val-display { font-size: 2.5rem; font-weight: 900; color: #222; font-family: monospace; }
         
-        #target { 
-            position: absolute; width: 130px; height: 130px; background: #cccccc; 
-            border-radius: 50%; border: 5px solid #444; display: flex; 
-            align-items: center; justify-content: center; font-weight: bold; 
-            text-align: center; padding: 10px; box-sizing: border-box; 
-            word-break: break-all; z-index: 2; overflow: hidden;
-            line-height: 0.9;
-        }
+        #arena { width: 550px; height: 500px; background: white; border: 12px solid #222; position: relative; overflow: hidden; box-shadow: inset 0 0 50px rgba(0,0,0,0.05); }
         
-        /* Adjusted HP font to scale down as the number gets longer */
-        #t-hp { font-size: 10px; font-family: 'Courier New', monospace; }
+        #target { position: absolute; background: #cccccc; border-radius: 50%; border: 5px solid #444; display: flex; align-items: center; justify-content: center; font-weight: bold; text-align: center; padding: 10px; box-sizing: border-box; word-break: break-all; z-index: 2; overflow: hidden; line-height: 0.9; }
+        #t-hp { font-family: 'Courier New', monospace; pointer-events: none; }
 
-        #active-ball { position: absolute; width: 55px; height: 55px; border-radius: 50%; border: 3px solid #000; color: white; font-weight: bold; display: none; align-items: center; justify-content: center; font-size: 16px; z-index: 3; }
+        #active-ball { position: absolute; border-radius: 50%; border: 3px solid #000; color: white; font-weight: bold; display: none; align-items: center; justify-content: center; z-index: 3; text-shadow: 1px 1px 2px black; }
 
-        .dmg-popup { 
-            position: absolute; color: #ff0000; font-weight: 900; font-family: 'Courier New', monospace; 
-            pointer-events: none; animation: fadeUp 1.2s forwards; z-index: 10; 
-            font-size: 18px; text-shadow: 1px 1px 1px rgba(0,0,0,0.3); white-space: nowrap; 
-        }
+        .dmg-popup { position: absolute; color: #ff0000; font-weight: 900; font-family: 'Courier New', monospace; pointer-events: none; animation: fadeUp 1.2s forwards; z-index: 10; font-size: 18px; text-shadow: 1px 1px 1px rgba(0,0,0,0.3); white-space: nowrap; }
+        @keyframes fadeUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
 
-        @keyframes fadeUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
+        /* Multi-row menu for many balls */
+        #menu { margin-top: 20px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 15px; background: #333; border-radius: 12px; width: 550px; box-sizing: border-box; }
+        .menu-btn { width: 100%; aspect-ratio: 1/1; border-radius: 50%; cursor: pointer; border: 2px solid white; color: white; font-weight: bold; font-size: 12px; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
+        .menu-btn:active { transform: scale(0.9); }
 
-        #menu { margin-top: 20px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 15px; background: #333; border-radius: 12px; }
-        .menu-btn { width: 65px; height: 65px; border-radius: 50%; cursor: pointer; border: 2px solid white; color: white; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
-        .hp-tools { display: flex; gap: 10px; align-items: center; }
-        input[type="text"] { padding: 8px; text-align: center; width: 220px; border: 2px solid #333; border-radius: 6px; font-weight: bold; }
-        .preset-btn { padding: 5px 10px; background: #444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .settings-row { display: flex; gap: 20px; width: 100%; justify-content: center; border-top: 1px solid #ddd; pt: 10px; }
+        .slider-group { display: flex; flex-direction: column; align-items: center; font-size: 12px; font-weight: bold; color: #555; }
+        .hp-tools { display: flex; gap: 5px; align-items: center; }
+        input[type="text"] { padding: 5px; text-align: center; width: 150px; border: 2px solid #333; border-radius: 4px; font-weight: bold; }
+        .preset-btn { padding: 4px 8px; background: #444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -45,8 +37,18 @@
     <div class="hp-tools">
         <button class="preset-btn" onclick="setHP('10^12')">1T</button>
         <button class="preset-btn" onclick="setHP('10^100')">GOOGOL</button>
-        <button class="preset-btn" onclick="setHP('10^200')">200 DIGITS</button>
         <input type="text" id="hp-input" value="10^100" oninput="manualReset()">
+    </div>
+    
+    <div class="settings-row">
+        <div class="slider-group">
+            <label>BIG BALL SIZE</label>
+            <input type="range" min="30" max="200" value="65" id="size-target" oninput="updateSizes()">
+        </div>
+        <div class="slider-group">
+            <label>SMALL BALL SIZE</label>
+            <input type="range" min="10" max="100" value="27" id="size-ball" oninput="updateSizes()">
+        </div>
     </div>
 </div>
 
@@ -61,6 +63,12 @@
     <button class="menu-btn" style="background:#4caf50" onclick="setBall('mult', 4, '#4caf50', '4x')">4x</button>
     <button class="menu-btn" style="background:#ffeb3b; color:black" onclick="setBall('mult', 5, '#ffeb3b', '5x')">5x</button>
     <button class="menu-btn" style="background:#673ab7" onclick="setBall('mult', 6, '#673ab7', '6x')">6x</button>
+    
+    <button class="menu-btn" style="background:#e91e63" onclick="setBall('mult', 7, '#e91e63', '7x')">7x</button>
+    <button class="menu-btn" style="background:#795548" onclick="setBall('mult', 8, '#795548', '8x')">8x</button>
+    <button class="menu-btn" style="background:#607d8b" onclick="setBall('mult', 9, '#607d8b', '9x')">9x</button>
+    <button class="menu-btn" style="background:#1a237e" onclick="setBall('mult', 10, '#1a237e', '10x')">10x</button>
+
     <button class="menu-btn" style="background:#000" onclick="setBall('rooter', 0, '#000', '√x')">√x</button>
     <button class="menu-btn" style="background:#f44336" onclick="setBall('halver', 0, '#f44336', 'x/2')">x/2</button>
     <button class="menu-btn" style="background:#ff9800" onclick="setBall('quarter', 0, '#ff9800', 'x/4')">x/4</button>
@@ -71,7 +79,23 @@
 let currentHP = 0n;
 let ballSpeed = 8.5;
 const targetObj = { x: 210, y: 210, dx: 1.5, dy: 1.5, radius: 65 };
-const ballObj = { x: 0, y: 0, dx: 0, dy: 0, active: false, type: '', val: 0n, hitCount: 1n, currentPower: 0n };
+const ballObj = { x: 0, y: 0, dx: 0, dy: 0, active: false, type: '', val: 0n, hitCount: 1n, currentPower: 0n, radius: 27.5 };
+
+function updateSizes() {
+    targetObj.radius = parseInt(document.getElementById('size-target').value);
+    ballObj.radius = parseInt(document.getElementById('size-ball').value);
+    
+    const tEl = document.getElementById('target');
+    tEl.style.width = (targetObj.radius * 2) + "px";
+    tEl.style.height = (targetObj.radius * 2) + "px";
+    
+    const bEl = document.getElementById('active-ball');
+    bEl.style.width = (ballObj.radius * 2) + "px";
+    bEl.style.height = (ballObj.radius * 2) + "px";
+    bEl.style.fontSize = Math.max(10, ballObj.radius * 0.6) + "px";
+    
+    updateHPDisplay();
+}
 
 function setHP(val) { document.getElementById('hp-input').value = val; manualReset(); }
 
@@ -94,17 +118,16 @@ function manualReset() {
 function updateHPDisplay() {
     let s = currentHP.toString();
     const hpEl = document.getElementById('t-hp');
-    
-    // Logic: Full number up to 10^100, then scientific for anything bigger to prevent browser crash
     if (s.length <= 101) {
         hpEl.innerText = s;
-        // Adjust font size based on length
-        if (s.length > 50) hpEl.style.fontSize = "7px";
-        else if (s.length > 20) hpEl.style.fontSize = "10px";
-        else hpEl.style.fontSize = "14px";
+        // Font scaling based on ball radius AND string length
+        let scaleFactor = (targetObj.radius / 65);
+        if (s.length > 50) hpEl.style.fontSize = (6 * scaleFactor) + "px";
+        else if (s.length > 20) hpEl.style.fontSize = (9 * scaleFactor) + "px";
+        else hpEl.style.fontSize = (13 * scaleFactor) + "px";
     } else {
         hpEl.innerText = "10^" + (s.length - 1);
-        hpEl.style.fontSize = "16px";
+        hpEl.style.fontSize = (16 * (targetObj.radius / 65)) + "px";
     }
 }
 
@@ -120,7 +143,7 @@ function createPopup(dmg) {
     const popup = document.createElement('div');
     popup.className = 'dmg-popup';
     popup.innerText = "-" + dmg.toString();
-    popup.style.left = (ballObj.x + 10) + 'px';
+    popup.style.left = (ballObj.x + ballObj.radius) + 'px';
     popup.style.top = (ballObj.y) + 'px';
     document.getElementById('arena').appendChild(popup);
     setTimeout(() => popup.remove(), 1200);
@@ -139,26 +162,31 @@ function setBall(type, val, color, label) {
     ballObj.dy = Math.sin(angle) * ballSpeed;
     const el = document.getElementById('active-ball');
     el.style.display = 'flex'; el.style.background = color; el.innerText = label;
+    updateSizes();
 }
 
 function run() {
     targetObj.x += targetObj.dx;
     targetObj.y += targetObj.dy;
-    if(targetObj.x <= 0 || targetObj.x >= 420) targetObj.dx *= -1;
-    if(targetObj.y <= 0 || targetObj.y >= 420) targetObj.dy *= -1;
+    
+    // Bounds check using dynamic radius
+    if(targetObj.x <= 0 || targetObj.x >= (550 - targetObj.radius * 2)) targetObj.dx *= -1;
+    if(targetObj.y <= 0 || targetObj.y >= (500 - targetObj.radius * 2)) targetObj.dy *= -1;
+    
     document.getElementById('target').style.left = targetObj.x + 'px';
     document.getElementById('target').style.top = targetObj.y + 'px';
 
     if(ballObj.active) {
         ballObj.x += ballObj.dx; ballObj.y += ballObj.dy;
-        if(ballObj.x <= 0 || ballObj.x >= 495) ballObj.dx *= -1;
-        if(ballObj.y <= 0 || ballObj.y >= 495) ballObj.dy *= -1;
+        if(ballObj.x <= 0 || ballObj.x >= (550 - ballObj.radius * 2)) ballObj.dx *= -1;
+        if(ballObj.y <= 0 || ballObj.y >= (500 - ballObj.radius * 2)) ballObj.dy *= -1;
 
-        let dx = (ballObj.x + 27.5) - (targetObj.x + 65);
-        let dy = (ballObj.y + 27.5) - (targetObj.y + 65);
+        let dx = (ballObj.x + ballObj.radius) - (targetObj.x + targetObj.radius);
+        let dy = (ballObj.y + ballObj.radius) - (targetObj.y + targetObj.radius);
         let distance = Math.sqrt(dx * dx + dy * dy);
+        let minDistance = ballObj.radius + targetObj.radius;
 
-        if (distance < 92.5) {
+        if (distance < minDistance) {
             let damageDealt = 0n;
             if (ballObj.type === 'mult') {
                 damageDealt = ballObj.currentPower;
@@ -188,17 +216,15 @@ function run() {
             let dot = ballObj.dx * nx + ballObj.dy * ny;
             ballObj.dx = (ballObj.dx - 2 * dot * nx);
             ballObj.dy = (ballObj.dy - 2 * dot * ny);
-            let angleShift = (Math.random() - 0.5) * 0.4;
-            let newAngle = Math.atan2(ballObj.dy, ballObj.dx) + angleShift;
-            ballObj.dx = Math.cos(newAngle) * ballSpeed;
-            ballObj.dy = Math.sin(newAngle) * ballSpeed;
             ballObj.x += nx * 8; ballObj.y += ny * 8;
         }
-        document.getElementById('active-ball').style.left = ballObj.x + 'px';
-        document.getElementById('active-ball').style.top = ballObj.y + 'px';
+        const bEl = document.getElementById('active-ball');
+        bEl.style.left = ballObj.x + 'px';
+        bEl.style.top = ballObj.y + 'px';
     }
     requestAnimationFrame(run);
 }
+updateSizes();
 manualReset();
 run();
 </script>
