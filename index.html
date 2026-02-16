@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Square Box Challenge</title>
+    <title>Randomized Square Challenge</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@900&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #f1efdb; --red: #cc0000; --gold: #ffcc00; --gray: #cccccc; }
@@ -48,7 +48,7 @@
 <div id="screen-lab" class="screen active">
     <div class="lab-ui">
         <div class="setup-col">
-            <h1>SQUARE ARENA SETUP</h1>
+            <h1>SQUARE ARENA</h1>
             <div class="toggle-box">
                 <div id="tgl-timer" class="tgl-btn active" onclick="setMode('timer')">TIMER</div>
                 <div id="tgl-watch" class="tgl-btn" onclick="setMode('stopwatch')">STOPWATCH</div>
@@ -96,8 +96,8 @@
 
 <script>
 let hp = 0n, gameTime = 0, last = 0, running = false, gameMode = 'timer';
-const p = { x: 50, y: 50, dx: 14, dy: 14, r: 40, type: 'mult', val: 2n, lbl: 'x2', col: '#ff0000', pwr: 2n, hits: 1n, name: "Doubler" };
-const t = { x: 250, y: 250, dx: 4, dy: 4, r: 120, mass: 6 };
+const p = { x: 50, y: 50, dx: 0, dy: 0, r: 40, type: 'mult', val: 2n, lbl: 'x2', col: '#ff0000', pwr: 2n, hits: 1n, name: "Doubler" };
+const t = { x: 250, y: 250, dx: 0, dy: 0, r: 120, mass: 6 };
 
 const ILLIONS = ["", "Thousand", "Million", "Billion", "Trillion", "Quadrillion", "Quintillion", "Sextillion", "Septillion", "Octillion", "Nonillion", "Decillion", "Undecillion", "Duodecillion", "Tredecillion", "Quattuordecillion", "Quindecillion", "Sexdecillion", "Septendecillion", "Octodecillion", "Novemdecillion", "Vigintillion", "Unvigintillion", "Duovigintillion", "Tresvigintillion", "Quattuorvigintillion", "Quinvigintillion", "Sexvigintillion", "Septenvigintillion", "Octovigintillion", "Novemvigintillion", "Trigintillion", "Untrigintillion", "Duotrigintillion", "Trestrigintillion"];
 
@@ -106,8 +106,7 @@ function playSound(freq, vol, duration) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    osc.type = 'square'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
     gain.gain.setValueAtTime(vol, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
     osc.connect(gain); gain.connect(audioCtx.destination);
@@ -155,12 +154,16 @@ function pre() {
 }
 
 function getNextDmg() {
+    if(hp <= 0n) return 0n;
     if(p.type==='mult') return p.pwr;
     if(p.type==='half') return hp/2n;
     if(p.type==='quarter') return hp/4n;
     if(p.type==='root') {
         let s = hp.toString();
-        return hp - BigInt(Math.floor(Math.sqrt(Number(s.substring(0,14))))) * 10n**BigInt(Math.max(0, s.length-14));
+        // Root + 1 finishing blow
+        let rootVal = BigInt(Math.floor(Math.sqrt(Number(s.substring(0,14))))) * 10n**BigInt(Math.max(0, s.length-14));
+        let actualDmg = hp - rootVal;
+        return (actualDmg === 0n && hp > 0n) ? 1n : actualDmg + 1n; 
     }
     if(p.type==='rev') return hp - (hp/(p.hits+1n));
     return 0n;
@@ -171,6 +174,13 @@ function go() {
     const rawHp = document.getElementById('in-hp').value;
     hp = rawHp.includes('^') ? BigInt(rawHp.split('^')[0])**BigInt(rawHp.split('^')[1]) : BigInt(rawHp);
     gameTime = gameMode === 'timer' ? parseFloat(document.getElementById('in-time').value)*1000 : 0;
+    
+    // Randomize Directions
+    const pAng = Math.random() * Math.PI * 2;
+    p.dx = Math.cos(pAng) * 14; p.dy = Math.sin(pAng) * 14;
+    const tAng = Math.random() * Math.PI * 2;
+    t.dx = Math.cos(tAng) * 4; t.dy = Math.sin(tAng) * 4;
+
     t.r = parseInt(document.getElementById('sz-t').value); p.r = parseInt(document.getElementById('sz-b').value);
     p.pwr = p.val || 1n; p.hits = 1n; running = true;
 
