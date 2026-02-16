@@ -2,86 +2,134 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Square Arena: Heavy Impact</title>
+    <title>Square Arena: Absolute Impact</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@900&display=swap" rel="stylesheet">
     <style>
+        /* CSS RESET & CORE STYLES */
         :root { 
-            --bg: #f1efdb; --red: #cc0000; --gold: #ffcc00; --black: #000000; --gray: #cccccc;
+            --bg: #f1efdb; --red: #cc0000; --gold: #ffcc00; 
+            --black: #000000; --gray: #cccccc; --white: #ffffff;
         }
-        * { box-sizing: border-box; font-family: 'Roboto Condensed', sans-serif; user-select: none; }
-        body { background: var(--bg); margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
 
-        /* LABORATORY */
-        .lab-ui { 
-            background: white; border: 8px solid var(--black); padding: 30px; width: 1050px; 
-            display: grid; grid-template-columns: 1.2fr 1fr; gap: 25px; box-shadow: 15px 15px 0px var(--black); 
+        * { box-sizing: border-box; font-family: 'Roboto Condensed', sans-serif; user-select: none; }
+        
+        body { 
+            background: var(--bg); margin: 0; display: flex; align-items: center; 
+            justify-content: center; min-height: 100vh; overflow: hidden; 
         }
+
+        /* LABORATORY UI */
+        .lab-ui { 
+            background: var(--white); border: 8px solid var(--black); padding: 30px; 
+            width: 1000px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 25px; 
+            box-shadow: 15px 15px 0px var(--black); 
+        }
+
         .setup-col { display: flex; flex-direction: column; gap: 12px; }
+        
         .preview-col { 
-            background: #eee; border: 5px dashed #aaa; position: relative; 
+            background: #ededed; border: 5px dashed #bbb; position: relative; 
             display: flex; align-items: center; justify-content: center; overflow: hidden; 
         }
 
-        /* INPUTS */
-        .input-box { display: flex; flex-direction: column; gap: 4px; }
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        
         input[type="text"], input[type="number"] { 
-            width: 100%; padding: 12px; border: 5px solid var(--black); font-size: 1.2rem; font-weight: 900; 
+            width: 100%; padding: 12px; border: 5px solid var(--black); 
+            font-size: 1.2rem; font-weight: 900; 
         }
-        .mode-sel { display: flex; gap: 10px; }
-        .mode-btn { 
-            flex: 1; padding: 12px; border: 5px solid var(--black); font-weight: 900; cursor: pointer; background: #fff; 
-        }
-        .mode-btn.active { background: var(--gold); }
 
-        /* BALL GRID */
-        .ball-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 10px 0; }
+        .mode-toggle { display: flex; gap: 10px; }
+        .m-btn { 
+            flex: 1; padding: 12px; border: 5px solid var(--black); 
+            font-weight: 900; cursor: pointer; background: #fff; 
+        }
+        .m-btn.active { background: var(--gold); }
+
+        /* SELECTION GRID */
+        .ball-grid { 
+            display: grid; grid-template-columns: repeat(5, 1fr); 
+            gap: 8px; margin: 10px 0; 
+        }
+
         .ball-opt { 
-            aspect-ratio: 1/1; border-radius: 50%; cursor: pointer; display: flex; align-items: center; 
-            justify-content: center; color: white; font-weight: 900; font-size: 12px; border: 3px solid rgba(0,0,0,0.1); 
+            aspect-ratio: 1/1; border-radius: 50%; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; 
+            color: white; font-weight: 900; font-size: 11px; 
+            border: 3px solid rgba(0,0,0,0.1); transition: 0.1s;
         }
-        .ball-opt.active { border: 6px solid var(--black); transform: scale(1.1); z-index: 2; }
 
-        /* ARENA */
+        .ball-opt.active { border: 5px solid var(--black); transform: scale(1.1); z-index: 5; }
+
+        /* GAME ARENA */
         .screen { display: none; flex-direction: column; align-items: center; width: 100%; height: 100vh; justify-content: center; }
         .active { display: flex; }
-        .header { text-align: center; font-size: 2.2rem; width: 850px; margin-bottom: 15px; text-transform: uppercase; font-weight: 900; }
+        
+        .header { 
+            text-align: center; font-size: 2.3rem; width: 900px; 
+            margin-bottom: 20px; text-transform: uppercase; font-weight: 900; 
+        }
+
         #arena { 
-            width: 600px; height: 600px; background: #fff; border: 12px solid var(--black); 
-            position: relative; overflow: visible; /* Visible for explosion effects */
+            width: 600px; height: 600px; background: #fff; 
+            border: 12px solid var(--black); position: relative; 
+            overflow: visible; /* Allows particles to fly out */
         }
         
         #big-ball { 
-            position: absolute; background: var(--gray); border-radius: 50%; border: 3px solid #444; 
-            display: flex; align-items: center; justify-content: center; z-index: 2; overflow: hidden;
+            position: absolute; background: var(--gray); border-radius: 50%; 
+            border: 3px solid #555; display: flex; align-items: center; 
+            justify-content: center; z-index: 2; overflow: hidden;
         }
+
         #hp-txt { 
-            color: #fff; font-weight: 900; font-family: monospace; word-break: break-all; 
-            line-height: 0.8; padding: 10px; text-align: center;
-            text-shadow: 2px 2px 0 #000, -2px -2px 0 #000;
+            color: #fff; font-weight: 900; font-family: monospace; 
+            word-break: break-all; line-height: 0.8; padding: 15px; 
+            text-align: center; text-shadow: 2px 2px 0 #000; 
         }
+
         #tiny-ball { 
             position: absolute; border-radius: 50%; border: 5px solid var(--black); 
             color: #fff; font-weight: 900; display: flex; align-items: center; 
-            justify-content: center; z-index: 3; text-shadow: 2px 2px 0px #000; font-size: 18px;
+            justify-content: center; z-index: 3; text-shadow: 2px 2px 0px #000; 
+            overflow: hidden; text-align: center; font-size: 14px;
         }
 
-        /* STATS */
-        .stats { width: 600px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
-        .stat-box { background: var(--black); color: var(--gold); padding: 12px; text-align: center; border: 5px solid var(--black); }
+        /* DASHBOARD */
+        .stats { 
+            width: 600px; display: grid; grid-template-columns: 1fr 1fr; 
+            gap: 15px; margin-top: 15px; 
+        }
+
+        .stat-box { 
+            background: var(--black); color: var(--gold); padding: 12px; 
+            text-align: center; border: 5px solid var(--black); 
+        }
+
         .stat-label { font-size: 0.8rem; color: #fff; display: block; }
-        .stat-val { font-size: 1.4rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .stat-val { 
+            font-size: 1.5rem; white-space: nowrap; 
+            overflow: hidden; text-overflow: ellipsis; 
+        }
 
         /* VFX */
         .dmg-pop { 
-            position: absolute; font-weight: 900; pointer-events: none; z-index: 100; 
-            -webkit-text-stroke: 2px #000; animation: rise 1.2s forwards; font-size: 30px; 
-            color: #ff0000 !important; white-space: nowrap;
+            position: absolute; font-weight: 900; pointer-events: none; 
+            z-index: 100; -webkit-text-stroke: 2px #000; 
+            animation: rise 1.2s forwards; font-size: 32px; 
+            color: #ff0000 !important; white-space: nowrap; 
         }
-        @keyframes rise { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-150px); } }
+
+        @keyframes rise { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-160px); } }
         
-        .particle { position: absolute; border-radius: 50%; pointer-events: none; z-index: 10; }
+        .part { position: absolute; border-radius: 50%; pointer-events: none; z-index: 10; }
         
-        .btn-go { grid-column: span 2; padding: 20px; background: var(--gold); border: 8px solid var(--black); font-size: 2.5rem; font-weight: 900; cursor: pointer; }
+        .btn-start { 
+            grid-column: span 2; padding: 20px; background: var(--gold); 
+            border: 8px solid var(--black); font-size: 2.5rem; 
+            font-weight: 900; cursor: pointer; 
+        }
     </style>
 </head>
 <body>
@@ -90,90 +138,87 @@
     <div class="lab-ui">
         <div class="setup-col">
             <h1>SQUARE ARENA</h1>
-            <div class="mode-sel">
-                <button id="m-tim" class="mode-btn active" onclick="setM('timer')">TIMER</button>
-                <button id="m-sw" class="mode-btn" onclick="setM('stopwatch')">STOPWATCH</button>
+            <div class="mode-toggle">
+                <button id="mb-t" class="m-btn active" onclick="setGM('timer')">TIMER</button>
+                <button id="mb-s" class="m-btn" onclick="setGM('stopwatch')">STOPWATCH</button>
             </div>
-            <div class="input-box"><label>HP</label><input type="text" id="in-hp" value="10^100"></div>
-            <div class="input-box" id="box-tim"><label>SECONDS</label><input type="number" id="in-t" value="60"></div>
+            <div class="input-group"><label>TARGET HP</label><input type="text" id="in-hp" value="10^100"></div>
+            <div class="input-group" id="box-t"><label>TIME LIMIT</label><input type="number" id="in-t" value="60"></div>
             <div class="ball-grid" id="grid"></div>
-            <div class="input-box"><label>BIG R</label><input type="range" min="50" max="240" value="120" id="sz-t" oninput="up()"></div>
-            <div class="input-box"><label>BALL R</label><input type="range" min="15" max="80" value="40" id="sz-b" oninput="up()"></div>
+            <div class="input-group"><label>TARGET RADIUS</label><input type="range" min="50" max="240" value="120" id="sz-t" oninput="upd()"></div>
+            <div class="input-group"><label>BALL RADIUS</label><input type="range" min="15" max="85" value="40" id="sz-b" oninput="upd()"></div>
         </div>
         <div class="preview-col">
             <div id="pre-t" style="background:#ccc; border-radius:50%"></div>
             <div id="pre-b" style="border-radius:50%; border:4px solid #000; position:absolute;"></div>
         </div>
-        <button class="btn-go" onclick="start()">START</button>
+        <button class="btn-start" onclick="start()">START BATTLE</button>
     </div>
 </div>
 
 <div id="screen-game" class="screen">
-    <div id="h" class="header"></div>
+    <div id="game-title" class="header"></div>
     <div id="arena">
         <div id="big-ball"><div id="hp-txt"></div></div>
         <div id="tiny-ball"></div>
     </div>
     <div class="stats">
-        <div class="stat-box"><span class="stat-label">PREVIOUS HIT</span><div id="v-prev" class="stat-val">0</div></div>
-        <div class="stat-box"><span class="stat-label">NEXT HIT</span><div id="v-next" class="stat-val">0</div></div>
+        <div class="stat-box"><span class="stat-label">PREVIOUS HIT</span><div id="stat-prev" class="stat-val">0</div></div>
+        <div class="stat-box"><span class="stat-label">NEXT HIT</span><div id="stat-next" class="stat-val">0</div></div>
     </div>
 </div>
 
 <script>
-    /**
-     * EXTENDED NUMBER SYSTEM
-     */
-    const NAMES = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Od", "Nd", "Vg", "Uvg", "Dvg", "Tvg", "Qvg", "Qivg", "Sxg", "Spg", "Ovg", "Nvg", "Tg", "Utg", "Dtg", "Ttg", "Qatg", "Qitg", "Sxtg", "Sptg", "Otg", "Ntg", "Qdg", "Uqdg", "Dqdg", "Tqdg", "Qaqdg", "Qiqdg", "Sxqdg", "Spqdg", "Oqdg", "Nqdg", "Qng", "Uqng", "Dqng", "Tqng", "Qaqng", "Qiqng", "Sxqng", "Spqng", "Oqng", "Nqng", "Sxg", "Usxg", "Dsxg", "Tsxg", "Qasxg", "Qisxg", "Sxsxg", "Spsxg", "Osxg", "Nsxg", "Spg", "Uspg", "Dspg", "Tspg", "Qaspg", "Qispg", "Sxspg", "Spspg", "Ospg", "Nspg", "Ocg", "Uocg", "Docg", "Tocg", "Qaocg", "Qiocg", "Sxocg", "Spocg", "Oocg", "Nocg", "Nng", "Unng", "Dnng", "Tnng", "Qanng", "Qinng", "Sxnng", "Spnng", "Onng", "Nnng", "Cen", "Ggl"];
-    
-    function fmt(n, full = false) {
+    /* ============================================================
+    EXTENDED NUMBER SYSTEM (UP TO GOOGOL & BEYOND)
+    ============================================================
+    */
+    const SUFFIXES = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Od", "Nd", "Vg", "Uvg", "Dvg", "Tvg", "Qvg", "Qivg", "Sxg", "Spg", "Ovg", "Nvg", "Tg", "Utg", "Dtg", "Ttg", "Qatg", "Qitg", "Sxtg", "Sptg", "Otg", "Ntg", "Qdg", "Uqdg", "Dqdg", "Tqdg", "Qaqdg", "Qiqdg", "Sxqdg", "Spqdg", "Oqdg", "Nqdg", "Qng", "Uqng", "Dqng", "Tqng", "Qaqng", "Qiqng", "Sxqng", "Spqng", "Oqng", "Nqng", "Sxg", "Usxg", "Dsxg", "Tsxg", "Qasxg", "Qisxg", "Sxsxg", "Spsxg", "Osxg", "Nsxg", "Spg", "Uspg", "Dspg", "Tspg", "Qaspg", "Qispg", "Sxspg", "Spspg", "Ospg", "Nspg", "Ocg", "Uocg", "Docg", "Tocg", "Qaocg", "Qiocg", "Sxocg", "Spocg", "Oocg", "Nocg", "Nng", "Unng", "Dnng", "Tnng", "Qanng", "Qinng", "Sxnng", "Spnng", "Onng", "Nnng", "Cen", "Ggl"];
+
+    function format(n, isFull = false) {
         if (n === 0n) return "0";
         let s = n.toString();
-        if (s.length > 306 && !full) return "INF"; 
-        if (full) return s;
+        if (isFull) return s;
+        if (s.length > 306) return "INF"; 
         let tier = Math.floor((s.length - 1) / 3);
         if (tier < 1) return s;
-        let name = NAMES[tier] || "e" + (tier * 3);
         let val = n / 10n**BigInt(tier * 3);
-        return val + " " + name;
+        return val + " " + (SUFFIXES[tier] || "e" + (tier*3));
     }
 
-    /**
-     * AUDIO SYSTEM - THE THUMP
-     */
-    const AC = new (window.AudioContext || window.webkitAudioContext)();
-    function playThump() {
-        if (AC.state === 'suspended') AC.resume();
-        const osc = AC.createOscillator();
-        const gain = AC.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(150, AC.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(40, AC.currentTime + 0.2);
-        gain.gain.setValueAtTime(1.5, AC.currentTime); // LOUDER
-        gain.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.4);
-        osc.connect(gain); gain.connect(AC.destination);
-        osc.start(); osc.stop(AC.currentTime + 0.4);
-    }
+    /* ============================================================
+    AUDIO ENGINE (LOUD THUMP + WALL CLINKS)
+    ============================================================
+    */
+    const Audio = {
+        ctx: new (window.AudioContext || window.webkitAudioContext)(),
+        play(freq, vol, type, duration, slide = 0) {
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+            const osc = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            if(slide) osc.frequency.exponentialRampToValueAtTime(slide, this.ctx.currentTime + duration);
+            g.gain.setValueAtTime(vol, this.ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+            osc.connect(g); g.connect(this.ctx.destination);
+            osc.start(); osc.stop(this.ctx.currentTime + duration);
+        },
+        thump() { this.play(160, 1.8, 'sine', 0.5, 40); },
+        wall() { this.play(400, 0.15, 'square', 0.1); }
+    };
 
-    function playWall() {
-        const osc = AC.createOscillator();
-        const gain = AC.createGain();
-        osc.frequency.setValueAtTime(120, AC.currentTime);
-        gain.gain.setValueAtTime(0.1, AC.currentTime);
-        osc.connect(gain); gain.connect(AC.destination);
-        osc.start(); osc.stop(AC.currentTime + 0.1);
-    }
+    /* ============================================================
+    GAME ENGINE LOGIC
+    ============================================================
+    */
+    let hp = 0n, initHP = 0n, time = 0, clock = 0, lastTs = 0, active = false, gMode = 'timer';
+    const player = { x: 60, y: 60, dx: 0, dy: 0, r: 40, type: 'mult', val: 2n, lbl: 'x2', col: '#ff0000', pwr: 2n, hits: 1n, name: "Doubler" };
+    const target = { x: 300, y: 300, dx: 0, dy: 0, r: 120, mass: 10 };
 
-    /**
-     * GAME STATE
-     */
-    let hp = 0n, time = 0, elapsed = 0, last = 0, run = false, gMode = 'timer';
-    const b = { x: 50, y: 50, dx: 0, dy: 0, r: 40, type: 'mult', val: 2n, lbl: 'x2', col: '#ff0000', pwr: 2n, hits: 1n, name: "Doubler" };
-    const t = { x: 250, y: 250, dx: 0, dy: 0, r: 120, m: 8 };
-
-    const BALLS = [
+    const BALL_TYPES = [
         {n:"Doubler", t:"mult", v:2n, l:"x2", c:"#f00"}, {n:"Tripler", t:"mult", v:3n, l:"x3", c:"#f50"},
-        {n:"Quadrupler", t:"mult", v:4n, l:"x4", c:"#fa0"}, {n:"Quintupler", t:"mult", v:5n, l:"#0cf"},
+        {n:"Quadrupler", t:"mult", v:4n, l:"x4", c:"#fa0"}, {n:"Quintupler", t:"mult", v:5n, l:"x5", c:"#0cf"},
         {n:"Sextupler", t:"mult", v:6n, l:"x6", c:"#06f"}, {n:"Septupler", t:"mult", v:7n, l:"x7", c:"#0f0"},
         {n:"Octupler", t:"mult", v:8n, l:"x8", c:"#5f0"}, {n:"Nonupler", t:"mult", v:9n, l:"x9", c:"#af0"},
         {n:"Decupler", t:"mult", v:10n, l:"x10", c:"#ff0"}, {n:"Rooter", t:"root", v:0n, l:"√x", c:"#000"},
@@ -182,63 +227,63 @@
         {n:"Reverser", t:"rev", v:0n, l:"x/y", c:"#60f"}
     ];
 
-    function setM(m) { 
+    function setGM(m) { 
         gMode = m; 
-        document.getElementById('m-tim').className = m==='timer'?'mode-btn active':'mode-btn';
-        document.getElementById('m-sw').className = m==='stopwatch'?'mode-btn active':'mode-btn';
-        document.getElementById('box-tim').style.display = m==='timer'?'flex':'none';
+        document.getElementById('mb-t').className = m==='timer'?'m-btn active':'m-btn';
+        document.getElementById('mb-s').className = m==='stopwatch'?'m-btn active':'m-btn';
+        document.getElementById('box-t').style.display = m==='timer'?'flex':'none';
     }
 
-    function build() {
-        const g = document.getElementById('grid');
-        BALLS.forEach(obj => {
-            const d = document.createElement('div');
-            d.className = 'ball-opt'; d.style.background = obj.c; d.innerText = obj.l;
-            if(obj.n === "Doubler") d.classList.add('active');
-            d.onclick = () => {
+    function generateGrid() {
+        const grid = document.getElementById('grid');
+        BALL_TYPES.forEach(b => {
+            const el = document.createElement('div');
+            el.className = 'ball-opt'; el.style.background = b.c; el.innerText = b.l;
+            if(b.n === "Doubler") el.classList.add('active');
+            el.onclick = () => {
                 document.querySelectorAll('.ball-opt').forEach(x=>x.classList.remove('active'));
-                d.classList.add('active'); b.type=obj.t; b.val=obj.v; b.lbl=obj.l; b.col=obj.c; b.name=obj.n; up();
+                el.classList.add('active'); player.type=b.t; player.val=b.v; player.lbl=b.l; player.col=b.c; player.name=b.n; upd();
             };
-            g.appendChild(d);
+            grid.appendChild(el);
         });
     }
 
-    function up() {
+    function upd() {
         const tr = document.getElementById('sz-t').value, br = document.getElementById('sz-b').value;
         const pt = document.getElementById('pre-t'), pb = document.getElementById('pre-b');
         pt.style.width = pt.style.height = (tr*2)+"px";
         pb.style.width = pb.style.height = (br*2)+"px";
-        pb.style.background = b.col; pb.innerText = b.lbl;
+        pb.style.background = player.col; pb.innerText = player.lbl;
     }
 
-    function getD() {
+    function getDmg() {
         if(hp <= 0n) return 0n;
         let d = 0n;
-        if(b.type==='mult'||b.type==='exp') d = b.pwr;
-        else if(b.type==='half') d = hp / 2n;
-        else if(b.type==='quarter') d = (hp * 3n) / 4n;
-        else if(b.type==='root') {
+        if(player.type==='mult'||player.type==='exp') d = player.pwr;
+        else if(player.type==='half') d = hp / 2n;
+        else if(player.type==='quarter') d = (hp * 3n) / 4n;
+        else if(player.type==='root') {
             let s = hp.toString();
-            let rV = BigInt(Math.floor(Math.sqrt(Number(s.substring(0,14))))) * 10n**BigInt(Math.max(0, s.length-14));
-            d = hp - rV;
+            let rv = BigInt(Math.floor(Math.sqrt(Number(s.substring(0,14))))) * 10n**BigInt(Math.max(0, s.length-14));
+            d = hp - rv;
         }
-        else if(b.type==='rev') d = hp - (hp / (b.hits + 1n));
+        else if(player.type==='rev') d = hp - (hp / (player.hits + 1n));
         return d > 0n ? d : 1n;
     }
 
-    function explode(x, y, color) {
+    function spawnExplosion(x, y, color) {
         const arena = document.getElementById('arena');
-        for(let i=0; i<30; i++) {
+        for(let i=0; i<40; i++) {
             const p = document.createElement('div');
-            p.className = 'particle'; p.style.background = color;
+            p.className = 'part'; p.style.background = color;
             p.style.width = p.style.height = (Math.random()*15+5)+"px";
             p.style.left = x+"px"; p.style.top = y+"px";
             arena.appendChild(p);
-            const adx = (Math.random()-0.5)*20, ady = (Math.random()-0.5)*20;
+            const vx = (Math.random()-0.5)*25, vy = (Math.random()-0.5)*25;
             let life = 1.0;
             const iv = setInterval(() => {
-                let curX = parseFloat(p.style.left), curY = parseFloat(p.style.top);
-                p.style.left = (curX + adx)+"px"; p.style.top = (curY + ady)+"px";
+                let cx = parseFloat(p.style.left), cy = parseFloat(p.style.top);
+                p.style.left = (cx + vx)+"px"; p.style.top = (cy + vy)+"px";
                 life -= 0.02; p.style.opacity = life;
                 if(life <= 0) { clearInterval(iv); p.remove(); }
             }, 16);
@@ -246,108 +291,117 @@
     }
 
     function start() {
-        const rH = document.getElementById('in-hp').value;
-        hp = rH.includes('^') ? BigInt(rH.split('^')[0])**BigInt(rH.split('^')[1]) : BigInt(rH);
-        initialHp = hp;
+        const raw = document.getElementById('in-hp').value;
+        hp = raw.includes('^') ? BigInt(raw.split('^')[0])**BigInt(raw.split('^')[1]) : BigInt(raw);
+        initHP = hp;
         time = parseFloat(document.getElementById('in-t').value)*1000;
-        elapsed = 0;
+        clock = 0;
         
-        b.dx = (Math.random()-0.5)*25; b.dy = (Math.random()-0.5)*25;
-        t.dx = (Math.random()-0.5)*8; t.dy = (Math.random()-0.5)*8;
-        t.r = parseInt(document.getElementById('sz-t').value);
-        b.r = parseInt(document.getElementById('sz-b').value);
-        b.pwr = (b.type === 'exp') ? 2n : (b.val || 1n);
-        b.hits = 1n; run = true;
+        player.dx = (Math.random()-0.5)*22; player.dy = (Math.random()-0.5)*22;
+        target.dx = (Math.random()-0.5)*10; target.dy = (Math.random()-0.5)*10;
+        target.r = parseInt(document.getElementById('sz-t').value);
+        player.r = parseInt(document.getElementById('sz-b').value);
+        player.pwr = (player.type === 'exp') ? 2n : (player.val || 1n);
+        player.hits = 1n; active = true;
 
-        document.getElementById('tiny-ball').style.background = b.col;
-        document.getElementById('tiny-ball').innerText = b.lbl;
-        document.getElementById('v-next').innerText = fmt(getD());
+        document.getElementById('tiny-ball').style.display = 'flex';
+        document.getElementById('big-ball').style.display = 'flex';
+        document.getElementById('tiny-ball').style.background = player.col;
+        document.getElementById('stat-next').innerText = format(getDmg());
         
         document.getElementById('screen-lab').classList.remove('active');
         document.getElementById('screen-game').classList.add('active');
-        last = performance.now();
+        lastTs = performance.now();
         loop();
     }
 
     function loop() {
-        if(!run) return;
-        const now = performance.now(), dt = now - last; last = now;
+        if(!active) return;
+        const now = performance.now(), dt = now - lastTs; lastTs = now;
         
+        const title = document.getElementById('game-title');
         if(gMode === 'timer') {
             time -= dt;
-            const displayT = Math.max(0, time/1000).toFixed(1);
-            document.getElementById('h').innerHTML = `Can <span style="color:${b.col}">${b.name}</span> do ${fmt(initialHp)} in ${displayT}?`;
+            const tStr = Math.max(0, time/1000).toFixed(1);
+            title.innerHTML = `Can <span style="color:${player.col}">${player.name}</span> do ${format(initHP)} in ${tStr}?`;
             if(time <= 0) {
-                explode(b.x + b.r, b.y + b.r, b.col);
+                spawnExplosion(player.x + player.r, player.y + player.r, player.col);
                 document.getElementById('tiny-ball').style.display = 'none';
-                end(); return;
+                active = false; setTimeout(() => location.reload(), 3000); return;
             }
         } else {
-            elapsed += dt;
-            const displayT = (elapsed/1000).toFixed(1);
-            document.getElementById('h').innerHTML = `How much time for <span style="color:${b.col}">${b.name}</span> to deal ${fmt(initialHp)}? ${displayT}`;
+            clock += dt;
+            const tStr = (clock/1000).toFixed(1);
+            title.innerHTML = `How much time for <span style="color:${player.col}">${player.name}</span> to deal ${format(initHP)}? ${tStr}`;
         }
 
         if(hp <= 0n) {
-            explode(t.x + t.r, t.y + t.r, '#ccc');
+            spawnExplosion(target.x + target.r, target.y + target.r, '#ccc');
             document.getElementById('big-ball').style.display = 'none';
-            end(); return;
+            active = false; setTimeout(() => location.reload(), 3000); return;
         }
 
-        // PHYSICS - FIXED BOUNDS (RADIUS OFFSET)
-        t.x += t.dx; t.y += t.dy;
-        if(t.x <= 0 || t.x >= 600 - t.r*2) { t.dx *= -1; t.x = Math.max(0, Math.min(600-t.r*2, t.x)); playWall(); }
-        if(t.y <= 0 || t.y >= 600 - t.r*2) { t.dy *= -1; t.y = Math.max(0, Math.min(600-t.r*2, t.y)); playWall(); }
+        // PHYSICS & BOUNDS PROTECTION (FIXED PERIMETERS)
+        target.x += target.dx; target.y += target.dy;
+        if(target.x <= 0 || target.x >= 600 - target.r*2) { target.dx *= -1; target.x = Math.max(0, Math.min(600-target.r*2, target.x)); Audio.wall(); }
+        if(target.y <= 0 || target.y >= 600 - target.r*2) { target.dy *= -1; target.y = Math.max(0, Math.min(600-target.r*2, target.y)); Audio.wall(); }
         
         const bb = document.getElementById('big-ball');
-        bb.style.left = t.x+"px"; bb.style.top = t.y+"px";
-        bb.style.width = bb.style.height = (t.r*2)+"px";
+        bb.style.left = target.x+"px"; bb.style.top = target.y+"px";
+        bb.style.width = bb.style.height = (target.r*2)+"px";
         document.getElementById('hp-txt').innerText = hp.toString();
 
-        b.x += b.dx; b.y += b.dy;
-        if(b.x <= 0 || b.x >= 600 - b.r*2) { b.dx *= -1; b.x = Math.max(0, Math.min(600-b.r*2, b.x)); playWall(); }
-        if(b.y <= 0 || b.y >= 600 - b.r*2) { b.dy *= -1; b.y = Math.max(0, Math.min(600-b.r*2, b.y)); playWall(); }
+        player.x += player.dx; player.y += player.dy;
+        if(player.x <= 0 || player.x >= 600 - player.r*2) { player.dx *= -1; player.x = Math.max(0, Math.min(600-player.r*2, player.x)); Audio.wall(); }
+        if(player.y <= 0 || player.y >= 600 - player.r*2) { player.dy *= -1; player.y = Math.max(0, Math.min(600-player.r*2, player.y)); Audio.wall(); }
         
         const tb = document.getElementById('tiny-ball');
-        tb.style.left = b.x+"px"; tb.style.top = b.y+"px";
-        tb.style.width = tb.style.height = (b.r*2)+"px";
-        tb.innerText = fmt(b.pwr); // Show abbreviated power in ball
+        tb.style.left = player.x+"px"; tb.style.top = player.y+"px";
+        tb.style.width = tb.style.height = (player.r*2)+"px";
+        tb.innerText = format(player.pwr); // Abbreviated name inside ball
 
         // COLLISION
-        const dx = (b.x+b.r) - (t.x+t.r), dy = (b.y+b.r) - (t.y+t.r), dist = Math.sqrt(dx*dx + dy*dy);
-        if(dist < (b.r + t.r)) {
-            playThump();
-            let d = getD();
+        const dx = (player.x+player.r) - (target.x+target.r);
+        const dy = (player.y+player.r) - (target.y+target.r);
+        const dist = Math.sqrt(dx*dx + dy*dy);
+
+        if(dist < (player.r + target.r)) {
+            Audio.thump();
+            let d = getDmg();
+            
+            // Red Pop shows FULL NUMBER
             const pop = document.createElement('div');
-            pop.className = 'dmg-pop'; pop.innerText = "-" + d.toString(); // FULL NUMBER
-            pop.style.left = b.x+"px"; pop.style.top = b.y+"px";
+            pop.className = 'dmg-pop'; pop.innerText = "-" + d.toString(); 
+            pop.style.left = player.x+"px"; pop.style.top = player.y+"px";
             document.getElementById('arena').appendChild(pop); setTimeout(()=>pop.remove(), 1200);
 
-            document.getElementById('v-prev').innerText = fmt(d);
+            document.getElementById('stat-prev').innerText = format(d);
             if(d >= hp) hp = 0n; else hp -= d;
 
-            if(b.type === 'mult' && b.val > 0n) b.pwr *= b.val;
-            if(b.type === 'exp') {
-                // UI Protection for Square/Cube
-                if (b.pwr.toString().length < 300) b.pwr = b.pwr ** b.val;
-                else b.pwr = 10n**400n; // Set to massive dummy if broke
+            // Power Up Logic
+            if(player.type === 'mult' && player.val > 0n) player.pwr *= player.val;
+            if(player.type === 'exp') {
+                if (player.pwr.toString().length < 300) player.pwr = player.pwr ** player.val;
+                else player.pwr = 10n**400n; // UI Protection
             }
-            if(b.type === 'rev') b.hits++;
-            document.getElementById('v-next').innerText = fmt(getD());
+            if(player.type === 'rev') player.hits++;
+            document.getElementById('stat-next').innerText = format(getDmg());
 
-            // Physics bounce
+            // Physics Bounce
             const nx = dx/dist, ny = dy/dist;
-            const p1 = b.dx*nx + b.dy*ny, p2 = t.dx*nx + t.dy*ny;
-            const v1 = (p1*(1-t.m)+2*t.m*p2)/(1+t.m);
-            const v2 = (p2*(t.m-1)+2*1*p1)/(1+t.m);
-            b.dx += (v1-p1)*nx; b.dy += (v1-p1)*ny;
-            t.dx += (v2-p2)*nx; t.dy += (v2-p2)*ny;
+            const p1 = player.dx*nx + player.dy*ny, p2 = target.dx*nx + target.dy*ny;
+            const v1 = (p1*(1-target.mass)+2*target.mass*p2)/(1+target.mass);
+            const v2 = (p2*(target.mass-1)+2*1*p1)/(1+target.mass);
+            player.dx += (v1-p1)*nx; player.dy += (v1-p1)*ny;
+            target.dx += (v2-p2)*nx; target.dy += (v2-p2)*ny;
+            
+            // Separation
+            player.x += nx*5; player.y += ny*5;
         }
         requestAnimationFrame(loop);
     }
 
-    function end() { run = false; setTimeout(() => location.reload(), 4000); }
-    build(); up();
+    generateGrid(); upd();
 </script>
 </body>
 </html>
