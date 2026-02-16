@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Exponential Ball Challenge</title>
+    <title>Square Arena: Max Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@900&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #f1efdb; --red: #cc0000; --gold: #ffcc00; --gray: #cccccc; }
@@ -12,13 +12,10 @@
         .setup-col { display: flex; flex-direction: column; gap: 8px; }
         .preview-col { background: #ddd; border: 4px dashed #888; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         
+        /* THE FULL GRID */
         .ball-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 10px 0; }
         .ball-opt { aspect-ratio: 1/1; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 11px; border: 2px solid rgba(0,0,0,0.2); transition: 0.1s; text-align: center; }
         .ball-opt.active { border: 4px solid #000; transform: scale(1.1); }
-
-        .toggle-box { display: flex; gap: 10px; }
-        .tgl-btn { flex: 1; padding: 10px; border: 4px solid #000; font-weight: 900; cursor: pointer; background: #eee; text-align: center; }
-        .tgl-btn.active { background: var(--gold); }
 
         .btn-start { grid-column: span 2; padding: 15px; background: var(--gold); border: 6px solid #000; font-size: 2rem; font-weight: 900; cursor: pointer; text-transform: uppercase; }
 
@@ -30,7 +27,6 @@
         
         #big-ball { position: absolute; background: var(--gray); border-radius: 50%; border: 2px solid #555; display: flex; align-items: center; justify-content: center; z-index: 2; overflow: hidden; }
         #hp-txt { color: #fff; font-weight: 900; font-family: monospace; word-break: break-all; line-height: 0.8; padding: 10px; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 2px 0 #000, 0 -2px 0 #000, 2px 0 0 #000, -2px 0 0 #000; }
-
         #tiny-ball { position: absolute; border-radius: 50%; border: 4px solid #000; color: #fff; font-weight: 900; display: flex; align-items: center; justify-content: center; z-index: 3; text-shadow: 2px 2px 0px #000; font-size: 20px; }
         
         .stats-bar { width: 600px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
@@ -39,6 +35,7 @@
         .stat-val { font-size: 1.4rem; white-space: nowrap; overflow: hidden; }
 
         .particle { position: absolute; border-radius: 50%; pointer-events: none; }
+        /* RED DAMAGE TEXT */
         .dmg-pop { position: absolute; font-weight: 900; pointer-events: none; z-index: 10; -webkit-text-stroke: 1.5px #000; animation: floatUp 1.2s forwards; font-size: 28px; word-break: break-all; max-width: 400px; text-align: center; color: #ff0000 !important; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-180px); } }
     </style>
@@ -49,28 +46,29 @@
     <div class="lab-ui">
         <div class="setup-col">
             <h1>SQUARE ARENA</h1>
-            <div class="toggle-box">
-                <div id="tgl-timer" class="tgl-btn active" onclick="setMode('timer')">TIMER</div>
-                <div id="tgl-watch" class="tgl-btn" onclick="setMode('stopwatch')">STOPWATCH</div>
-            </div>
             <label>HP TARGET</label>
             <input type="text" id="in-hp" style="width:100%; padding:8px; border:4px solid #000;" value="10^100">
-            <div id="timer-input-group">
-                <label>SECONDS</label>
-                <input type="number" id="in-time" style="width:100%; padding:8px; border:4px solid #000;" value="58.1">
-            </div>
+            <label>SECONDS</label>
+            <input type="number" id="in-time" style="width:100%; padding:8px; border:4px solid #000;" value="58.1">
+            
             <div class="ball-grid">
                 <div class="ball-opt active" data-name="Doubler" style="background:#ff0000" onclick="sel(this,'mult',2,'x2')">x2</div>
                 <div class="ball-opt" data-name="Tripler" style="background:#ff5500" onclick="sel(this,'mult',3,'x3')">x3</div>
+                <div class="ball-opt" data-name="Quadrupler" style="background:#ffaa00" onclick="sel(this,'mult',4,'x4')">x4</div>
+                <div class="ball-opt" data-name="Quintupler" style="background:#00ccff" onclick="sel(this,'mult',5,'x5')">x5</div>
+                <div class="ball-opt" data-name="Sextupler" style="background:#0066ff" onclick="sel(this,'mult',6,'x6')">x6</div>
+                <div class="ball-opt" data-name="Septupler" style="background:#00ff00" onclick="sel(this,'mult',7,'x7')">x7</div>
+                <div class="ball-opt" data-name="Octupler" style="background:#55ff00" onclick="sel(this,'mult',8,'x8')">x8</div>
+                <div class="ball-opt" data-name="Nonupler" style="background:#aaff00" onclick="sel(this,'mult',9,'x9')">x9</div>
                 <div class="ball-opt" data-name="Decupler" style="background:#ffff00; color:#000" onclick="sel(this,'mult',10,'x10')">x10</div>
+                <div class="ball-opt" data-name="Rooter" style="background:#000000" onclick="sel(this,'root',0,'√x')">√x</div>
                 <div class="ball-opt" data-name="Squared" style="background:#ff00ff" onclick="sel(this,'exp',2,'x²')">x²</div>
                 <div class="ball-opt" data-name="Cubed" style="background:#800080" onclick="sel(this,'exp',3,'x³')">x³</div>
-                
-                <div class="ball-opt" data-name="Rooter" style="background:#000000" onclick="sel(this,'root',0,'√x')">√x</div>
                 <div class="ball-opt" data-name="Halver" style="background:#777777" onclick="sel(this,'half',0,'x/2')">x/2</div>
                 <div class="ball-opt" data-name="Quarter" style="background:#444444" onclick="sel(this,'quarter',0,'x/4')">x/4</div>
                 <div class="ball-opt" data-name="Reverser" style="background:#6600ff" onclick="sel(this,'rev',0,'x/y')">x/y</div>
             </div>
+            
             <label>BIG R</label><input type="range" min="50" max="240" value="120" id="sz-t" oninput="pre()">
             <label>PLAYER R</label><input type="range" min="15" max="80" value="40" id="sz-b" oninput="pre()">
         </div>
@@ -92,7 +90,7 @@
 </div>
 
 <script>
-let hp = 0n, gameTime = 0, last = 0, running = false, gameMode = 'timer';
+let hp = 0n, gameTime = 0, last = 0, running = false;
 const p = { x: 50, y: 50, dx: 0, dy: 0, r: 40, type: 'mult', val: 2n, lbl: 'x2', col: '#ff0000', pwr: 2n, hits: 1n, name: "Doubler" };
 const t = { x: 250, y: 250, dx: 0, dy: 0, r: 120, mass: 6 };
 
@@ -111,48 +109,35 @@ function playSound(freq, vol, duration) {
     osc.start(); osc.stop(audioCtx.currentTime + duration);
 }
 
+// SPACING ADDED IN ABBREVIATIONS
 function formatAbbr(n) {
     if (n === 0n) return "0";
     const s = n.toString();
     if (s.length >= 101) return (n / 10n**100n) + " Ggl";
     let tier = Math.floor((s.length - 1) / 3);
     if (tier < 1) return s;
-    let base = n / 10n**BigInt(tier * 3);
-    return base + " " + SHORTS[tier];
+    return (n / 10n**BigInt(tier * 3)) + " " + SHORTS[tier];
 }
 
+// FULL NAMES FOR TITLE
 function formatFull(n) {
     if (n === 0n) return "0";
     const s = n.toString();
     if (s.length >= 101) return (n / 10n**100n) + " Googol";
     let tier = Math.floor((s.length - 1) / 3);
     if (tier < 1) return s;
-    let base = n / 10n**BigInt(tier * 3);
-    return base + " " + FULLS[tier];
-}
-
-function setMode(m) {
-    gameMode = m;
-    document.getElementById('tgl-timer').classList.toggle('active', m === 'timer');
-    document.getElementById('tgl-watch').classList.toggle('active', m === 'stopwatch');
-}
-
-function explode(x, y, color) {
-    for(let i=0; i<60; i++) {
-        const d = document.createElement('div'); d.className = 'particle';
-        d.style.background = color; d.style.width = d.style.height = (Math.random()*15+5)+"px";
-        d.style.left = x+"px"; d.style.top = y+"px";
-        document.getElementById('arena').appendChild(d);
-        const ang = Math.random()*Math.PI*2, dist = 50 + Math.random()*250;
-        d.animate([{transform:'translate(0,0) scale(1)', opacity:1}, {transform:`translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist}px) scale(0)`, opacity:0}], 1200);
-        setTimeout(()=>d.remove(), 1200);
-    }
+    return (n / 10n**BigInt(tier * 3)) + " " + FULLS[tier];
 }
 
 function sel(el, type, val, lbl) {
     document.querySelectorAll('.ball-opt').forEach(b => b.classList.remove('active'));
-    el.classList.add('active'); p.type = type; p.val = BigInt(val); p.lbl = lbl; p.col = el.style.backgroundColor; 
-    p.name = el.getAttribute('data-name'); pre();
+    el.classList.add('active'); 
+    p.type = type; 
+    p.val = BigInt(val); 
+    p.lbl = lbl; 
+    p.col = el.style.backgroundColor; 
+    p.name = el.getAttribute('data-name'); 
+    pre();
 }
 
 function pre() {
@@ -164,25 +149,29 @@ function pre() {
 
 function getNextDmg() {
     if(hp <= 0n) return 0n;
-    if(p.type==='mult' || p.type==='exp') return p.pwr;
-    if(p.type==='half') return hp/2n;
-    if(p.type==='quarter') return hp/4n;
-    if(p.type==='root') {
+    let d = 0n;
+    if(p.type==='mult' || p.type==='exp') d = p.pwr;
+    else if(p.type==='half') d = hp / 2n;
+    else if(p.type==='quarter') d = (hp * 3n) / 4n; // Corrected: Deals 75%
+    else if(p.type==='root') {
         let s = hp.toString();
         let rootVal = BigInt(Math.floor(Math.sqrt(Number(s.substring(0,14))))) * 10n**BigInt(Math.max(0, s.length-14));
-        let actualDmg = hp - rootVal;
-        return (actualDmg === 0n && hp > 0n) ? 1n : actualDmg + 1n; 
+        d = hp - rootVal; // Deals current HP minus the root result
     }
-    if(p.type==='rev') return hp - (hp/(p.hits+1n));
-    return 0n;
+    else if(p.type==='rev') d = hp - (hp / (p.hits + 1n));
+    
+    // MERCY FINISHER: Allows halver/quarter to kill 1hp ball
+    if (d === 0n && hp > 0n) return 1n;
+    return d;
 }
 
 function go() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const rawHp = document.getElementById('in-hp').value;
     hp = rawHp.includes('^') ? BigInt(rawHp.split('^')[0])**BigInt(rawHp.split('^')[1]) : BigInt(rawHp);
-    gameTime = gameMode === 'timer' ? parseFloat(document.getElementById('in-time').value)*1000 : 0;
+    gameTime = parseFloat(document.getElementById('in-time').value)*1000;
     
+    // RANDOM DIRECTIONS
     const pAng = Math.random() * Math.PI * 2;
     p.dx = Math.cos(pAng) * 14; p.dy = Math.sin(pAng) * 14;
     const tAng = Math.random() * Math.PI * 2;
@@ -190,16 +179,14 @@ function go() {
 
     t.r = parseInt(document.getElementById('sz-t').value); p.r = parseInt(document.getElementById('sz-b').value);
     
-    // Initial power setup
-    if(p.type === 'exp') p.pwr = 2n; 
+    // Reset Power
+    if(p.type === 'exp') p.pwr = 2n;
     else p.pwr = p.val || 1n;
     
     p.hits = 1n; running = true;
 
     const h = document.getElementById('h-main');
-    const hpStr = formatFull(hp).toUpperCase();
-    if (gameMode === 'timer') h.innerHTML = `CAN <span style="color:${p.col}">${p.name.toUpperCase()}</span> ${p.lbl} DEAL ${hpStr} IN <span id="timer-val">${(gameTime/1000).toFixed(1)}</span>s?`;
-    else h.innerHTML = `HOW MUCH TIME FOR <span style="color:${p.col}">${p.name.toUpperCase()}</span> ${p.lbl} TO DEAL ${hpStr}? [<span id="timer-val">0.0</span>s]`;
+    h.innerHTML = `CAN <span style="color:${p.col}">${p.name.toUpperCase()}</span> ${p.lbl} DEAL ${formatFull(hp).toUpperCase()}? [<span id="timer-val">0.0</span>s]`;
 
     document.getElementById('tiny-ball').style.background = p.col;
     document.getElementById('tiny-ball').innerText = p.lbl;
@@ -214,48 +201,54 @@ function go() {
 function loop() {
     if(!running) return;
     const now = performance.now(), dt = now - last; last = now;
-    if (gameMode === 'timer') { gameTime -= dt; if (gameTime <= 0) { end(false); return; } }
-    else gameTime += dt;
+    gameTime -= dt;
+    if (gameTime <= 0) { end(false); return; }
     if (hp <= 0n) { end(true); return; }
 
     document.getElementById('timer-val').innerText = (gameTime/1000).toFixed(1);
 
+    // Big Ball Move
     t.x += t.dx; t.y += t.dy;
-    if (t.x <= 0 || t.x >= 600 - t.r*2) { t.dx *= -1; t.x = t.x <= 0 ? 0 : 600 - t.r*2; playSound(150, 0.05, 0.1); }
-    if (t.y <= 0 || t.y >= 600 - t.r*2) { t.dy *= -1; t.y = t.y <= 0 ? 0 : 600 - t.r*2; playSound(150, 0.05, 0.1); }
+    if (t.x <= 0 || t.x >= 600 - t.r*2) { t.dx *= -1; t.x = t.x <= 0 ? 0 : 600 - t.r*2; }
+    if (t.y <= 0 || t.y >= 600 - t.r*2) { t.dy *= -1; t.y = t.y <= 0 ? 0 : 600 - t.r*2; }
     const bb = document.getElementById('big-ball');
-    bb.style.left = t.x+"px"; bb.style.top = t.y+"px";
+    bb.style.left = t.x + "px"; bb.style.top = t.y + "px";
     bb.style.width = bb.style.height = (t.r*2)+"px";
     document.getElementById('hp-txt').innerText = hp.toString();
 
+    // Player Ball Move
     p.x += p.dx; p.y += p.dy;
-    if (p.x <= 0 || p.x >= 600 - p.r*2) { p.dx *= -1; p.x = p.x <= 0 ? 0 : 600 - p.r*2; playSound(400, 0.1, 0.1); }
-    if (p.y <= 0 || p.y >= 600 - p.r*2) { p.dy *= -1; p.y = p.y <= 0 ? 0 : 600 - p.r*2; playSound(400, 0.1, 0.1); }
+    if (p.x <= 0 || p.x >= 600 - p.r*2) { p.dx *= -1; p.x = p.x <= 0 ? 0 : 600 - p.r*2; }
+    if (p.y <= 0 || p.y >= 600 - p.r*2) { p.dy *= -1; p.y = p.y <= 0 ? 0 : 600 - p.r*2; }
     const tb = document.getElementById('tiny-ball');
-    tb.style.left = p.x+"px"; tb.style.top = p.y+"px";
+    tb.style.left = p.x + "px"; tb.style.top = p.y + "px";
     tb.style.width = tb.style.height = (p.r*2)+"px";
 
+    // Collision
     const dx = (p.x+p.r) - (t.x+t.r), dy = (p.y+p.r) - (t.y+t.r), dist = Math.sqrt(dx*dx + dy*dy);
     if (dist < (p.r + t.r)) {
         playSound(200, 0.4, 0.3);
         let dmg = getNextDmg();
-        let actualDmgValue = dmg; 
-        
-        // Logical update AFTER damage is calculated for the hit
-        if(p.type==='mult' && p.val > 0n) p.pwr *= p.val;
-        if(p.type==='exp') p.pwr = p.pwr ** p.val;
-        if(p.type==='rev') p.hits++;
+        let rawDmgStr = dmg.toString();
         
         if (dmg >= hp) { dmg = hp; hp = 0n; } else { hp -= dmg; }
         
         document.getElementById('last-hit-val').innerText = formatAbbr(dmg);
-        document.getElementById('next-hit-val').innerText = formatAbbr(getNextDmg());
         
+        // POPUP: RED & FULL NUMBER
         const pop = document.createElement('div'); pop.className = 'dmg-pop';
-        pop.innerText = "-" + actualDmgValue.toString();
+        pop.innerText = "-" + rawDmgStr;
         pop.style.left = p.x+"px"; pop.style.top = p.y+"px";
         document.getElementById('arena').appendChild(pop); setTimeout(()=>pop.remove(), 1200);
 
+        // Power Scaling AFTER damage
+        if(p.type==='mult' && p.val > 0n) p.pwr *= p.val;
+        if(p.type==='exp') p.pwr = p.pwr ** p.val;
+        if(p.type==='rev') p.hits++;
+        
+        document.getElementById('next-hit-val').innerText = formatAbbr(getNextDmg());
+
+        // Physics bounce
         const nx = dx/dist, ny = dy/dist;
         const p1 = p.dx * nx + p.dy * ny, p2 = t.dx * nx + t.dy * ny;
         const v1 = (p1 * (1 - t.mass) + 2 * t.mass * p2) / (1 + t.mass);
@@ -269,8 +262,7 @@ function loop() {
 
 function end(vic) {
     running = false;
-    if(vic) { document.getElementById('big-ball').style.display='none'; explode(t.x+t.r, t.y+t.r, '#ccc'); playSound(100, 0.6, 1.5); }
-    else { document.getElementById('tiny-ball').style.display='none'; explode(p.x+p.r, p.y+p.r, p.col); playSound(50, 0.6, 1.5); }
+    if(vic) playSound(100, 0.6, 1.5); else playSound(50, 0.6, 1.5);
     setTimeout(() => location.reload(), 3000);
 }
 pre();
