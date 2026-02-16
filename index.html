@@ -1,128 +1,124 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Math Battle Pro</title>
+    <title>Math Simulation</title>
     <style>
-        body { background: #121212; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        body { background: #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; }
         
-        /* The Arena - Perfectly Square */
+        #stats { text-align: center; margin-bottom: 10px; }
+        #dmg-display { font-size: 2.5rem; font-weight: bold; color: #333; margin: 5px; }
+
+        /* Fixed Square Box Perimeters */
         #arena { 
-            width: 500px; height: 500px; background: #ffffff; border: 10px solid #222; 
-            position: relative; overflow: hidden; border-radius: 4px;
+            width: 400px; height: 400px; background: white; 
+            border: 10px solid #222; position: relative; overflow: hidden; 
         }
 
-        /* The Big Ball (Rooter) */
+        /* The Big Ball */
         #target {
-            position: absolute; width: 130px; height: 130px; background: #cfcfcf; 
-            border-radius: 50%; border: 5px solid #444; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; font-weight: 900; color: #222;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.1); pointer-events: none;
+            position: absolute; width: 100px; height: 100px; background: #bbb; 
+            border-radius: 50%; border: 4px solid #444; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; font-weight: bold; text-align: center;
         }
 
-        /* Small Balls */
-        .ball {
-            position: absolute; width: 55px; height: 55px; border-radius: 50%; 
-            border: 3px solid #000; color: white; font-weight: bold; font-size: 18px;
-            display: flex; align-items: center; justify-content: center; pointer-events: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        /* The Active Ball */
+        #active-ball {
+            position: absolute; width: 50px; height: 50px; border-radius: 50%; 
+            border: 3px solid #000; color: white; font-weight: bold;
+            display: none; align-items: center; justify-content: center;
         }
 
-        /* UI Styling */
-        #controls { margin-top: 15px; display: flex; gap: 8px; background: #222; padding: 12px; border-radius: 12px; }
-        .spawn-btn { width: 55px; height: 55px; border-radius: 50%; cursor: pointer; border: 2px solid white; color: white; font-weight: 800; transition: 0.1s; }
-        .spawn-btn:hover { transform: scale(1.1); }
-        
-        #stats { color: white; text-align: center; margin-bottom: 10px; }
-        #dmg { font-size: 2.5rem; color: #ff5722; font-weight: 900; margin: 0; }
-        input { background: #333; color: white; border: 1px solid #555; padding: 5px; border-radius: 4px; text-align: center; }
-
-        .crash { animation: shake 0.05s infinite; background: #ff0000 !important; border-color: #700 !important; }
-        @keyframes shake { 0% { transform: translate(3px, 3px); } 100% { transform: translate(-3px, -3px); } }
+        #menu { margin-top: 20px; display: flex; gap: 10px; padding: 10px; background: #333; border-radius: 8px; }
+        .menu-btn { width: 50px; height: 50px; border-radius: 50%; cursor: pointer; border: 2px solid white; color: white; font-weight: bold; }
+        input { padding: 5px; text-align: center; width: 150px; border: 2px solid #333; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div id="stats">
-    <p>TARGET HP: <input type="text" id="hp-input" value="1000000"></p>
-    <h1 id="dmg">10</h1>
+    TARGET HP: <input type="number" id="hp-input" value="1000000" oninput="updateHP()">
+    <div id="dmg-display">10</div>
 </div>
 
 <div id="arena">
     <div id="target">
-        <span>ROOTER</span>
-        <span id="t-hp" style="font-size: 12px;">HP: 1M</span>
+        <div>BIG BALL</div>
+        <div id="t-hp">HP: 1,000,000</div>
     </div>
+    <div id="active-ball"></div>
 </div>
 
-<div id="controls">
-    <button class="spawn-btn" style="background:#ff5722" onclick="addBall(2, '#ff5722')">2x</button>
-    <button class="spawn-btn" style="background:#2196f3" onclick="addBall(3, '#2196f3')">3x</button>
-    <button class="spawn-btn" style="background:#4caf50" onclick="addBall(4, '#4caf50')">4x</button>
-    <button class="spawn-btn" style="background:#ffeb3b; color:black" onclick="addBall(5, '#ffeb3b')">5x</button>
-    <button class="spawn-btn" style="background:#9c27b0" onclick="addBall(6, '#9c27b0')">6x</button>
+<div id="menu">
+    <button class="menu-btn" style="background:#ff5722" onclick="setBall(2, '#ff5722')">2x</button>
+    <button class="menu-btn" style="background:#2196f3" onclick="setBall(3, '#2196f3')">3x</button>
+    <button class="menu-btn" style="background:#4caf50" onclick="setBall(4, '#4caf50')">4x</button>
+    <button class="menu-btn" style="background:#ffeb3b; color:black" onclick="setBall(5, '#ffeb3b')">5x</button>
+    <button class="menu-btn" style="background:#9c27b0" onclick="setBall(6, '#9c27b0')">6x</button>
 </div>
 
 <script>
 let damage = 10n;
-let isDead = false;
-const balls = [];
-const target = { x: 185, y: 185, dx: 2, dy: 2, radius: 65 };
+const target = { x: 150, y: 150, dx: 2, dy: 2, size: 100 };
+const ball = { x: 0, y: 0, dx: 0, dy: 0, size: 50, active: false, mult: 1n };
 
-function addBall(m, c) {
-    if (isDead) return;
-    const b = { x: Math.random()*400, y: 20, dx: (Math.random()-0.5)*12, dy: 5, m: BigInt(m), color: c };
-    const el = document.createElement('div');
-    el.className = 'ball';
-    el.style.background = c;
+function updateHP() {
+    const val = document.getElementById('hp-input').value;
+    document.getElementById('t-hp').innerText = "HP: " + Number(val).toLocaleString();
+}
+
+function setBall(m, color) {
+    ball.active = true;
+    ball.mult = BigInt(m);
+    ball.x = 20; ball.y = 20;
+    ball.dx = 5; ball.dy = 5;
+    
+    const el = document.getElementById('active-ball');
+    el.style.display = 'flex';
+    el.style.background = color;
     el.innerText = m + 'x';
-    document.getElementById('arena').appendChild(el);
-    b.el = el;
-    balls.push(b);
 }
 
 function run() {
-    if (isDead) return;
-
-    // Move Rooter (The Big Ball)
+    // Big Ball Movement
     target.x += target.dx; target.y += target.dy;
-    if (target.x < 0 || target.x > 360) target.dx *= -1;
-    if (target.y < 0 || target.y > 360) target.dy *= -1;
+    if(target.x <= 0 || target.x >= 300) target.dx *= -1;
+    if(target.y <= 0 || target.y >= 300) target.dy *= -1;
+    
     const tEl = document.getElementById('target');
     tEl.style.left = target.x + 'px';
     tEl.style.top = target.y + 'px';
 
-    const hpVal = BigInt(document.getElementById('hp-input').value || 0);
-    document.getElementById('t-hp').innerText = "HP: " + hpVal.toLocaleString();
-
-    balls.forEach(b => {
-        b.x += b.dx; b.y += b.dy;
-        // Bounce off walls
-        if (b.x < 0 || b.x > 435) b.dx *= -1;
-        if (b.y < 0 || b.y > 435) b.dy *= -1;
+    if(ball.active) {
+        ball.x += ball.dx; ball.y += ball.dy;
+        
+        // Arena Perimeters (accounting for ball size)
+        if(ball.x <= 0 || ball.x >= 350) ball.dx *= -1;
+        if(ball.y <= 0 || ball.y >= 350) ball.dy *= -1;
 
         // Collision Logic
-        let dist = Math.hypot((b.x+27) - (target.x+65), (b.y+27) - (target.y+65));
-        if (dist < 92) {
-            damage *= b.m;
-            // Physics Kick
-            b.dx *= -1.02; b.dy *= -1.02;
-            b.x += b.dx * 2; b.y += b.dy * 2;
+        let dist = Math.hypot((ball.x+25) - (target.x+50), (ball.y+25) - (target.y+50));
+        if(dist < 75) {
+            damage *= ball.mult;
+            ball.dx *= -1; ball.dy *= -1;
             
-            // UI Update
+            // Update Stats
             const dStr = damage.toString();
-            document.getElementById('dmg').innerText = dStr.length > 12 ? "10^" + dStr.length : dStr;
-
-            if (damage >= hpVal) {
-                isDead = true;
-                document.getElementById('arena').classList.add('crash');
-                document.getElementById('dmg').innerText = "ERROR";
-            }
+            document.getElementById('dmg-display').innerText = dStr.length > 15 ? "10^" + dStr.length : dStr;
+            
+            // Deduct from HP Input visually
+            let currentHP = BigInt(document.getElementById('hp-input').value);
+            let remaining = currentHP - damage;
+            document.getElementById('t-hp').innerText = "HP: " + (remaining > 0n ? remaining.toLocaleString() : "0");
         }
-        b.el.style.left = b.x + 'px';
-        b.el.style.top = b.y + 'px';
-    });
+
+        const bEl = document.getElementById('active-ball');
+        bEl.style.left = ball.x + 'px';
+        bEl.style.top = ball.y + 'px';
+    }
+
     requestAnimationFrame(run);
 }
+
 run();
 </script>
 </body>
