@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Abbreviated Challenge</title>
+    <title>Full Number Challenge</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@900&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #f1efdb; --red: #cc0000; --gold: #ffcc00; --gray: #cccccc; }
@@ -26,14 +26,8 @@
         .active { display: flex; }
 
         .header { text-align: center; font-size: 2.2rem; width: 600px; margin-bottom: 15px; line-height: 1.1; text-transform: uppercase; }
-        
-        #arena-container { position: relative; }
         #arena { width: 600px; height: 600px; background: #fff; border: 10px solid #000; position: relative; overflow: hidden; }
         
-        /* Shake Animation */
-        .shake { animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both; }
-        @keyframes shake { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(4px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-8px, 0, 0); } 40%, 60% { transform: translate3d(8px, 0, 0); } }
-
         #big-ball { position: absolute; background: var(--gray); border-radius: 50%; border: 2px solid #555; display: flex; align-items: center; justify-content: center; z-index: 2; overflow: hidden; }
         #hp-txt { color: #fff; font-weight: 900; font-family: monospace; word-break: break-all; line-height: 0.8; padding: 10px; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 2px 0 #000, 0 -2px 0 #000, 2px 0 0 #000, -2px 0 0 #000; }
 
@@ -45,8 +39,8 @@
         .stat-val { font-size: 1.4rem; white-space: nowrap; overflow: hidden; }
 
         .particle { position: absolute; border-radius: 50%; pointer-events: none; }
-        .dmg-pop { position: absolute; font-weight: 900; pointer-events: none; z-index: 10; -webkit-text-stroke: 1.5px #fff; animation: floatUp 0.8s forwards; font-size: 32px; }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
+        .dmg-pop { position: absolute; font-weight: 900; pointer-events: none; z-index: 10; -webkit-text-stroke: 1px #fff; animation: floatUp 1.2s forwards; font-size: 24px; word-break: break-all; max-width: 300px; text-align: center; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-150px); } }
     </style>
 </head>
 <body>
@@ -90,11 +84,9 @@
 
 <div id="screen-game" class="screen">
     <div id="h-main" class="header"></div>
-    <div id="arena-container">
-        <div id="arena">
-            <div id="big-ball"><div id="hp-txt"></div></div>
-            <div id="tiny-ball"></div>
-        </div>
+    <div id="arena">
+        <div id="big-ball"><div id="hp-txt"></div></div>
+        <div id="tiny-ball"></div>
     </div>
     <div class="stats-bar">
         <div class="stat-box"><span class="stat-label">LAST HIT</span><div id="last-hit-val" class="stat-val">---</div></div>
@@ -107,8 +99,8 @@ let hp = 0n, gameTime = 0, last = 0, running = false, gameMode = 'timer';
 const p = { x: 50, y: 50, dx: 0, dy: 0, r: 40, type: 'mult', val: 2n, lbl: 'x2', col: '#ff0000', pwr: 2n, hits: 1n, name: "Doubler" };
 const t = { x: 250, y: 250, dx: 0, dy: 0, r: 120, mass: 6 };
 
-// Short Abbreviations
 const SHORTS = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Od", "Nd", "Vg", "Uvg", "Dvg", "Tvg", "Qvg", "Qivg", "Sxg", "Spg", "Ovg", "Nvg", "Tg", "Utg", "Dtg", "Ttg"];
+const FULLS = ["", "Thousand", "Million", "Billion", "Trillion", "Quadrillion", "Quintillion", "Sextillion", "Septillion", "Octillion", "Nonillion", "Decillion", "Undecillion", "Duodecillion", "Tredecillion", "Quattuordecillion", "Quindecillion", "Sexdecillion", "Septendecillion", "Octodecillion", "Novemdecillion", "Vigintillion", "Unvigintillion", "Duovigintillion", "Tresvigintillion", "Quattuorvigintillion", "Quinvigintillion", "Sexvigintillion", "Septenvigintillion", "Octovigintillion", "Novemvigintillion", "Trigintillion", "Untrigintillion", "Duotrigintillion", "Trestrigintillion"];
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playSound(freq, vol, duration) {
@@ -122,14 +114,24 @@ function playSound(freq, vol, duration) {
     osc.start(); osc.stop(audioCtx.currentTime + duration);
 }
 
-function format(n) {
+function formatAbbr(n) {
     if (n === 0n) return "0";
     const s = n.toString();
-    if (s.length >= 101) return (n / 10n**100n) + "Ggl";
+    if (s.length >= 101) return (n / 10n**100n) + " Ggl";
     let tier = Math.floor((s.length - 1) / 3);
     if (tier < 1) return s;
     let base = n / 10n**BigInt(tier * 3);
-    return base + (SHORTS[tier] || "Inf");
+    return base + " " + SHORTS[tier]; // Space added here
+}
+
+function formatFull(n) {
+    if (n === 0n) return "0";
+    const s = n.toString();
+    if (s.length >= 101) return (n / 10n**100n) + " Googol";
+    let tier = Math.floor((s.length - 1) / 3);
+    if (tier < 1) return s;
+    let base = n / 10n**BigInt(tier * 3);
+    return base + " " + FULLS[tier];
 }
 
 function setMode(m) {
@@ -148,14 +150,6 @@ function explode(x, y, color) {
         d.animate([{transform:'translate(0,0) scale(1)', opacity:1}, {transform:`translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist}px) scale(0)`, opacity:0}], 1200);
         setTimeout(()=>d.remove(), 1200);
     }
-}
-
-function triggerShake() {
-    const a = document.getElementById('arena');
-    a.classList.remove('shake');
-    void a.offsetWidth; // Trigger reflow
-    a.classList.add('shake');
-    setTimeout(() => a.classList.remove('shake'), 200);
 }
 
 function sel(el, type, val, lbl) {
@@ -201,13 +195,13 @@ function go() {
     p.pwr = p.val || 1n; p.hits = 1n; running = true;
 
     const h = document.getElementById('h-main');
-    const hpStr = format(hp).toUpperCase();
+    const hpStr = formatFull(hp).toUpperCase(); // Title uses Full names
     if (gameMode === 'timer') h.innerHTML = `CAN <span style="color:${p.col}">${p.name.toUpperCase()}</span> ${p.lbl} DEAL ${hpStr} IN <span id="timer-val">${(gameTime/1000).toFixed(1)}</span>s?`;
     else h.innerHTML = `HOW MUCH TIME FOR <span style="color:${p.col}">${p.name.toUpperCase()}</span> ${p.lbl} TO DEAL ${hpStr}? [<span id="timer-val">0.0</span>s]`;
 
     document.getElementById('tiny-ball').style.background = p.col;
     document.getElementById('tiny-ball').innerText = p.lbl;
-    document.getElementById('next-hit-val').innerText = format(getNextDmg());
+    document.getElementById('next-hit-val').innerText = formatAbbr(getNextDmg());
     
     document.getElementById('screen-lab').classList.remove('active');
     document.getElementById('screen-game').classList.add('active');
@@ -242,20 +236,22 @@ function loop() {
     const dx = (p.x+p.r) - (t.x+t.r), dy = (p.y+p.r) - (t.y+t.r), dist = Math.sqrt(dx*dx + dy*dy);
     if (dist < (p.r + t.r)) {
         playSound(200, 0.4, 0.3);
-        triggerShake(); // Arena Shake
         
         let dmg = getNextDmg();
+        let actualDmgValue = dmg; // Keep the full raw value for the pop
+        
         if(p.type==='mult' && p.val > 0n) p.pwr *= p.val;
         if(p.type==='rev') p.hits++;
         
         if (dmg >= hp) { dmg = hp; hp = 0n; } else { hp -= dmg; }
         
-        document.getElementById('last-hit-val').innerText = format(dmg);
-        document.getElementById('next-hit-val').innerText = format(getNextDmg());
+        document.getElementById('last-hit-val').innerText = formatAbbr(dmg);
+        document.getElementById('next-hit-val').innerText = formatAbbr(getNextDmg());
         
         const pop = document.createElement('div'); pop.className = 'dmg-pop';
-        pop.innerText = "-" + format(dmg); pop.style.left = p.x+"px"; pop.style.top = p.y+"px"; pop.style.color = p.col;
-        document.getElementById('arena').appendChild(pop); setTimeout(()=>pop.remove(), 800);
+        pop.innerText = "-" + actualDmgValue.toString(); // Shows full number
+        pop.style.left = p.x+"px"; pop.style.top = p.y+"px"; pop.style.color = p.col;
+        document.getElementById('arena').appendChild(pop); setTimeout(()=>pop.remove(), 1200);
 
         const nx = dx/dist, ny = dy/dist;
         const p1 = p.dx * nx + p.dy * ny, p2 = t.dx * nx + t.dy * ny;
