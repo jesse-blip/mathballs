@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Infinite Scale Challenge</title>
+    <title>Perfect Format Challenge</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@900&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #f1efdb; --red: #cc0000; --gold: #ffcc00; --gray: #cccccc; }
@@ -22,8 +22,6 @@
         .active { display: flex; }
 
         .header { text-align: center; font-size: 2.2rem; width: 850px; margin-bottom: 10px; line-height: 1; text-transform: uppercase; }
-        
-        /* Dynamic Color Class */
         #h-ball { -webkit-text-stroke: 1.5px black; font-size: 2.8rem; }
 
         #arena { width: 600px; height: 750px; background: #fff; border: 8px solid #000; position: relative; overflow: hidden; }
@@ -38,8 +36,8 @@
         #damage-label { margin-top: 10px; font-size: 3.2rem; color: var(--gold); -webkit-text-stroke: 2px black; font-weight: 900; }
         
         .particle { position: absolute; border-radius: 50%; pointer-events: none; z-index: 5; }
-        .dmg-pop { position: absolute; font-weight: 900; pointer-events: none; z-index: 10; -webkit-text-stroke: 1px #fff; animation: floatUp 0.8s forwards; font-size: 28px; }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
+        .dmg-pop { position: absolute; font-weight: 900; pointer-events: none; z-index: 10; -webkit-text-stroke: 1.5px #fff; animation: floatUp 0.8s forwards; font-size: 32px; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
 <body>
@@ -48,7 +46,9 @@
     <div class="lab-ui">
         <div class="setup-col">
             <h1>CHALLENGE SETUP</h1>
+            <label>HP (Try 1000 or 10^100)</label>
             <input type="text" id="in-hp" style="width:100%; padding:8px; border:4px solid #000;" value="10^100">
+            <label>SECONDS</label>
             <input type="number" id="in-time" style="width:100%; padding:8px; border:4px solid #000;" value="58.1">
             
             <div class="ball-grid">
@@ -77,7 +77,7 @@
 
 <div id="screen-game" class="screen">
     <div class="header">
-        Can <span id="h-ball">BALL</span> <span id="h-sub">x2</span> Deal 1 <span id="h-unit">Unit</span> Damage in <span id="h-tm">58.1</span>s?
+        Can <span id="h-ball">BALL</span> <span id="h-sub">x2</span> Deal <span id="h-unit">Unit</span> Damage in <span id="h-tm">58.1</span>s?
     </div>
     <div id="arena">
         <div id="big-ball"><div id="hp-txt"></div></div>
@@ -112,6 +112,25 @@ function explode(x, y, color) {
     }
 }
 
+function format(n) {
+    if (n === 0n) return "0";
+    const s = n.toString();
+    if (s.length > 300) return "Infinity";
+    if (s.length > 100) {
+        let googols = n / 10n**100n;
+        return googols + " Googol";
+    }
+    
+    let tier = Math.floor((s.length - 1) / 3);
+    if (tier < 1) return s; // Handles 1-999
+    
+    let name = ILLIONS[tier] || "Unfathomable";
+    let divisor = 10n**BigInt(tier * 3);
+    let base = n / divisor;
+    
+    return base + " " + name;
+}
+
 function pre() {
     const tr = document.getElementById('sz-t').value; const br = document.getElementById('sz-b').value;
     const pt = document.getElementById('pre-t'); const pb = document.getElementById('pre-b');
@@ -125,33 +144,23 @@ function sel(el, type, val, lbl) {
     p.name = el.getAttribute('data-name'); pre();
 }
 
-function format(n) {
-    const s = n.toString();
-    if (s.length > 300) return "Infinity";
-    if (s.length > 100) return (n / 10n**100n) + " Googol";
-    
-    let tier = Math.floor((s.length - 1) / 3);
-    if (tier < 1) return s;
-    
-    let name = ILLIONS[tier] || "Unfathomable";
-    let base = n / 10n**BigInt(tier * 3);
-    return base + " " + name;
-}
-
 function go() {
-    const val = document.getElementById('in-hp').value;
-    hp = val.includes('^') ? BigInt(val.split('^')[0])**BigInt(val.split('^')[1]) : BigInt(val);
+    const rawHp = document.getElementById('in-hp').value;
+    hp = rawHp.includes('^') ? BigInt(rawHp.split('^')[0])**BigInt(rawHp.split('^')[1]) : BigInt(rawHp);
     time = parseFloat(document.getElementById('in-time').value)*1000;
     t.r = parseInt(document.getElementById('sz-t').value); p.r = parseInt(document.getElementById('sz-b').value);
     p.pwr = p.val || 1n; running = true; p.hits = 1n;
 
-    // Set Header Colors to Ball Colors
     const hBall = document.getElementById('h-ball');
     hBall.innerText = p.name.toUpperCase();
     hBall.style.color = p.col;
 
     document.getElementById('h-sub').innerText = p.lbl;
-    document.getElementById('h-unit').innerText = format(hp).split(' ').slice(1).join(' ') || "Damage";
+    
+    // Fixed Header Formatting
+    let formattedHp = format(hp);
+    document.getElementById('h-unit').innerText = formattedHp + (hp < 1000n ? "" : "");
+    
     document.getElementById('tiny-ball').style.background = p.col; 
     document.getElementById('tiny-ball').innerText = p.lbl;
 
@@ -169,7 +178,7 @@ function loop() {
         running = false;
         if(hp <= 0n) { explode(t.x+t.r, t.y+t.r, '#fff'); play(100, 0.5, 0.5); } 
         else { explode(p.x+p.r, p.y+p.r, p.col); play(50, 0.5, 0.5); }
-        setTimeout(() => location.reload(), 1500); return;
+        setTimeout(() => location.reload(), 2000); return;
     }
 
     document.getElementById('h-tm').innerText = (time/1000).toFixed(1);
@@ -205,6 +214,7 @@ function loop() {
         else if(p.type==='quarter') dmg = hp - (hp/4n);
         else if(p.type==='rev') { dmg = hp - (hp/(p.hits+1n)); p.hits++; }
         
+        if (dmg > hp) dmg = hp;
         hp -= dmg;
         document.getElementById('damage-label').innerText = "HIT: " + format(dmg);
         
