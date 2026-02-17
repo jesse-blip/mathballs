@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Square Arena: Script-Master Edition</title>
+    <title>Square Arena: Chaos & Cinema</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -23,7 +23,6 @@
         .col-script { flex: 0 0 340px; display: flex; flex-direction: column; gap: 15px; background: var(--panel-dark); color: #fff; padding: 20px; border: var(--border-thick); box-shadow: 10px 10px 0 rgba(0,0,0,0.4); }
         
         h2 { text-transform: uppercase; font-weight: 900; border-bottom: 3px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
-        .h-dark { border-color: var(--accent); color: var(--accent); }
         .input-group { margin-bottom: 10px; }
         label { display: block; font-size: 0.8rem; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
         input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 3px solid #000; font-family: 'Share Tech Mono', monospace; font-size: 1.1rem; }
@@ -36,12 +35,8 @@
         .mad-input { width: 60px; padding: 4px; border: 2px solid var(--accent); background: #0f3460; color: #fff; font-family: monospace; text-align: center; }
         .mad-select { padding: 4px; border: 2px solid var(--accent); background: #0f3460; color: #fff; font-weight: bold; }
         
-        .btn-calc { background: var(--accent); color: white; border: 2px solid #fff; padding: 10px; font-weight: 900; cursor: pointer; text-transform: uppercase; }
-        #calc-result { min-height: 40px; background: rgba(255,255,255,0.05); border: 1px dashed #555; display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 0.8rem; text-align: center; padding: 5px; margin-top: 5px; }
-
         #preview-container { width: 700px; height: 700px; background: #fff; border: 2px solid #000; position: relative; overflow: hidden; }
         .btn-start { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: #00ff88; color: #000; padding: 15px 50px; border: 4px solid #000; font-size: 2rem; font-weight: 900; cursor: pointer; z-index: 200; box-shadow: 0 5px 0 #000; }
-        .btn-start:active { transform: translateX(-50%) translateY(4px); box-shadow: 0 1px 0 #000; }
 
         /* --- ARENA VIEW --- */
         #game-view { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: #fdfaf0; flex-direction: column; align-items: center; justify-content: center; z-index: 200; color: #000; }
@@ -53,14 +48,14 @@
         .b-hero { border: 3px solid #000; font-weight: 900; z-index: 10; color: #000; }
         
         #target-text { color: #fff; font-weight: 900; text-align: center; text-shadow: 2px 2px 0 #000; padding: 8%; font-family: 'Share Tech Mono', monospace; line-height: 0.85; width: 100%; word-break: break-all; }
-
-        .dmg-float { position: absolute; font-size: 34px; font-weight: 900; color: #ff4757; -webkit-text-stroke: 1.5px #000; pointer-events: none; z-index: 100; animation: floatUp 1.2s ease-out forwards; }
-        @keyframes floatUp { 0%{opacity:1; transform:scale(0.7);} 100%{opacity:0; transform:translateY(-150px) scale(1.3);} }
-        .shard { position: absolute; border-radius: 50%; pointer-events: none; z-index: 20; }
-        
         #stats-bar { width: 700px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         .stat-card { background: #000; color: #fff; padding: 15px; border: 4px solid #000; text-align: center; }
         .stat-num { font-size: 1.6rem; font-weight: 900; color: #00ff88; display: block; }
+        
+        /* SHARDS & FLOATS */
+        .dmg-float { position: absolute; font-size: 34px; font-weight: 900; color: #ff4757; -webkit-text-stroke: 1.5px #000; pointer-events: none; z-index: 100; animation: floatUp 1.2s ease-out forwards; }
+        @keyframes floatUp { 0%{opacity:1; transform:scale(0.7);} 100%{opacity:0; transform:translateY(-150px) scale(1.3);} }
+        .shard { position: absolute; border-radius: 50%; pointer-events: none; z-index: 20; }
     </style>
 </head>
 <body>
@@ -92,27 +87,29 @@
     </div>
 
     <div class="col-script">
-        <h2 class="h-dark">Script Engine</h2>
-        <div style="display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.2); padding:10px; margin-bottom:5px;">
-            <input type="checkbox" id="chk-script" style="width:20px; height:20px;" onchange="toggleScriptMode()"><label style="margin:0; color:#fff;">Enable Script</label>
+        <h2 style="color:var(--accent); border-color:var(--accent);">Script Engine</h2>
+        <div style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.1); padding:12px; border:2px solid #444;">
+            <input type="checkbox" id="chk-script" style="width:22px; height:22px;" onchange="toggleScriptUI()"><label style="margin:0; color:#fff; font-size:1rem;">Enable Scripting</label>
         </div>
         
-        <div id="script-panel" style="opacity: 0.5; pointer-events: none;">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px; color: #00ff88;">
-                <input type="checkbox" id="chk-last-sec" style="width:18px; height:18px;"><label style="margin:0;">Last Second Heroics</label>
+        <div id="script-options" style="opacity: 0.3; pointer-events: none; transition: 0.3s;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px; background:rgba(0,255,136,0.1); padding:10px; border:1px solid #00ff88;">
+                <input type="checkbox" id="chk-last-sec" style="width:18px; height:18px;" onchange="toggleLSH()"><label style="margin:0; color:#00ff88;">Last Second Heroics</label>
             </div>
 
-            <div class="mad-lib">Big Ball must die 
-                <select id="sl-cond-type" class="mad-select" onchange="updateScriptUI()">
-                    <option value="time">at exact time</option>
-                    <option value="wall">after wall hits</option>
-                </select>
+            <div id="madlib-container" style="transition: 0.3s;">
+                <p style="font-size:0.8rem; color:#888; margin-bottom:5px;">PHYSICS OVERRIDE:</p>
+                <div class="mad-lib">Big Ball must die 
+                    <select id="sl-cond-type" class="mad-select" onchange="updateScriptSubUI()">
+                        <option value="time">at exact time</option>
+                        <option value="wall">after wall hits</option>
+                    </select>
+                </div>
+                <div id="cond-time"><div class="mad-lib">Between <input type="number" id="sc-t1" class="mad-input" value="28">s and <input type="number" id="sc-t2" class="mad-input" value="30">s.</div></div>
+                <div id="cond-wall" style="display:none;"><div class="mad-lib">Within <input type="number" id="sc-delay" class="mad-input" value="2">s after hitting the wall <input type="number" id="sc-hits" class="mad-input" value="10"> times.</div></div>
             </div>
-            <div id="cond-time"><div class="mad-lib">Between <input type="number" id="sc-t1" class="mad-input" value="28">s and <input type="number" id="sc-t2" class="mad-input" value="30">s.</div></div>
-            <div id="cond-wall" style="display:none;"><div class="mad-lib">Within <input type="number" id="sc-delay" class="mad-input" value="2">s after hitting the wall <input type="number" id="sc-hits" class="mad-input" value="10"> times.</div></div>
-            <button class="btn-calc" onclick="calculateFeasibility()">Calculate Script</button>
-            <div id="calc-result">Waiting for parameters...</div>
         </div>
+        <p id="hint-text" style="font-size:0.75rem; color:#666; font-style:italic;">Note: If scripting is off, all physics will be randomized.</p>
     </div>
 </div>
 
@@ -143,29 +140,26 @@ const HEROES = [
 const NAMES_FULL = ["", "Thousand", "Million", "Billion", "Trillion", "Quadrillion", "Quintillion", "Sextillion", "Septillion", "Octillion", "Nonillion", "Decillion", "Undecillion", "Duodecillion", "Tredecillion", "Quattuordecillion", "Quindecillion", "Sexdecillion", "Septendecillion", "Octodecillion", "Novemdecillion", "Vigintillion", "Unvigintillion", "Duovigintillion", "Trestrigintillion", "Quattuorvigintillion", "Quinvigintillion", "Sexvigintillion", "Septenvigintillion", "Octovigintillion", "Novemvigintillion", "Trigintillion", "Untrigintillion", "Duotrigintillion", "Trestrigintillion", "Quadragintillion", "Quinquagintillion", "Sexagintillion", "Septuagintillion", "Octogintillion", "Nonagintillion", "Centillion"];
 const NAMES_ABBR = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Od", "Nd", "Vg", "Uvg", "Dvg", "Tvg", "Qvg", "Qivg", "Sxg", "Spg", "Ovg", "Nvg", "Tg", "Utg", "Dtg", "Ttg", "Qtg", "Uq", "Dq", "Tq", "Qq", "Qiq", "Sxq", "Spq", "Oq", "Nq", "Qing"];
 
-let conf = { hero: {...HEROES[0], r:60}, target: {r:180, mass:30}, mode: "timer", script: {enabled: false, lastSec: false} };
+let conf = { hero: {...HEROES[0], r:60}, target: {r:180, mass:30}, mode: "timer", scriptEnabled: false, lsh: false };
 let sim = { active: false, hp: 0n, initHP: 0n, elapsed: 0, wallHits: 0, lastWallTime: 0, lastTs: 0 };
 
-/* --- FORMATTER (NO SCIENTIFIC NOTATION) --- */
+const SFX = {
+    ctx: null, init(){ if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); },
+    hit(){ this.play(120,'sine',0.1,0.2); }, 
+    clack(){ this.play(600,'square',0.03,0.05); }, 
+    boom(){ this.play(55,'sawtooth',0.8,0.3,1); },
+    play(f,t,d,v,s=0){ this.init(); const o=this.ctx.createOscillator(), g=this.ctx.createGain(); o.type=t; o.frequency.setValueAtTime(f, this.ctx.currentTime); if(s) o.frequency.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+d); g.gain.setValueAtTime(v, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime+d); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+d); }
+};
+
 function format(n, full = false) {
     if(n === 0n) return "0";
     let s = n.toString();
     let tier = Math.floor((s.length - 1) / 3);
     let arr = full ? NAMES_FULL : NAMES_ABBR;
-    
     if (tier === 0) return s;
     let base = n / 10n**BigInt(tier * 3);
-    let name = arr[tier] || "Infinity";
-    return base.toString() + " " + name;
+    return base.toString() + " " + (arr[tier] || "Cosmic");
 }
-
-const SFX = {
-    ctx: null, init(){ if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); },
-    hit(){ this.play(120,'sine',0.1,0.2); }, 
-    clack(){ this.play(600,'square',0.03,0.05); }, // Reduced Volume and Length
-    boom(){ this.play(55,'sawtooth',0.8,0.3,1); },
-    play(f,t,d,v,s=0){ this.init(); const o=this.ctx.createOscillator(), g=this.ctx.createGain(); o.type=t; o.frequency.setValueAtTime(f, this.ctx.currentTime); if(s) o.frequency.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+d); g.gain.setValueAtTime(v, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime+d); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+d); }
-};
 
 function init() {
     const g = document.getElementById('hero-grid');
@@ -192,20 +186,35 @@ function updatePreview() {
     ph.style.fontSize = (conf.hero.r*0.7)+"px"; ph.style.left = "50px"; ph.style.top = "50px";
 }
 
-function toggleScriptMode() {
-    conf.script.enabled = document.getElementById('chk-script').checked;
-    document.getElementById('script-panel').style.opacity = conf.script.enabled ? "1" : "0.5";
-    document.getElementById('script-panel').style.pointerEvents = conf.script.enabled ? "all" : "none";
-    document.getElementById('basic-modes').style.opacity = conf.script.enabled ? "0.3" : "1";
-    conf.mode = conf.script.enabled ? "script" : document.getElementById('sel-mode').value;
+/* --- UI CONTROLS --- */
+function toggleScriptUI() {
+    conf.scriptEnabled = document.getElementById('chk-script').checked;
+    const opt = document.getElementById('script-options');
+    opt.style.opacity = conf.scriptEnabled ? "1" : "0.3";
+    opt.style.pointerEvents = conf.scriptEnabled ? "all" : "none";
+    document.getElementById('basic-modes').style.opacity = conf.scriptEnabled ? "0.4" : "1";
+    toggleLSH(); // Refresh LSH state
 }
 
-function updateModeUI() { if(!conf.script.enabled) conf.mode = document.getElementById('sel-mode').value; }
-function updateScriptUI() { 
+function toggleLSH() {
+    conf.lsh = document.getElementById('chk-last-sec').checked;
+    const mad = document.getElementById('madlib-container');
+    if(conf.lsh && conf.scriptEnabled) {
+        mad.style.opacity = "0.2";
+        mad.style.pointerEvents = "none";
+    } else {
+        mad.style.opacity = "1";
+        mad.style.pointerEvents = "all";
+    }
+}
+
+function updateModeUI() { conf.mode = document.getElementById('sel-mode').value; }
+function updateScriptSubUI() {
     document.getElementById('cond-time').style.display = document.getElementById('sl-cond-type').value==='time'?'block':'none'; 
     document.getElementById('cond-wall').style.display = document.getElementById('sl-cond-type').value==='wall'?'block':'none'; 
 }
 
+/* --- PHYSICS --- */
 function getDmg(h, currHP) {
     let d = 1n;
     if(h.t==='root') { let s = currHP.toString(); d = currHP - (BigInt(Math.floor(Math.sqrt(Number(s.substring(0,14))))) * 10n**BigInt(Math.max(0, s.length-14))); }
@@ -224,16 +233,17 @@ function physicsStep(state, h, t, isSim) {
         if(b.y < 0 || b.y > sz-b.r*2) { b.vy*=-1; b.y = b.y<0?0:sz-b.r*2; hitW=true; }
     });
     if(hitW) { state.wallHits++; state.lastWallTime = state.elapsed; if(!isSim) SFX.clack(); }
+    
     let dx = (h.x+h.r)-(t.x+t.r), dy = (h.y+h.r)-(t.y+t.r), dist = Math.sqrt(dx*dx+dy*dy);
     if(dist < h.r+t.r) {
         if(!isSim) SFX.hit();
         let dmg = getDmg(h, state.hp);
         
-        // SCRIPTED: LAST SECOND HEROICS LOGIC
-        if(!isSim && conf.script.enabled && conf.script.lastSec) {
+        // MOVIE LOGIC (Last Second Heroics)
+        if(!isSim && conf.scriptEnabled && conf.lsh) {
             let limit = parseFloat(document.getElementById('inp-time').value);
-            if (state.elapsed >= limit - 1.0) dmg = state.hp; // Force kill in last second
-            else if (dmg >= state.hp) dmg = state.hp / 2n; // Prevent early kill
+            if (state.elapsed >= limit - 0.8) dmg = state.hp; 
+            else if (dmg >= state.hp) dmg = state.hp / 2n;
         }
 
         state.hp = dmg >= state.hp ? 0n : state.hp - dmg;
@@ -256,18 +266,35 @@ function launchGame() {
     const rawHPStr = document.getElementById('inp-hp').value;
     sim.hp = rawHPStr.includes('^') ? BigInt(rawHPStr.split('^')[0])**BigInt(rawHPStr.split('^')[1]) : BigInt(rawHPStr);
     sim.initHP = sim.hp; sim.elapsed = 0; sim.wallHits = 0; sim.active = true; sim.lastTs = performance.now();
-    conf.hero.x = 50; conf.hero.y = 50; conf.hero.vx = 12; conf.hero.vy = 10; conf.hero.hits = 0;
+    
+    conf.hero.hits = 0;
     conf.hero.pwr = (conf.hero.t==='root') ? 0n : conf.hero.v;
-    conf.target.x = 350-conf.target.r; conf.target.y = 350-conf.target.r; conf.target.vx = -4; conf.target.vy = 3;
-    conf.script.lastSec = document.getElementById('chk-last-sec').checked;
+
+    // RANDOMNESS LOGIC
+    if (!conf.scriptEnabled) {
+        // Random Start Positions
+        conf.hero.x = Math.random() * 200; 
+        conf.hero.y = Math.random() * 200;
+        conf.target.x = 300 + Math.random() * 200;
+        conf.target.y = 300 + Math.random() * 200;
+        // Random Velocities
+        conf.hero.vx = (Math.random() > 0.5 ? 1 : -1) * (8 + Math.random() * 8);
+        conf.hero.vy = (Math.random() > 0.5 ? 1 : -1) * (8 + Math.random() * 8);
+        conf.target.vx = (Math.random() > 0.5 ? 1 : -1) * (3 + Math.random() * 4);
+        conf.target.vy = (Math.random() > 0.5 ? 1 : -1) * (3 + Math.random() * 4);
+    } else {
+        // Consistent physics for scripted runs
+        conf.hero.x = 50; conf.hero.y = 50; conf.hero.vx = 12; conf.hero.vy = 10;
+        conf.target.x = 350-conf.target.r; conf.target.y = 350-conf.target.r; conf.target.vx = -4; conf.target.vy = 3;
+    }
 
     document.getElementById('setup-dashboard').style.display = 'none';
     document.getElementById('game-view').style.display = 'flex';
-    document.getElementById('hero').style.background = conf.hero.c;
-    document.getElementById('hero').innerText = conf.hero.l;
-    document.getElementById('hero').style.width = document.getElementById('hero').style.height = (conf.hero.r*2)+"px";
-    document.getElementById('target').style.width = document.getElementById('target').style.height = (conf.target.r*2)+"px";
-    document.getElementById('hero').style.display = 'flex'; document.getElementById('target').style.display = 'flex';
+    const hEl = document.getElementById('hero'), tEl = document.getElementById('target');
+    hEl.style.background = conf.hero.c; hEl.innerText = conf.hero.l;
+    hEl.style.width = hEl.style.height = (conf.hero.r*2)+"px";
+    tEl.style.width = tEl.style.height = (conf.target.r*2)+"px";
+    hEl.style.display = tEl.style.display = 'flex';
     requestAnimationFrame(gameLoop);
 }
 
@@ -286,25 +313,23 @@ function gameLoop(ts) {
     h.style.transform = `translate(${conf.hero.x}px, ${conf.hero.y}px)`;
     t.style.transform = `translate(${conf.target.x}px, ${conf.target.y}px)`;
     
-    const hpStr = sim.hp.toString(); txt.innerText = hpStr;
-    if(hpStr.length < 10) txt.style.fontSize = (conf.target.r*0.8) + "px";
-    else txt.style.fontSize = Math.min((conf.target.r*2.2)/Math.sqrt(hpStr.length*1.5), conf.target.r*0.6) + "px";
+    txt.innerText = sim.hp.toString();
+    txt.style.fontSize = sim.hp.toString().length < 10 ? (conf.target.r*0.8)+"px" : Math.min((conf.target.r*2)/Math.sqrt(sim.hp.toString().length*1.5), conf.target.r*0.6)+"px";
 
     const title = document.getElementById('arena-title'), hName = `<span style="color:${conf.hero.c}">${conf.hero.n}</span>`, goal = format(sim.initHP, true);
     
-    if(conf.script.enabled && conf.script.lastSec) {
-        // Last second heroics uses normal timer title
-        let rem = parseFloat(document.getElementById('inp-time').value) - sim.elapsed;
-        title.innerHTML = `Can ${hName} deal ${goal} damage in ${Math.max(0, rem).toFixed(1)} seconds?`;
-        if(rem <= 0 && !killed) endGame(false);
-    } else if(conf.mode === 'timer') {
-        let rem = parseFloat(document.getElementById('inp-time').value) - sim.elapsed;
-        title.innerHTML = `Can ${hName} deal ${goal} damage in ${Math.max(0, rem).toFixed(1)} seconds?`;
-        if(rem <= 0 && !killed) endGame(false);
-    } else if(conf.mode === 'stopwatch') {
-        title.innerHTML = `How long for ${hName} to deal ${goal}?<br>${sim.elapsed.toFixed(1)} Seconds`;
+    // TITLE LOGIC
+    if (conf.scriptEnabled && !conf.lsh) {
+        title.innerHTML = `Scripted Run: ${sim.wallHits} Hits | ${sim.elapsed.toFixed(1)}s`;
     } else {
-        title.innerHTML = `Script: Hits ${sim.wallHits} | Time ${sim.elapsed.toFixed(1)}s`;
+        // Standard Time Attack Title
+        if(conf.mode === 'timer' || conf.lsh) {
+            let rem = parseFloat(document.getElementById('inp-time').value) - sim.elapsed;
+            title.innerHTML = `Can ${hName} deal ${goal} damage in ${Math.max(0, rem).toFixed(1)} seconds?`;
+            if(rem <= 0 && !killed) endGame(false);
+        } else {
+            title.innerHTML = `Stopwatch: ${sim.elapsed.toFixed(1)}s<br>Goal: ${goal}`;
+        }
     }
 
     document.getElementById('val-next').innerText = format(getDmg(conf.hero, sim.hp));
@@ -314,7 +339,7 @@ function gameLoop(ts) {
 function endGame(victory) {
     sim.active = false; SFX.boom();
     let isWin = victory;
-    if(conf.script.enabled && !conf.script.lastSec && victory) {
+    if(conf.scriptEnabled && !conf.lsh && victory) {
         const type = document.getElementById('sl-cond-type').value;
         if(type === 'time') isWin = (sim.elapsed >= parseFloat(document.getElementById('sc-t1').value) && sim.elapsed <= parseFloat(document.getElementById('sc-t2').value));
         else isWin = (sim.wallHits >= parseInt(document.getElementById('sc-hits').value) && (sim.elapsed - sim.lastWallTime) <= parseFloat(document.getElementById('sc-delay').value));
@@ -323,7 +348,7 @@ function endGame(victory) {
     const x = (victory ? conf.target.x+conf.target.r : conf.hero.x+conf.hero.r);
     const y = (victory ? conf.target.y+conf.target.r : conf.hero.y+conf.hero.r);
     ball.style.display = 'none';
-    for(let i=0; i<60; i++) {
+    for(let i=0; i<50; i++) {
         const s = document.createElement('div'); s.className='shard'; s.style.width=s.style.height=(Math.random()*15+5)+"px";
         s.style.background = victory ? '#ccc' : conf.hero.c; s.style.left=x+"px"; s.style.top=y+"px";
         document.getElementById('arena').appendChild(s);
@@ -331,18 +356,6 @@ function endGame(victory) {
         const anim = () => { if(l<=0){s.remove();return;} px+=vx; py+=vy; l-=0.02; s.style.left=px+"px"; s.style.top=py+"px"; s.style.opacity=l; requestAnimationFrame(anim); }; anim();
     }
     setTimeout(() => { alert(isWin ? "GOAL ACHIEVED" : "GAME OVER"); location.reload(); }, 2000);
-}
-
-function calculateFeasibility() {
-    const r = document.getElementById('calc-result'); r.innerText = "Simulating Logic...";
-    setTimeout(() => {
-        let s = { hp: BigInt(10n**63n), elapsed: 0, wallHits: 0, lastWallTime: 0 };
-        let h = {...conf.hero, x:50, y:50, vx:12, vy:10, hits:0, pwr: conf.hero.t==='root'?0n:conf.hero.v };
-        let t = {...conf.target, x:350-conf.target.r, y:350-conf.target.r, vx:-4, vy:3 };
-        let k = false; for(let i=0; i<4000; i++){ s.elapsed += 0.016; if(physicsStep(s,h,t,true)){ k=true; break; } }
-        if(!k) r.innerText = "Fail: Target survives physics run.";
-        else r.innerText = `Physics Pass: Dies at ${s.elapsed.toFixed(2)}s. Hits: ${s.wallHits}`;
-    }, 100);
 }
 
 init();
