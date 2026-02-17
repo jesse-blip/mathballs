@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Square Arena: Architect Prime</title>
+    <title>Square Arena: Script-Master Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #2c3e50; --panel-light: #ecf0f1; --panel-dark: #34495e;
-            --accent: #f1c40f; --hero-red: #d92d20; --border-thick: 4px solid #000;
+            --bg: #1a1a2e; --panel-light: #f4f4f9; --panel-dark: #16213e;
+            --accent: #e94560; --border-thick: 4px solid #000;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { background-color: var(--bg); font-family: 'Roboto Condensed', sans-serif; height: 100vh; overflow: hidden; }
+        body { background-color: var(--bg); font-family: 'Roboto Condensed', sans-serif; height: 100vh; overflow: hidden; color: #fff; }
 
-        /* --- SETUP DASHBOARD (UNCHANGED) --- */
+        /* --- SETUP DASHBOARD --- */
         #setup-dashboard {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #fff; z-index: 100; display: flex; padding: 20px; gap: 20px;
+            background: #fff; z-index: 100; display: flex; padding: 20px; gap: 20px; color: #000;
         }
-        .col-config { flex: 0 0 300px; display: flex; flex-direction: column; gap: 15px; background: var(--panel-light); padding: 20px; border: var(--border-thick); box-shadow: 10px 10px 0 rgba(0,0,0,0.2); overflow-y: auto; }
-        .col-arena { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #e0e0e0; border: var(--border-thick); position: relative; }
-        .col-script { flex: 0 0 320px; display: flex; flex-direction: column; gap: 15px; background: var(--panel-dark); color: #fff; padding: 20px; border: var(--border-thick); box-shadow: 10px 10px 0 rgba(0,0,0,0.5); }
+        .col-config { flex: 0 0 300px; display: flex; flex-direction: column; gap: 15px; background: var(--panel-light); padding: 20px; border: var(--border-thick); box-shadow: 10px 10px 0 rgba(0,0,0,0.1); overflow-y: auto; }
+        .col-arena { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #ddd; border: var(--border-thick); position: relative; }
+        .col-script { flex: 0 0 340px; display: flex; flex-direction: column; gap: 15px; background: var(--panel-dark); color: #fff; padding: 20px; border: var(--border-thick); box-shadow: 10px 10px 0 rgba(0,0,0,0.4); }
         
         h2 { text-transform: uppercase; font-weight: 900; border-bottom: 3px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
         .h-dark { border-color: var(--accent); color: var(--accent); }
@@ -29,37 +29,38 @@
         input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 3px solid #000; font-family: 'Share Tech Mono', monospace; font-size: 1.1rem; }
         
         .ball-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .ball-opt { aspect-ratio: 1/1; border-radius: 50%; border: 2px solid transparent; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 900; cursor: pointer; }
-        .ball-opt.selected { border-color: #000; transform: scale(1.15); box-shadow: 0 0 0 2px #fff, 4px 4px 0 #000; z-index: 2; }
+        .ball-opt { aspect-ratio: 1/1; border-radius: 50%; border: 2px solid transparent; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 900; cursor: pointer; transition: 0.1s; }
+        .ball-opt.selected { border-color: #000; transform: scale(1.1); box-shadow: 0 0 0 2px #fff, 4px 4px 0 #000; z-index: 2; }
 
-        .mad-lib { font-size: 1.1rem; line-height: 1.6; }
-        .mad-input { width: 60px; padding: 5px; border: 2px solid var(--accent); background: #222; color: #fff; font-family: monospace; text-align: center; }
-        .mad-select { padding: 5px; border: 2px solid var(--accent); background: #222; color: #fff; font-weight: bold; }
-        .btn-calc { background: #9b59b6; color: white; border: 3px solid #fff; padding: 10px; font-weight: 900; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
-        #calc-result { min-height: 40px; background: rgba(0,0,0,0.3); border: 1px dashed #777; display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 0.8rem; text-align: center; padding: 5px; }
+        .mad-lib { font-size: 1rem; line-height: 1.6; margin-bottom: 10px; }
+        .mad-input { width: 60px; padding: 4px; border: 2px solid var(--accent); background: #0f3460; color: #fff; font-family: monospace; text-align: center; }
+        .mad-select { padding: 4px; border: 2px solid var(--accent); background: #0f3460; color: #fff; font-weight: bold; }
+        
+        .btn-calc { background: var(--accent); color: white; border: 2px solid #fff; padding: 10px; font-weight: 900; cursor: pointer; text-transform: uppercase; }
+        #calc-result { min-height: 40px; background: rgba(255,255,255,0.05); border: 1px dashed #555; display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 0.8rem; text-align: center; padding: 5px; margin-top: 5px; }
 
         #preview-container { width: 700px; height: 700px; background: #fff; border: 2px solid #000; position: relative; overflow: hidden; }
-        .btn-start { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2ecc71; color: white; padding: 15px 50px; border: 4px solid #000; font-size: 2rem; font-weight: 900; cursor: pointer; z-index: 200; }
+        .btn-start { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: #00ff88; color: #000; padding: 15px 50px; border: 4px solid #000; font-size: 2rem; font-weight: 900; cursor: pointer; z-index: 200; box-shadow: 0 5px 0 #000; }
+        .btn-start:active { transform: translateX(-50%) translateY(4px); box-shadow: 0 1px 0 #000; }
 
         /* --- ARENA VIEW --- */
-        #game-view { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: #fdfaf0; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
-        #arena-title { width: 900px; text-align: center; font-size: 2.2rem; font-weight: 900; margin-bottom: 20px; text-transform: uppercase; line-height: 1.1; height: 100px; }
-        #arena { width: 700px; height: 700px; background: #fff; border: 6px solid #000; position: relative; overflow: visible; }
+        #game-view { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: #fdfaf0; flex-direction: column; align-items: center; justify-content: center; z-index: 200; color: #000; }
+        #arena-title { width: 950px; text-align: center; font-size: 2.2rem; font-weight: 900; margin-bottom: 20px; text-transform: uppercase; line-height: 1.1; min-height: 100px; }
+        #arena { width: 700px; height: 700px; background: #fff; border: 6px solid #000; position: relative; }
         
         .ball-render { position: absolute; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
         .b-target { background: #cbcbcb; border: 1px solid #555; z-index: 5; }
         .b-hero { border: 3px solid #000; font-weight: 900; z-index: 10; color: #000; }
         
-        #target-text { color: #fff; font-weight: 900; text-align: center; text-shadow: 2px 2px 0 #000; padding: 5%; font-family: 'Share Tech Mono', monospace; line-height: 0.85; width: 100%; word-break: break-all; }
+        #target-text { color: #fff; font-weight: 900; text-align: center; text-shadow: 2px 2px 0 #000; padding: 8%; font-family: 'Share Tech Mono', monospace; line-height: 0.85; width: 100%; word-break: break-all; }
 
-        .dmg-float { position: absolute; font-size: 32px; font-weight: 900; color: #ff4757; -webkit-text-stroke: 1.5px #000; pointer-events: none; z-index: 100; animation: floatUp 1.2s ease-out forwards; white-space: nowrap; }
-        @keyframes floatUp { 0%{opacity:1; transform:scale(0.8);} 100%{opacity:0; transform:translateY(-140px) scale(1.2);} }
+        .dmg-float { position: absolute; font-size: 34px; font-weight: 900; color: #ff4757; -webkit-text-stroke: 1.5px #000; pointer-events: none; z-index: 100; animation: floatUp 1.2s ease-out forwards; }
+        @keyframes floatUp { 0%{opacity:1; transform:scale(0.7);} 100%{opacity:0; transform:translateY(-150px) scale(1.3);} }
         .shard { position: absolute; border-radius: 50%; pointer-events: none; z-index: 20; }
         
         #stats-bar { width: 700px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         .stat-card { background: #000; color: #fff; padding: 15px; border: 4px solid #000; text-align: center; }
-        .stat-label { font-size: 10px; color: #888; letter-spacing: 1px; }
-        .stat-num { font-size: 1.6rem; font-weight: 900; color: var(--accent); display: block; }
+        .stat-num { font-size: 1.6rem; font-weight: 900; color: #00ff88; display: block; }
     </style>
 </head>
 <body>
@@ -67,7 +68,7 @@
 <div id="setup-dashboard">
     <div class="col-config">
         <h2>Laboratory</h2>
-        <div class="input-group"><label>Target HP</label><input type="text" id="inp-hp" value="10^126"></div>
+        <div class="input-group"><label>Target HP</label><input type="text" id="inp-hp" value="10^63"></div>
         <div id="basic-modes">
             <div class="input-group"><label>Mode</label>
                 <select id="sel-mode" style="width:100%; padding:10px; border:3px solid #000; font-weight:900;" onchange="updateModeUI()">
@@ -75,9 +76,9 @@
                     <option value="stopwatch">Stopwatch</option>
                 </select>
             </div>
-            <div class="input-group" id="grp-time"><label>Time Limit (s)</label><input type="number" id="inp-time" value="60"></div>
+            <div class="input-group" id="grp-time"><label>Time Limit (s)</label><input type="number" id="inp-time" value="30"></div>
         </div>
-        <div class="input-group"><label>Hero Roster</label><div id="hero-grid" class="ball-grid"></div></div>
+        <div class="input-group"><label>Choose Ball</label><div id="hero-grid" class="ball-grid"></div></div>
         <div class="input-group"><label>Hero Size: <span id="lbl-h-size">60</span>px</label><input type="range" id="sl-hero" min="30" max="100" value="60" oninput="updatePreview()"></div>
         <div class="input-group"><label>Target Size: <span id="lbl-t-size">180</span>px</label><input type="range" id="sl-target" min="100" max="250" value="180" oninput="updatePreview()"></div>
     </div>
@@ -87,25 +88,30 @@
             <div id="prev-target" class="ball-render b-target"></div>
             <div id="prev-hero" class="ball-render b-hero"></div>
         </div>
-        <button class="btn-start" onclick="launchGame()">INITIATE BATTLE</button>
+        <button class="btn-start" onclick="launchGame()">START BATTLE</button>
     </div>
 
     <div class="col-script">
         <h2 class="h-dark">Script Engine</h2>
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+        <div style="display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.2); padding:10px; margin-bottom:5px;">
             <input type="checkbox" id="chk-script" style="width:20px; height:20px;" onchange="toggleScriptMode()"><label style="margin:0; color:#fff;">Enable Script</label>
         </div>
+        
         <div id="script-panel" style="opacity: 0.5; pointer-events: none;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px; color: #00ff88;">
+                <input type="checkbox" id="chk-last-sec" style="width:18px; height:18px;"><label style="margin:0;">Last Second Heroics</label>
+            </div>
+
             <div class="mad-lib">Big Ball must die 
                 <select id="sl-cond-type" class="mad-select" onchange="updateScriptUI()">
                     <option value="time">at exact time</option>
                     <option value="wall">after wall hits</option>
                 </select>
             </div>
-            <div id="cond-time" style="margin-top:10px;"><div class="mad-lib">Between <input type="number" id="sc-t1" class="mad-input" value="10">s and <input type="number" id="sc-t2" class="mad-input" value="12">s.</div></div>
-            <div id="cond-wall" style="display:none; margin-top:10px;"><div class="mad-lib">Within <input type="number" id="sc-delay" class="mad-input" value="3">s after hitting the wall <input type="number" id="sc-hits" class="mad-input" value="5"> times.</div></div>
-            <button class="btn-calc" onclick="calculateFeasibility()">Verify Physics</button>
-            <div id="calc-result">Status: Idle</div>
+            <div id="cond-time"><div class="mad-lib">Between <input type="number" id="sc-t1" class="mad-input" value="28">s and <input type="number" id="sc-t2" class="mad-input" value="30">s.</div></div>
+            <div id="cond-wall" style="display:none;"><div class="mad-lib">Within <input type="number" id="sc-delay" class="mad-input" value="2">s after hitting the wall <input type="number" id="sc-hits" class="mad-input" value="10"> times.</div></div>
+            <button class="btn-calc" onclick="calculateFeasibility()">Calculate Script</button>
+            <div id="calc-result">Waiting for parameters...</div>
         </div>
     </div>
 </div>
@@ -117,8 +123,8 @@
         <div id="hero" class="ball-render b-hero"></div>
     </div>
     <div id="stats-bar">
-        <div class="stat-card"><span class="stat-label">PREVIOUS HIT (ABBR)</span><span id="val-last" class="stat-num">---</span></div>
-        <div class="stat-card"><span class="stat-label">NEXT HIT (ABBR)</span><span id="val-next" class="stat-num">---</span></div>
+        <div class="stat-card"><span style="font-size:10px; color:#888;">PREV HIT</span><span id="val-last" class="stat-num">---</span></div>
+        <div class="stat-card"><span style="font-size:10px; color:#888;">NEXT HIT</span><span id="val-next" class="stat-num">---</span></div>
     </div>
 </div>
 
@@ -134,10 +140,32 @@ const HEROES = [
     {n:"Reverser", t:"rev", v:0n, l:"x/y", c:"#8e44ad"}
 ];
 
-const NAMES_S = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Od", "Nd", "Vg", "Uvg", "Dvg", "Tvg", "Qvg", "Qivg", "Sxg", "Spg", "Ovg", "Nvg", "Tg", "Utg", "Dtg", "Ttg", "Qtg", "Uq", "Dq", "Tq", "Qq", "Qiq", "Sxq", "Spq", "Oq", "Nq", "Qing"];
+const NAMES_FULL = ["", "Thousand", "Million", "Billion", "Trillion", "Quadrillion", "Quintillion", "Sextillion", "Septillion", "Octillion", "Nonillion", "Decillion", "Undecillion", "Duodecillion", "Tredecillion", "Quattuordecillion", "Quindecillion", "Sexdecillion", "Septendecillion", "Octodecillion", "Novemdecillion", "Vigintillion", "Unvigintillion", "Duovigintillion", "Trestrigintillion", "Quattuorvigintillion", "Quinvigintillion", "Sexvigintillion", "Septenvigintillion", "Octovigintillion", "Novemvigintillion", "Trigintillion", "Untrigintillion", "Duotrigintillion", "Trestrigintillion", "Quadragintillion", "Quinquagintillion", "Sexagintillion", "Septuagintillion", "Octogintillion", "Nonagintillion", "Centillion"];
+const NAMES_ABBR = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Od", "Nd", "Vg", "Uvg", "Dvg", "Tvg", "Qvg", "Qivg", "Sxg", "Spg", "Ovg", "Nvg", "Tg", "Utg", "Dtg", "Ttg", "Qtg", "Uq", "Dq", "Tq", "Qq", "Qiq", "Sxq", "Spq", "Oq", "Nq", "Qing"];
 
-let conf = { hero: {...HEROES[0], r:60}, target: {r:180, mass:30}, mode: "timer", script: {enabled: false} };
+let conf = { hero: {...HEROES[0], r:60}, target: {r:180, mass:30}, mode: "timer", script: {enabled: false, lastSec: false} };
 let sim = { active: false, hp: 0n, initHP: 0n, elapsed: 0, wallHits: 0, lastWallTime: 0, lastTs: 0 };
+
+/* --- FORMATTER (NO SCIENTIFIC NOTATION) --- */
+function format(n, full = false) {
+    if(n === 0n) return "0";
+    let s = n.toString();
+    let tier = Math.floor((s.length - 1) / 3);
+    let arr = full ? NAMES_FULL : NAMES_ABBR;
+    
+    if (tier === 0) return s;
+    let base = n / 10n**BigInt(tier * 3);
+    let name = arr[tier] || "Infinity";
+    return base.toString() + " " + name;
+}
+
+const SFX = {
+    ctx: null, init(){ if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); },
+    hit(){ this.play(120,'sine',0.1,0.2); }, 
+    clack(){ this.play(600,'square',0.03,0.05); }, // Reduced Volume and Length
+    boom(){ this.play(55,'sawtooth',0.8,0.3,1); },
+    play(f,t,d,v,s=0){ this.init(); const o=this.ctx.createOscillator(), g=this.ctx.createGain(); o.type=t; o.frequency.setValueAtTime(f, this.ctx.currentTime); if(s) o.frequency.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+d); g.gain.setValueAtTime(v, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime+d); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+d); }
+};
 
 function init() {
     const g = document.getElementById('hero-grid');
@@ -173,24 +201,10 @@ function toggleScriptMode() {
 }
 
 function updateModeUI() { if(!conf.script.enabled) conf.mode = document.getElementById('sel-mode').value; }
-function updateScriptUI() { document.getElementById('cond-time').style.display = document.getElementById('sl-cond-type').value==='time'?'block':'none'; document.getElementById('cond-wall').style.display = document.getElementById('sl-cond-type').value==='wall'?'block':'none'; }
-
-function parseHP(s) { try { return s.includes('^') ? BigInt(s.split('^')[0])**BigInt(s.split('^')[1]) : BigInt(s); } catch(e) { return 1000n; } }
-
-function format(n) {
-    if(n === 0n) return "0";
-    let s = n.toString();
-    if(s.length > 150) return s[0] + "." + s[1] + "e" + (s.length-1);
-    let t = Math.floor((s.length-1)/3);
-    if(t < NAMES_S.length) return (n/10n**BigInt(t*3)).toString() + NAMES_S[t];
-    return s.substring(0,4)+"...";
+function updateScriptUI() { 
+    document.getElementById('cond-time').style.display = document.getElementById('sl-cond-type').value==='time'?'block':'none'; 
+    document.getElementById('cond-wall').style.display = document.getElementById('sl-cond-type').value==='wall'?'block':'none'; 
 }
-
-const SFX = {
-    ctx: null, init(){ if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); },
-    hit(){ this.play(120,'sine',0.1,0.2); }, clack(){ this.play(700,'square',0.04,0.1); }, boom(){ this.play(60,'sawtooth',0.7,0.4,1); },
-    play(f,t,d,v,s=0){ this.init(); const o=this.ctx.createOscillator(), g=this.ctx.createGain(); o.type=t; o.frequency.setValueAtTime(f, this.ctx.currentTime); if(s) o.frequency.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+d); g.gain.setValueAtTime(v, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime+d); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+d); }
-};
 
 function getDmg(h, currHP) {
     let d = 1n;
@@ -214,6 +228,14 @@ function physicsStep(state, h, t, isSim) {
     if(dist < h.r+t.r) {
         if(!isSim) SFX.hit();
         let dmg = getDmg(h, state.hp);
+        
+        // SCRIPTED: LAST SECOND HEROICS LOGIC
+        if(!isSim && conf.script.enabled && conf.script.lastSec) {
+            let limit = parseFloat(document.getElementById('inp-time').value);
+            if (state.elapsed >= limit - 1.0) dmg = state.hp; // Force kill in last second
+            else if (dmg >= state.hp) dmg = state.hp / 2n; // Prevent early kill
+        }
+
         state.hp = dmg >= state.hp ? 0n : state.hp - dmg;
         if(!isSim) { 
             document.getElementById('val-last').innerText = format(dmg);
@@ -231,11 +253,14 @@ function physicsStep(state, h, t, isSim) {
 }
 
 function launchGame() {
-    sim.hp = parseHP(document.getElementById('inp-hp').value);
+    const rawHPStr = document.getElementById('inp-hp').value;
+    sim.hp = rawHPStr.includes('^') ? BigInt(rawHPStr.split('^')[0])**BigInt(rawHPStr.split('^')[1]) : BigInt(rawHPStr);
     sim.initHP = sim.hp; sim.elapsed = 0; sim.wallHits = 0; sim.active = true; sim.lastTs = performance.now();
     conf.hero.x = 50; conf.hero.y = 50; conf.hero.vx = 12; conf.hero.vy = 10; conf.hero.hits = 0;
     conf.hero.pwr = (conf.hero.t==='root') ? 0n : conf.hero.v;
     conf.target.x = 350-conf.target.r; conf.target.y = 350-conf.target.r; conf.target.vx = -4; conf.target.vy = 3;
+    conf.script.lastSec = document.getElementById('chk-last-sec').checked;
+
     document.getElementById('setup-dashboard').style.display = 'none';
     document.getElementById('game-view').style.display = 'flex';
     document.getElementById('hero').style.background = conf.hero.c;
@@ -257,7 +282,6 @@ function gameLoop(ts) {
     const dt = (ts - sim.lastTs)/1000; sim.lastTs = ts; sim.elapsed += dt;
     const killed = physicsStep(sim, conf.hero, conf.target, false);
     
-    // Render
     const h = document.getElementById('hero'), t = document.getElementById('target'), txt = document.getElementById('target-text');
     h.style.transform = `translate(${conf.hero.x}px, ${conf.hero.y}px)`;
     t.style.transform = `translate(${conf.target.x}px, ${conf.target.y}px)`;
@@ -266,16 +290,21 @@ function gameLoop(ts) {
     if(hpStr.length < 10) txt.style.fontSize = (conf.target.r*0.8) + "px";
     else txt.style.fontSize = Math.min((conf.target.r*2.2)/Math.sqrt(hpStr.length*1.5), conf.target.r*0.6) + "px";
 
-    // Titles
-    const title = document.getElementById('arena-title'), hName = `<span style="color:${conf.hero.c}">${conf.hero.n}</span>`, goal = format(sim.initHP);
-    if(conf.mode === 'timer') {
+    const title = document.getElementById('arena-title'), hName = `<span style="color:${conf.hero.c}">${conf.hero.n}</span>`, goal = format(sim.initHP, true);
+    
+    if(conf.script.enabled && conf.script.lastSec) {
+        // Last second heroics uses normal timer title
+        let rem = parseFloat(document.getElementById('inp-time').value) - sim.elapsed;
+        title.innerHTML = `Can ${hName} deal ${goal} damage in ${Math.max(0, rem).toFixed(1)} seconds?`;
+        if(rem <= 0 && !killed) endGame(false);
+    } else if(conf.mode === 'timer') {
         let rem = parseFloat(document.getElementById('inp-time').value) - sim.elapsed;
         title.innerHTML = `Can ${hName} deal ${goal} damage in ${Math.max(0, rem).toFixed(1)} seconds?`;
         if(rem <= 0 && !killed) endGame(false);
     } else if(conf.mode === 'stopwatch') {
-        title.innerHTML = `How long for ${hName} to deal ${goal} damage?<br>${sim.elapsed.toFixed(1)} Seconds`;
+        title.innerHTML = `How long for ${hName} to deal ${goal}?<br>${sim.elapsed.toFixed(1)} Seconds`;
     } else {
-        title.innerHTML = `Scripting: ${sim.wallHits} Wall Hits | ${sim.elapsed.toFixed(1)}s`;
+        title.innerHTML = `Script: Hits ${sim.wallHits} | Time ${sim.elapsed.toFixed(1)}s`;
     }
 
     document.getElementById('val-next').innerText = format(getDmg(conf.hero, sim.hp));
@@ -285,14 +314,14 @@ function gameLoop(ts) {
 function endGame(victory) {
     sim.active = false; SFX.boom();
     let isWin = victory;
-    if(conf.mode === 'script' && victory) {
+    if(conf.script.enabled && !conf.script.lastSec && victory) {
         const type = document.getElementById('sl-cond-type').value;
         if(type === 'time') isWin = (sim.elapsed >= parseFloat(document.getElementById('sc-t1').value) && sim.elapsed <= parseFloat(document.getElementById('sc-t2').value));
         else isWin = (sim.wallHits >= parseInt(document.getElementById('sc-hits').value) && (sim.elapsed - sim.lastWallTime) <= parseFloat(document.getElementById('sc-delay').value));
     }
     const ball = victory ? document.getElementById('target') : document.getElementById('hero');
-    const x = victory ? conf.target.x+conf.target.r : conf.hero.x+conf.hero.r;
-    const y = victory ? conf.target.y+conf.target.r : conf.hero.y+conf.hero.r;
+    const x = (victory ? conf.target.x+conf.target.r : conf.hero.x+conf.hero.r);
+    const y = (victory ? conf.target.y+conf.target.r : conf.hero.y+conf.hero.r);
     ball.style.display = 'none';
     for(let i=0; i<60; i++) {
         const s = document.createElement('div'); s.className='shard'; s.style.width=s.style.height=(Math.random()*15+5)+"px";
@@ -301,18 +330,18 @@ function endGame(victory) {
         const a=Math.random()*6.28, v=Math.random()*12; let vx=Math.cos(a)*v, vy=Math.sin(a)*v, l=1, px=x, py=y;
         const anim = () => { if(l<=0){s.remove();return;} px+=vx; py+=vy; l-=0.02; s.style.left=px+"px"; s.style.top=py+"px"; s.style.opacity=l; requestAnimationFrame(anim); }; anim();
     }
-    setTimeout(() => { alert(isWin ? "CRITICAL SUCCESS" : "MISSION FAILED"); location.reload(); }, 2000);
+    setTimeout(() => { alert(isWin ? "GOAL ACHIEVED" : "GAME OVER"); location.reload(); }, 2000);
 }
 
 function calculateFeasibility() {
-    const r = document.getElementById('calc-result'); r.innerText = "Simulating...";
+    const r = document.getElementById('calc-result'); r.innerText = "Simulating Logic...";
     setTimeout(() => {
-        let s = { hp: parseHP(document.getElementById('inp-hp').value), elapsed: 0, wallHits: 0, lastWallTime: 0 };
+        let s = { hp: BigInt(10n**63n), elapsed: 0, wallHits: 0, lastWallTime: 0 };
         let h = {...conf.hero, x:50, y:50, vx:12, vy:10, hits:0, pwr: conf.hero.t==='root'?0n:conf.hero.v };
         let t = {...conf.target, x:350-conf.target.r, y:350-conf.target.r, vx:-4, vy:3 };
-        let k = false; for(let i=0; i<3600; i++){ s.elapsed += 0.016; if(physicsStep(s,h,t,true)){ k=true; break; } }
-        if(!k) r.innerText = "Target survived 60s.";
-        else r.innerText = `Possible! Died at ${s.elapsed.toFixed(2)}s with ${s.wallHits} wall hits.`;
+        let k = false; for(let i=0; i<4000; i++){ s.elapsed += 0.016; if(physicsStep(s,h,t,true)){ k=true; break; } }
+        if(!k) r.innerText = "Fail: Target survives physics run.";
+        else r.innerText = `Physics Pass: Dies at ${s.elapsed.toFixed(2)}s. Hits: ${s.wallHits}`;
     }, 100);
 }
 
