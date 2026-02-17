@@ -2,324 +2,674 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Square Arena: Titan Scale</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Square Arena: Titan Engine v4.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --bg: #f1efdb; --red: #cc0000; --gold: #ffcc00; 
-            --black: #000000; --gray: #cccccc;
+        /* --- DESIGN TOKENS --- */
+        :root {
+            --bg-color: #f4f1de;
+            --panel-bg: #ffffff;
+            --accent-red: #e76f51;
+            --accent-yellow: #e9c46a;
+            --accent-green: #2a9d8f;
+            --accent-blue: #264653;
+            --border-main: #000000;
+            --text-main: #000000;
+            --shadow-offset: 12px;
         }
-        * { box-sizing: border-box; font-family: 'Roboto Condensed', sans-serif; user-select: none; }
-        body { background: var(--bg); margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
 
-        .lab-ui { 
-            background: white; border: 8px solid var(--black); padding: 30px; 
-            width: 1000px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 25px; 
-            box-shadow: 15px 15px 0px var(--black); 
+        /* --- GLOBAL RESET --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
         }
-        .setup-col { display: flex; flex-direction: column; gap: 12px; }
-        .preview-col { background: #eee; border: 5px dashed #bbb; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 
-        .input-group { display: flex; flex-direction: column; gap: 4px; }
-        input[type="text"], input[type="number"] { width: 100%; padding: 12px; border: 5px solid var(--black); font-size: 1.2rem; font-weight: 900; }
-        .mode-toggle { display: flex; gap: 10px; }
-        .m-btn { flex: 1; padding: 12px; border: 5px solid var(--black); font-weight: 900; cursor: pointer; background: #fff; }
-        .m-btn.active { background: var(--gold); }
-
-        .ball-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 10px 0; }
-        .ball-opt { aspect-ratio: 1/1; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 11px; border: 3px solid rgba(0,0,0,0.1); }
-        .ball-opt.active { border: 5px solid var(--black); transform: scale(1.1); }
-
-        .screen { display: none; flex-direction: column; align-items: center; width: 100%; height: 100vh; justify-content: center; }
-        .active { display: flex; }
-        .header { text-align: center; font-size: 2.2rem; width: 950px; margin-bottom: 20px; text-transform: uppercase; font-weight: 900; line-height: 1.1; }
-        
-        #arena { 
-            width: 600px; height: 600px; background: #fff; 
-            border: 18px solid var(--black); 
-            position: relative; overflow: visible; 
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Roboto Condensed', sans-serif;
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
-        
-        #big-ball { position: absolute; background: var(--gray); border-radius: 50%; border: 4px solid #333; display: flex; align-items: center; justify-content: center; z-index: 2; overflow: hidden; }
-        #hp-txt { 
-            color: #fff; font-weight: 900; font-family: 'Roboto Condensed', sans-serif; 
-            word-break: break-all; line-height: 0.9; padding: 10px; 
-            text-align: center; text-shadow: 3px 3px 0 #000;
-            font-size: 2.5rem; /* LARGER TEXT */
+
+        /* --- SETUP LABORATORY --- */
+        #screen-setup {
+            display: flex;
+            width: 1100px;
+            background: var(--panel-bg);
+            border: 10px solid var(--border-main);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--border-main);
+            padding: 40px;
+            gap: 30px;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        
-        #tiny-ball { position: absolute; border-radius: 50%; border: 5px solid var(--black); color: #fff; font-weight: 900; display: flex; align-items: center; justify-content: center; z-index: 3; text-shadow: 2px 2px 0px #000; font-size: 20px; }
 
-        .stats { width: 600px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
-        .stat-box { background: var(--black); color: var(--gold); padding: 12px; text-align: center; border: 5px solid var(--black); }
-        .stat-label { font-size: 0.8rem; color: #fff; display: block; }
-        .stat-val { font-size: 1.6rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .config-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-        .dmg-pop { position: absolute; font-weight: 900; pointer-events: none; z-index: 100; -webkit-text-stroke: 2px #000; animation: rise 1.2s forwards; font-size: 38px; color: #ff0000 !important; }
-        @keyframes rise { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-180px); } }
-        .part { position: absolute; border-radius: 50%; pointer-events: none; z-index: 10; }
-        .btn-start { grid-column: span 2; padding: 20px; background: var(--gold); border: 8px solid var(--black); font-size: 2.5rem; font-weight: 900; cursor: pointer; }
+        .preview-panel {
+            flex: 0.8;
+            background: #e5e5e5;
+            border: 6px dashed #999;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 0.9;
+            margin-bottom: 10px;
+        }
+
+        /* --- UI COMPONENTS --- */
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            color: #444;
+        }
+
+        input[type="text"], input[type="number"] {
+            padding: 15px;
+            border: 6px solid var(--border-main);
+            font-size: 1.4rem;
+            font-weight: 900;
+            outline: none;
+            background: #fff;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 15px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 15px;
+            border: 6px solid var(--border-main);
+            background: #fff;
+            font-weight: 900;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: var(--accent-yellow);
+            transform: translate(-4px, -4px);
+            box-shadow: 4px 4px 0px var(--border-main);
+        }
+
+        /* --- BALL GRID --- */
+        .ball-selection {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .ball-unit {
+            aspect-ratio: 1/1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 900;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border: 4px solid transparent;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+            transition: all 0.1s;
+        }
+
+        .ball-unit.selected {
+            border-color: var(--border-main);
+            transform: scale(1.15);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        .start-btn {
+            background: var(--accent-green);
+            color: white;
+            padding: 25px;
+            border: 8px solid var(--border-main);
+            font-size: 2.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            margin-top: 10px;
+            text-shadow: 3px 3px 0px var(--border-main);
+            transition: all 0.2s;
+        }
+
+        .start-btn:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 8px 8px 0px var(--border-main);
+        }
+
+        /* --- GAME SCREEN --- */
+        #screen-game {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .game-header {
+            width: 900px;
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            line-height: 1.1;
+        }
+
+        #battle-arena {
+            width: 600px;
+            height: 600px;
+            background: #fff;
+            border: 22px solid var(--border-main);
+            position: relative;
+            box-shadow: 20px 20px 0px rgba(0,0,0,0.05);
+        }
+
+        /* --- BALLS --- */
+        #target-ball {
+            position: absolute;
+            background: #d1d1d1;
+            border-radius: 50%;
+            border: 6px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        #target-display {
+            color: #fff;
+            font-family: 'Share Tech Mono', monospace;
+            font-weight: 900;
+            text-align: center;
+            text-shadow: 3px 3px 0px #000;
+            padding: 10%;
+            word-break: break-all;
+            line-height: 0.8;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #hero-ball {
+            position: absolute;
+            border-radius: 50%;
+            border: 6px solid var(--border-main);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 900;
+            text-shadow: 2px 2px 0px #000;
+            box-sizing: border-box;
+        }
+
+        /* --- FOOTER STATS --- */
+        .footer-stats {
+            width: 600px;
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: var(--border-main);
+            color: var(--accent-yellow);
+            padding: 15px;
+            border: 5px solid var(--border-main);
+            text-align: center;
+        }
+
+        .stat-label {
+            display: block;
+            color: #fff;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .dmg-popup {
+            position: absolute;
+            font-weight: 900;
+            font-size: 42px;
+            color: #ff0000;
+            -webkit-text-stroke: 2px black;
+            pointer-events: none;
+            z-index: 100;
+            animation: popupFloat 1s ease-out forwards;
+        }
+
+        @keyframes popupFloat {
+            0% { transform: translateY(0) scale(0.5); opacity: 1; }
+            100% { transform: translateY(-150px) scale(1.2); opacity: 0; }
+        }
     </style>
 </head>
 <body>
 
-<div id="screen-lab" class="screen active">
-    <div class="lab-ui">
-        <div class="setup-col">
-            <h1>SQUARE ARENA</h1>
-            <div class="mode-toggle">
-                <button id="mb-t" class="m-btn active" onclick="setGM('timer')">TIMER</button>
-                <button id="mb-s" class="m-btn" onclick="setGM('stopwatch')">STOPWATCH</button>
-            </div>
-            <div class="input-group"><label>TARGET HP</label><input type="text" id="in-hp" value="10^100"></div>
-            <div class="input-group" id="box-t"><label>TIME LIMIT</label><input type="number" id="in-t" value="60"></div>
-            <div class="ball-grid" id="grid"></div>
-            <div class="input-group"><label>TARGET RADIUS</label><input type="range" min="80" max="250" value="150" id="sz-t" oninput="upd()"></div>
-            <div class="input-group"><label>BALL RADIUS</label><input type="range" min="20" max="90" value="45" id="sz-b" oninput="upd()"></div>
+<div id="screen-setup">
+    <div class="config-panel">
+        <h1>SQUARE<br>ARENA</h1>
+        
+        <div class="mode-selector">
+            <button id="btn-mode-timer" class="mode-btn active" onclick="setGameMode('timer')">TIME TRIAL</button>
+            <button id="btn-mode-stop" class="mode-btn" onclick="setGameMode('stopwatch')">STOPWATCH</button>
         </div>
-        <div class="preview-col">
-            <div id="pre-t" style="background:#ccc; border-radius:50%"></div>
-            <div id="pre-b" style="border-radius:50%; border:4px solid #000; position:absolute;"></div>
+
+        <div class="control-group">
+            <label>Initial Health</label>
+            <input type="text" id="input-hp" value="10^126">
         </div>
-        <button class="btn-start" onclick="start()">START BATTLE</button>
+
+        <div class="control-group" id="limit-container">
+            <label>Time Limit (Seconds)</label>
+            <input type="number" id="input-time" value="60">
+        </div>
+
+        <div class="control-group">
+            <label>Choose Your Hero Ball</label>
+            <div id="hero-grid" class="ball-selection"></div>
+        </div>
+
+        <div class="control-group">
+            <label>Target Size</label>
+            <input type="range" id="slide-target" min="80" max="250" value="160" oninput="refreshPreview()">
+            <label>Hero Size</label>
+            <input type="range" id="slide-hero" min="20" max="90" value="45" oninput="refreshPreview()">
+        </div>
+
+        <button class="start-btn" onclick="initGame()">ENTER ARENA</button>
+    </div>
+
+    <div class="preview-panel">
+        <div id="prev-target" style="background:#ccc; border-radius:50%; position:absolute;"></div>
+        <div id="prev-hero" style="border-radius:50%; border:5px solid #000; position:absolute; z-index:2;"></div>
     </div>
 </div>
 
-<div id="screen-game" class="screen">
-    <div id="game-title" class="header"></div>
-    <div id="arena">
-        <div id="big-ball"><div id="hp-txt"></div></div>
-        <div id="tiny-ball"></div>
+<div id="screen-game">
+    <div id="title-bar" class="game-header"></div>
+    <div id="battle-arena">
+        <div id="target-ball">
+            <div id="target-display"></div>
+        </div>
+        <div id="hero-ball"></div>
     </div>
-    <div class="stats">
-        <div class="stat-box"><span class="stat-label">PREVIOUS HIT</span><div id="stat-prev" class="stat-val">0</div></div>
-        <div class="stat-box"><span class="stat-label">NEXT HIT</span><div id="stat-next" class="stat-val">0</div></div>
+    <div class="footer-stats">
+        <div class="stat-card">
+            <span class="stat-label">Previous Impact</span>
+            <div id="stat-last" class="stat-value">---</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Power Level</span>
+            <div id="stat-power" class="stat-value">---</div>
+        </div>
     </div>
 </div>
 
 <script>
-    const FULL_NAMES = ["", "Thousand", "Million", "Billion", "Trillion", "Quadrillion", "Quintillion", "Sextillion", "Septillion", "Octillion", "Nonillion", "Decillion", "Undecillion", "Duodecillion", "Tredecillion", "Quattuordecillion", "Quindecillion", "Sexdecillion", "Septendecillion", "Octodecillion", "Novemdecillion", "Vigintillion", "Unvigintillion", "Duovigintillion", "Tresvigintillion", "Quattuorvigintillion", "Quinvigintillion", "Sexvigintillion", "Septenvigintillion", "Octovigintillion", "Novemvigintillion", "Trigintillion", "Untrigintillion", "Duotrigintillion", "Trestrigintillion", "Quadragintillion", "Quinquagintillion", "Sexagintillion", "Septuagintillion", "Octogintillion", "Nonagintillion", "Centillion"];
+/* ============================================================
+   NUMERICAL ENGINE: THE TITAN ARRAY
+   ============================================================ */
+const NAMES_LONG = ["", "Thousand", "Million", "Billion", "Trillion", "Quadrillion", "Quintillion", "Sextillion", "Septillion", "Octillion", "Nonillion", "Decillion", "Undecillion", "Duodecillion", "Tredecillion", "Quattuordecillion", "Quindecillion", "Sexdecillion", "Septendecillion", "Octodecillion", "Novemdecillion", "Vigintillion", "Unvigintillion", "Duovigintillion", "Tresvigintillion", "Quattuorvigintillion", "Quinvigintillion", "Sexvigintillion", "Septenvigintillion", "Octovigintillion", "Novemvigintillion", "Trigintillion", "Untrigintillion", "Duotrigintillion", "Trestrigintillion", "Quadragintillion", "Unquadragintillion", "Duoquadragintillion", "Tresquadragintillion", "Quattuorquadragintillion", "Quinquadragintillion", "Sexquadragintillion", "Septenquadragintillion", "Octoquadragintillion", "Novemquadragintillion", "Quinquagintillion", "Unquinquagintillion", "Duoquinquagintillion", "Tresquinquagintillion", "Quattuorquinquagintillion", "Quinquinquagintillion", "Sexquinquagintillion", "Septenquinquagintillion", "Octoquinquagintillion", "Novemquinquagintillion", "Sexagintillion", "Septuagintillion", "Octogintillion", "Nonagintillion", "Centillion"];
 
-    const SHORT_NAMES = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Od", "Nd", "Vg", "Uvg", "Dvg", "Tvg", "Qvg", "Qivg", "Sxg", "Spg", "Ovg", "Nvg", "Tg", "Utg", "Dtg", "Ttg", "Qtg", "Qitg", "Sxtg", "Sptg", "Otg", "Ntg", "Cen"];
+const NAMES_SHORT = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Od", "Nd", "Vg", "Uvg", "Dvg", "Tvg", "Qvg", "Qivg", "Sxg", "Spg", "Ovg", "Nvg", "Tg", "Utg", "Dtg", "Ttg", "Qtg", "Uq", "Dq", "Tq", "Qq", "Qiq", "Sxq", "Spq", "Oq", "Nq", "Qing", "Uqing", "Dqing", "Tqing", "Qaqing", "Qiqing", "Sxqing", "Spqing", "Oqing", "Nqing", "Sxg", "Spg", "Ocg", "Nng", "Cen"];
 
-    function getBigName(n, useFull = false) {
-        if (n === 0n) return "0";
-        let s = n.toString();
-        let len = s.length;
+/**
+ * Formats numbers based on the user's specific threshold rules:
+ * 1. Under 1e126: Use full names (e.g., Quintillion).
+ * 2. Over 1e125: Use Scientific Notation (1e126).
+ */
+function formatNumber(n, fullNames = false) {
+    if (n === 0n) return "0";
+    let str = n.toString();
+    let len = str.length;
 
-        // Exact Googol Check
-        if (s === "1" + "0".repeat(100)) return "1 Googol";
+    // Threshold Check: 10^125 is 126 digits. Anything >= 127 digits is 1e126+
+    if (len >= 127 && !fullNames) {
+        return (n / 10n**BigInt(len-1)).toString() + "e" + (len-1);
+    }
 
-        // Dynamic naming logic for numbers beyond Googol
-        let tier = Math.floor((len - 1) / 3);
-        let nameArr = useFull ? FULL_NAMES : SHORT_NAMES;
-        
-        if (tier < nameArr.length) {
-            let val = n / 10n**BigInt(tier * 3);
-            return val + " " + nameArr[tier];
+    // Special Case: Googol
+    if (str === "1" + "0".repeat(100)) return "1 Googol";
+
+    let tier = Math.floor((len - 1) / 3);
+    let nameSource = fullNames ? NAMES_LONG : NAMES_SHORT;
+
+    if (tier < nameSource.length && nameSource[tier] !== "") {
+        let val = n / 10n**BigInt(tier * 3);
+        return val + " " + nameSource[tier];
+    } else {
+        return (n / 10n**BigInt(len-1)).toString() + "e" + (len-1);
+    }
+}
+
+/* ============================================================
+   GAME STATE & CONFIG
+   ============================================================ */
+let gameState = {
+    hp: 0n,
+    initialHP: 0n,
+    timeRemaining: 0,
+    elapsed: 0,
+    mode: 'timer',
+    active: false,
+    lastTick: 0,
+    hero: {
+        x: 50, y: 50, vx: 0, vy: 0, r: 40,
+        type: 'mult', val: 2n, label: '2x', color: '#e76f51', 
+        name: 'Doubler', power: 2n, hits: 0
+    },
+    target: {
+        x: 250, y: 250, vx: 0, vy: 0, r: 150, mass: 20
+    }
+};
+
+const HERO_TEMPLATES = [
+    {n:"Doubler", t:"mult", v:2n, l:"2x", c:"#e76f51"},
+    {n:"Tripler", t:"mult", v:3n, l:"3x", c:"#f4a261"},
+    {n:"Quadrupler", t:"mult", v:4n, l:"4x", c:"#e9c46a"},
+    {n:"Quintupler", t:"mult", v:5n, l:"5x", c:"#2a9d8f"},
+    {n:"Sextupler", t:"mult", v:6n, l:"6x", c:"#264653"},
+    {n:"Septupler", t:"mult", v:7n, l:"7x", c:"#6d597a"},
+    {n:"Octupler", t:"mult", v:8n, l:"8x", c:"#b56576"},
+    {n:"Nonupler", t:"mult", v:9n, l:"9x", c:"#e56b6f"},
+    {n:"Decupler", t:"mult", v:10n, l:"10x", c:"#eaac8b"},
+    {n:"Rooter", t:"root", v:0n, l:"√x", c:"#000000"},
+    {n:"Squarer", t:"exp", v:2n, l:"x²", c:"#9b5de5"},
+    {n:"Cuber", t:"exp", v:3n, l:"x³", c:"#00bbf9"},
+    {n:"Halver", t:"half", v:0n, l:"x/2", c:"#555555"},
+    {n:"Quarter", t:"quarter", v:0n, l:"x/4", c:"#888888"},
+    {n:"Reverser", t:"rev", v:0n, l:"x/y", c:"#f15bb5"}
+];
+
+/* ============================================================
+   ENGINE CORE
+   ============================================================ */
+const Sfx = {
+    ctx: new (window.AudioContext || window.webkitAudioContext)(),
+    play(freq, vol, type, dur, slide = 0) {
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        if(slide) osc.frequency.exponentialRampToValueAtTime(slide, this.ctx.currentTime + dur);
+        g.gain.setValueAtTime(vol, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + dur);
+        osc.connect(g); g.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + dur);
+    },
+    hit() { this.play(100, 2.5, 'sine', 0.5, 20); },
+    bounce() { this.play(200, 0.2, 'square', 0.1); }
+};
+
+function setGameMode(m) {
+    gameState.mode = m;
+    document.getElementById('btn-mode-timer').classList.toggle('active', m === 'timer');
+    document.getElementById('btn-mode-stop').classList.toggle('active', m === 'stopwatch');
+    document.getElementById('limit-container').style.display = m === 'timer' ? 'flex' : 'none';
+}
+
+function buildGrid() {
+    const container = document.getElementById('hero-grid');
+    HERO_TEMPLATES.forEach((temp, i) => {
+        const div = document.createElement('div');
+        div.className = `ball-unit ${i===0?'selected':''}`;
+        div.style.backgroundColor = temp.c;
+        div.innerText = temp.l;
+        div.onclick = () => {
+            document.querySelectorAll('.ball-unit').forEach(b => b.classList.remove('selected'));
+            div.classList.add('selected');
+            Object.assign(gameState.hero, {
+                type: temp.t, val: temp.v, label: temp.l, color: temp.c, name: temp.n, power: temp.t === 'exp' ? 2n : (temp.v || 1n)
+            });
+            refreshPreview();
+        };
+        container.appendChild(div);
+    });
+}
+
+function refreshPreview() {
+    const tR = document.getElementById('slide-target').value;
+    const hR = document.getElementById('slide-hero').value;
+    
+    const pt = document.getElementById('prev-target');
+    const ph = document.getElementById('prev-hero');
+    
+    pt.style.width = pt.style.height = (tR * 2) + "px";
+    ph.style.width = ph.style.height = (hR * 2) + "px";
+    ph.style.backgroundColor = gameState.hero.color;
+    ph.innerText = gameState.hero.label;
+}
+
+function initGame() {
+    const rawInput = document.getElementById('input-hp').value;
+    try {
+        if (rawInput.includes('^')) {
+            const parts = rawInput.split('^');
+            gameState.hp = BigInt(parts[0]) ** BigInt(parts[1]);
         } else {
-            // If it exceeds Centillion, start using scientific notation logic with names
-            return (n / 10n**BigInt((len-1))).toString() + "e" + (len-1);
+            gameState.hp = BigInt(rawInput);
         }
+    } catch(e) { gameState.hp = 1000n; }
+
+    gameState.initialHP = gameState.hp;
+    gameState.timeRemaining = parseFloat(document.getElementById('input-time').value) * 1000;
+    gameState.elapsed = 0;
+    
+    gameState.target.r = parseInt(document.getElementById('slide-target').value);
+    gameState.hero.r = parseInt(document.getElementById('slide-hero').value);
+    
+    // Initial random velocity
+    gameState.hero.vx = (Math.random() - 0.5) * 30;
+    gameState.hero.vy = (Math.random() - 0.5) * 30;
+    gameState.target.vx = (Math.random() - 0.5) * 10;
+    gameState.target.vy = (Math.random() - 0.5) * 10;
+
+    document.getElementById('screen-setup').style.display = 'none';
+    document.getElementById('screen-game').style.display = 'flex';
+    
+    const hb = document.getElementById('hero-ball');
+    hb.style.backgroundColor = gameState.hero.color;
+    hb.style.width = hb.style.height = (gameState.hero.r * 2) + "px";
+    hb.innerText = gameState.hero.label;
+
+    gameState.active = true;
+    gameState.lastTick = performance.now();
+    requestAnimationFrame(gameLoop);
+}
+
+function calcDamage() {
+    if (gameState.hp <= 0n) return 0n;
+    let d = 0n;
+    const h = gameState.hero;
+    
+    if (h.type === 'mult' || h.type === 'exp') d = h.power;
+    else if (h.type === 'half') d = gameState.hp / 2n;
+    else if (h.type === 'quarter') d = (gameState.hp * 3n) / 4n;
+    else if (h.type === 'root') {
+        let s = gameState.hp.toString();
+        let rootApprox = BigInt(Math.floor(Math.sqrt(Number(s.substring(0, 14))))) * 10n**BigInt(Math.max(0, s.length - 14));
+        d = gameState.hp - rootApprox;
+    } else if (h.type === 'rev') {
+        d = gameState.hp - (gameState.hp / BigInt(h.hits + 2));
+    }
+    
+    return d > 0n ? d : 1n;
+}
+
+function createDmgPopup(dmg) {
+    const p = document.createElement('div');
+    p.className = 'dmg-popup';
+    p.innerText = "-" + formatNumber(dmg);
+    p.style.left = (gameState.hero.x + gameState.hero.r) + "px";
+    p.style.top = (gameState.hero.y) + "px";
+    document.getElementById('battle-arena').appendChild(p);
+    setTimeout(() => p.remove(), 1000);
+}
+
+function gameLoop(ts) {
+    if (!gameState.active) return;
+    const dt = ts - gameState.lastTick;
+    gameState.lastTick = ts;
+
+    const arenaSize = 600;
+    const h = gameState.hero;
+    const t = gameState.target;
+
+    // --- TITLE AND CLOCK ---
+    const header = document.getElementById('title-bar');
+    const heroName = `<span style="color:${h.color}">${h.name}</span>`;
+    const targetGoal = formatNumber(gameState.initialHP, true);
+
+    if (gameState.mode === 'timer') {
+        gameState.timeRemaining -= dt;
+        header.innerHTML = `Can ${heroName} deal ${targetGoal} Damage in ${(Math.max(0, gameState.timeRemaining / 1000)).toFixed(1)}s?`;
+        if (gameState.timeRemaining <= 0) { gameState.active = false; location.reload(); }
+    } else {
+        gameState.elapsed += dt;
+        header.innerHTML = `${heroName} vs ${targetGoal} Damage [Time: ${(gameState.elapsed / 1000).toFixed(1)}s]`;
     }
 
-    const Audio = {
-        ctx: new (window.AudioContext || window.webkitAudioContext)(),
-        play(freq, vol, type, duration, slide = 0) {
-            if (this.ctx.state === 'suspended') this.ctx.resume();
-            const osc = this.ctx.createOscillator();
-            const g = this.ctx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-            if(slide) osc.frequency.exponentialRampToValueAtTime(slide, this.ctx.currentTime + duration);
-            g.gain.setValueAtTime(vol, this.ctx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
-            osc.connect(g); g.connect(this.ctx.destination);
-            osc.start(); osc.stop(this.ctx.currentTime + duration);
-        },
-        thump() { this.play(120, 2.8, 'sine', 0.6, 15); },
-        wall() { this.play(280, 0.25, 'square', 0.1); }
-    };
-
-    let hp = 0n, initHP = 0n, time = 0, clock = 0, lastTs = 0, active = false, gMode = 'timer';
-    const player = { x: 60, y: 60, dx: 0, dy: 0, r: 40, type: 'mult', val: 2n, lbl: '2x', col: '#ff0000', pwr: 2n, hits: 1n, name: "Doubler" };
-    const target = { x: 300, y: 300, dx: 0, dy: 0, r: 150, mass: 15 };
-
-    const BALLS = [
-        {n:"Doubler", t:"mult", v:2n, l:"2x", c:"#f00"}, {n:"Tripler", t:"mult", v:3n, l:"3x", c:"#f50"},
-        {n:"Quadrupler", t:"mult", v:4n, l:"4x", c:"#fa0"}, {n:"Quintupler", t:"mult", v:5n, l:"5x", c:"#0cf"},
-        {n:"Sextupler", t:"mult", v:6n, l:"6x", c:"#06f"}, {n:"Septupler", t:"mult", v:7n, l:"7x", c:"#0f0"},
-        {n:"Octupler", t:"mult", v:8n, l:"8x", c:"#5f0"}, {n:"Nonupler", t:"mult", v:9n, l:"9x", c:"#af0"},
-        {n:"Decupler", t:"mult", v:10n, l:"10x", c:"#ff0"}, {n:"Rooter", t:"root", v:0n, l:"√x", c:"#000"},
-        {n:"Squarer", t:"exp", v:2n, l:"x²", c:"#f0f"}, {n:"Cuber", t:"exp", v:3n, l:"x³", c:"#808"},
-        {n:"Halver", t:"half", v:0n, l:"x/2", c:"#777"}, {n:"Quarter", t:"quarter", v:0n, l:"x/4", c:"#444"},
-        {n:"Reverser", t:"rev", v:0n, l:"x/y", c:"#60f"}
-    ];
-
-    function setGM(m) { 
-        gMode = m; 
-        document.getElementById('mb-t').className = m==='timer'?'m-btn active':'m-btn';
-        document.getElementById('mb-s').className = m==='stopwatch'?'m-btn active':'m-btn';
-        document.getElementById('box-t').style.display = m==='timer'?'flex':'none';
+    // --- PHYSICS: BOUNDARY CONSTRAINTS ---
+    // Hero movement
+    h.x += h.vx; h.y += h.vy;
+    if (h.x <= 0 || h.x >= arenaSize - h.r * 2) { 
+        h.vx *= -1; 
+        h.x = h.x <= 0 ? 0 : arenaSize - h.r * 2; 
+        Sfx.bounce(); 
+    }
+    if (h.y <= 0 || h.y >= arenaSize - h.r * 2) { 
+        h.vy *= -1; 
+        h.y = h.y <= 0 ? 0 : arenaSize - h.r * 2; 
+        Sfx.bounce(); 
     }
 
-    function genGrid() {
-        const grid = document.getElementById('grid');
-        BALLS.forEach(b => {
-            const el = document.createElement('div');
-            el.className = 'ball-opt'; el.style.background = b.c; el.innerText = b.l;
-            if(b.n === "Doubler") el.classList.add('active');
-            el.onclick = () => {
-                document.querySelectorAll('.ball-opt').forEach(x=>x.classList.remove('active'));
-                el.classList.add('active'); 
-                player.type=b.t; player.val=b.v; player.lbl=b.l; player.col=b.c; player.name=b.n; upd();
-            };
-            grid.appendChild(el);
-        });
+    // Target movement
+    t.x += t.vx; t.y += t.vy;
+    if (t.x <= 0 || t.x >= arenaSize - t.r * 2) { 
+        t.vx *= -1; 
+        t.x = t.x <= 0 ? 0 : arenaSize - t.r * 2; 
+        Sfx.bounce(); 
+    }
+    if (t.y <= 0 || t.y >= arenaSize - t.r * 2) { 
+        t.vy *= -1; 
+        t.y = t.y <= 0 ? 0 : arenaSize - t.r * 2; 
+        Sfx.bounce(); 
     }
 
-    function upd() {
-        const tr = document.getElementById('sz-t').value, br = document.getElementById('sz-b').value;
-        const pt = document.getElementById('pre-t'), pb = document.getElementById('pre-b');
-        pt.style.width = pt.style.height = (tr*2)+"px";
-        pb.style.width = pb.style.height = (br*2)+"px";
-        pb.style.background = player.col; pb.innerText = player.lbl;
-    }
+    // Update Visuals
+    const heroEl = document.getElementById('hero-ball');
+    const targetEl = document.getElementById('target-ball');
+    heroEl.style.transform = `translate(${h.x}px, ${h.y}px)`;
+    targetEl.style.transform = `translate(${t.x}px, ${t.y}px)`;
+    targetEl.style.width = targetEl.style.height = (t.r * 2) + "px";
 
-    function getDmg() {
-        if(hp <= 0n) return 0n;
-        let d = 0n;
-        if(player.type==='mult'||player.type==='exp') d = player.pwr;
-        else if(player.type==='half') d = hp / 2n;
-        else if(player.type==='quarter') d = (hp * 3n) / 4n;
-        else if(player.type==='root') {
-            let s = hp.toString();
-            let rv = BigInt(Math.floor(Math.sqrt(Number(s.substring(0,14))))) * 10n**BigInt(Math.max(0, s.length-14));
-            d = hp - rv;
+    // --- THE BIG BALL RAW DISPLAY ---
+    const hpStr = gameState.hp.toString();
+    const hpDisplay = document.getElementById('target-display');
+    hpDisplay.innerText = hpStr;
+    
+    // Dynamic Font Shrink Algorithm
+    // Uses density-based calculation to ensure 100+ digits fit inside the radius
+    let charCount = hpStr.length;
+    let baseSize = t.r * 1.8;
+    let shrinkFactor = Math.sqrt(charCount * 1.5);
+    hpDisplay.style.fontSize = Math.min(baseSize / shrinkFactor, t.r * 0.7) + "px";
+
+    // --- COLLISION DETECTION ---
+    const dx = (h.x + h.r) - (t.x + t.r);
+    const dy = (h.y + h.r) - (t.y + t.r);
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < (h.r + t.r)) {
+        Sfx.hit();
+        const dmg = calcDamage();
+        createDmgPopup(dmg);
+
+        document.getElementById('stat-last').innerText = formatNumber(dmg);
+        gameState.hp = dmg >= gameState.hp ? 0n : gameState.hp - dmg;
+
+        // Upgrade Power
+        if (h.type === 'mult') h.power *= h.val;
+        if (h.type === 'exp') {
+            if (h.power.toString().length < 500) h.power = h.power ** h.val;
         }
-        else if(player.type==='rev') d = hp - (hp / (player.hits + 1n));
-        return d > 0n ? d : 1n;
-    }
+        h.hits++;
+        document.getElementById('stat-power').innerText = formatNumber(calcDamage());
 
-    function boom(x, y, color) {
-        const arena = document.getElementById('arena');
-        for(let i=0; i<50; i++) {
-            const d = document.createElement('div'); d.className = 'part'; d.style.background = color;
-            d.style.width = d.style.height = (Math.random()*15+5)+"px";
-            d.style.left = x+"px"; d.style.top = y+"px"; arena.appendChild(d);
-            const vx = (Math.random()-0.5)*30, vy = (Math.random()-0.5)*30;
-            let life = 1.0;
-            const iv = setInterval(() => {
-                d.style.left = (parseFloat(d.style.left) + vx)+"px";
-                d.style.top = (parseFloat(d.style.top) + vy)+"px";
-                life -= 0.02; d.style.opacity = life;
-                if(life <= 0) { clearInterval(iv); d.remove(); }
-            }, 16);
-        }
-    }
-
-    function start() {
-        const raw = document.getElementById('in-hp').value;
-        hp = raw.includes('^') ? BigInt(raw.split('^')[0])**BigInt(raw.split('^')[1]) : BigInt(raw);
-        initHP = hp;
-        time = parseFloat(document.getElementById('in-t').value)*1000;
-        clock = 0; player.dx = (Math.random()-0.5)*28; player.dy = (Math.random()-0.5)*28;
-        target.dx = (Math.random()-0.5)*12; target.dy = (Math.random()-0.5)*12;
-        target.r = parseInt(document.getElementById('sz-t').value);
-        player.r = parseInt(document.getElementById('sz-b').value);
-        player.pwr = (player.type === 'exp') ? 2n : (player.val || 1n); player.hits = 1n; active = true;
-
-        document.getElementById('tiny-ball').style.display = 'flex';
-        document.getElementById('big-ball').style.display = 'flex';
-        document.getElementById('tiny-ball').style.background = player.col;
-        document.getElementById('tiny-ball').innerText = player.lbl; 
-        document.getElementById('stat-next').innerText = getBigName(getDmg());
-        
-        document.getElementById('screen-lab').classList.remove('active');
-        document.getElementById('screen-game').classList.add('active');
-        lastTs = performance.now(); loop();
-    }
-
-    function loop() {
-        if(!active) return;
-        const now = performance.now(), dt = now - lastTs; lastTs = now;
-        const header = document.getElementById('game-title');
-        const fullHPName = getBigName(initHP, true);
-
-        if(gMode === 'timer') {
-            time -= dt;
-            header.innerHTML = `Can <span style="color:${player.col}">${player.name}</span> do ${fullHPName} Damage in ${(Math.max(0, time/1000)).toFixed(1)}?`;
-            if(time <= 0) { boom(player.x + player.r, player.y + player.r, player.col); document.getElementById('tiny-ball').style.display = 'none'; active = false; setTimeout(() => location.reload(), 3000); return; }
-        } else {
-            clock += dt;
-            header.innerHTML = `How much time for <span style="color:${player.col}">${player.name}</span> to deal ${fullHPName} Damage? ${(clock/1000).toFixed(1)}`;
+        if (gameState.hp <= 0n) {
+            gameState.active = false;
+            setTimeout(() => location.reload(), 3000);
+            return;
         }
 
-        if(hp <= 0n) { boom(target.x + target.r, target.y + target.r, '#ccc'); document.getElementById('big-ball').style.display = 'none'; active = false; setTimeout(() => location.reload(), 3000); return; }
-
-        // PERIMETER COLLISION: HARD LIMITS
-        const LIMIT = 600; 
-        const BORDER = 18;
+        // Elastic Collision Response
+        const nx = dx / distance;
+        const ny = dy / distance;
+        const p = 2 * (h.vx * nx + h.vy * ny - t.vx * nx - t.vy * ny) / (1 + t.mass);
         
-        target.x += target.dx; target.y += target.dy;
-        if(target.x < 0) { target.x = 0; target.dx *= -1; Audio.wall(); }
-        else if(target.x > LIMIT - target.r*2) { target.x = LIMIT - target.r*2; target.dx *= -1; Audio.wall(); }
-        if(target.y < 0) { target.y = 0; target.dy *= -1; Audio.wall(); }
-        else if(target.y > LIMIT - target.r*2) { target.y = LIMIT - target.r*2; target.dy *= -1; Audio.wall(); }
-        
-        const bb = document.getElementById('big-ball');
-        bb.style.left = target.x+"px"; bb.style.top = target.y+"px";
-        bb.style.width = bb.style.height = (target.r*2)+"px";
-        
-        // BIG BALL TEXT: Dynamic sizing based on content
-        const hpString = (hp > 10n**100n) ? getBigName(hp, false) : hp.toString();
-        const hpEl = document.getElementById('hp-txt');
-        hpEl.innerText = hpString;
-        hpEl.style.fontSize = hpString.length > 10 ? "1.8rem" : "2.8rem";
+        h.vx -= p * t.mass * nx;
+        h.vy -= p * t.mass * ny;
+        t.vx += p * nx;
+        t.vy += p * ny;
 
-        player.x += player.dx; player.y += player.dy;
-        if(player.x < 0) { player.x = 0; player.dx *= -1; Audio.wall(); }
-        else if(player.x > LIMIT - player.r*2) { player.x = LIMIT - player.r*2; player.dx *= -1; Audio.wall(); }
-        if(player.y < 0) { player.y = 0; player.dy *= -1; Audio.wall(); }
-        else if(player.y > LIMIT - player.r*2) { player.y = LIMIT - player.r*2; player.dy *= -1; Audio.wall(); }
-        
-        const tb = document.getElementById('tiny-ball');
-        tb.style.left = player.x+"px"; tb.style.top = player.y+"px";
-        tb.style.width = tb.style.height = (player.r*2)+"px";
-
-        // BALL COLLISION
-        const dx = (player.x+player.r) - (target.x+target.r), dy = (player.y+player.r) - (target.y+target.r), dist = Math.sqrt(dx*dx + dy*dy);
-        if(dist < (player.r + target.r)) {
-            Audio.thump();
-            let d = getDmg();
-            const pop = document.createElement('div'); pop.className = 'dmg-pop'; pop.innerText = "-" + d.toString(); 
-            pop.style.left = player.x+"px"; pop.style.top = player.y+"px";
-            document.getElementById('arena').appendChild(pop); setTimeout(()=>pop.remove(), 1200);
-
-            document.getElementById('stat-prev').innerText = getBigName(d);
-            if(d >= hp) hp = 0n; else hp -= d;
-
-            if(player.type === 'mult' && player.val > 0n) player.pwr *= player.val;
-            if(player.type === 'exp') { 
-                if (player.pwr.toString().length < 400) player.pwr = player.pwr ** player.val; 
-                else player.pwr = 10n**500n; 
-            }
-            if(player.type === 'rev') player.hits++;
-            document.getElementById('stat-next').innerText = getBigName(getDmg());
-
-            const nx = dx/dist, ny = dy/dist;
-            const p1 = player.dx*nx + player.dy*ny, p2 = target.dx*nx + target.dy*ny;
-            const v1 = (p1*(1-target.mass)+2*target.mass*p2)/(1+target.mass);
-            const v2 = (p2*(target.mass-1)+2*1*p1)/(1+target.mass);
-            player.dx += (v1-p1)*nx; player.dy += (v1-p1)*ny;
-            target.dx += (v2-p2)*nx; target.dy += (v2-p2)*ny;
-            
-            const overlap = (player.r + target.r) - dist;
-            player.x += nx * (overlap + 3); player.y += ny * (overlap + 3);
-        }
-        requestAnimationFrame(loop);
+        // Separation to prevent sticking
+        const overlap = (h.r + t.r) - distance;
+        h.x += nx * (overlap + 2);
+        h.y += ny * (overlap + 2);
     }
-    genGrid(); upd();
+
+    requestAnimationFrame(gameLoop);
+}
+
+// Boot
+buildGrid();
+refreshPreview();
 </script>
 </body>
 </html>
