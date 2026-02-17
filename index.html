@@ -1,368 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Square Arena: Chaos & Cinema</title>
-    <title>Square Arena: Sequence & Series</title>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<style>
-:root {
-@@ -28,7 +28,7 @@
-input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 3px solid #000; font-family: 'Share Tech Mono', monospace; font-size: 1.1rem; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Square Arena: Architect Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #2c3e50;
+            --panel-light: #ecf0f1;
+            --panel-dark: #34495e;
+            --accent: #f1c40f;
+            --hero-red: #d92d20;
+            --border-thick: 4px solid #000;
+        }
 
-.ball-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .ball-opt { aspect-ratio: 1/1; border-radius: 50%; border: 2px solid transparent; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 900; cursor: pointer; transition: 0.1s; }
-        .ball-opt { aspect-ratio: 1/1; border-radius: 50%; border: 2px solid transparent; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 900; cursor: pointer; transition: 0.1s; }
-.ball-opt.selected { border-color: #000; transform: scale(1.1); box-shadow: 0 0 0 2px #fff, 4px 4px 0 #000; z-index: 2; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { background-color: var(--bg); font-family: 'Roboto Condensed', sans-serif; height: 100vh; overflow: hidden; }
 
-.mad-lib { font-size: 1rem; line-height: 1.6; margin-bottom: 10px; }
-@@ -51,19 +51,14 @@
-#stats-bar { width: 700px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-.stat-card { background: #000; color: #fff; padding: 15px; border: 4px solid #000; text-align: center; }
-.stat-num { font-size: 1.6rem; font-weight: 900; color: #00ff88; display: block; }
+        /* --- FULLSCREEN SETUP DASHBOARD --- */
+        #setup-dashboard {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff; z-index: 100; display: flex;
+            padding: 20px; gap: 20px;
+        }
+
+        /* COLUMNS */
+        .col-config {
+            flex: 0 0 300px; display: flex; flex-direction: column; gap: 15px;
+            background: var(--panel-light); padding: 20px; border: var(--border-thick);
+            box-shadow: 10px 10px 0 rgba(0,0,0,0.2);
+            overflow-y: auto;
+        }
         
-        /* SHARDS & FLOATS */
-        .dmg-float { position: absolute; font-size: 34px; font-weight: 900; color: #ff4757; -webkit-text-stroke: 1.5px #000; pointer-events: none; z-index: 100; animation: floatUp 1.2s ease-out forwards; }
-        @keyframes floatUp { 0%{opacity:1; transform:scale(0.7);} 100%{opacity:0; transform:translateY(-150px) scale(1.3);} }
+        .col-arena {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: #e0e0e0; border: var(--border-thick); position: relative;
+        }
+
+        .col-script {
+            flex: 0 0 320px; display: flex; flex-direction: column; gap: 15px;
+            background: var(--panel-dark); color: #fff; padding: 20px; border: var(--border-thick);
+            box-shadow: 10px 10px 0 rgba(0,0,0,0.5);
+        }
+
+        /* HEADERS */
+        h2 { text-transform: uppercase; font-weight: 900; border-bottom: 3px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
+        .h-dark { border-color: var(--accent); color: var(--accent); }
+
+        /* INPUTS */
+        .input-group { margin-bottom: 10px; }
+        label { display: block; font-size: 0.8rem; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
+        input[type="text"], input[type="number"] {
+            width: 100%; padding: 10px; border: 3px solid #000; font-family: 'Share Tech Mono', monospace; font-size: 1.1rem;
+        }
+        
+        /* BALL GRID */
+        .ball-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .ball-opt {
+            aspect-ratio: 1/1; border-radius: 50%; border: 2px solid transparent;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 12px; font-weight: 900; cursor: pointer;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+        }
+        .ball-opt:hover { transform: scale(1.1); }
+        .ball-opt.selected { border-color: #000; transform: scale(1.15); box-shadow: 0 0 0 2px #fff, 4px 4px 0 #000; z-index: 2; }
+
+        /* SCRIPT MODE TOGGLE */
+        .toggle-box { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 10px; }
+        .chk-big { width: 25px; height: 25px; accent-color: var(--accent); cursor: pointer; }
+
+        /* MAD LIBS */
+        .mad-lib { font-size: 1.1rem; line-height: 1.6; }
+        .mad-input { width: 60px; padding: 5px; border: 2px solid var(--accent); background: #222; color: #fff; font-family: monospace; text-align: center; }
+        .mad-select { padding: 5px; border: 2px solid var(--accent); background: #222; color: #fff; font-weight: bold; }
+
+        /* ACTION BUTTONS */
+        .btn-calc {
+            background: #9b59b6; color: white; border: 3px solid #fff; padding: 10px;
+            font-weight: 900; cursor: pointer; text-transform: uppercase; margin-top: 10px;
+        }
+        .btn-calc:hover { background: #8e44ad; }
+
+        #calc-result { 
+            min-height: 40px; background: rgba(0,0,0,0.3); border: 1px dashed #777; 
+            display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 0.9rem;
+            margin-top: 10px; text-align: center; padding: 5px;
+        }
+
+        .btn-start {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #2ecc71; color: white; padding: 15px 50px; border: 4px solid #000;
+            font-size: 2rem; font-weight: 900; cursor: pointer; box-shadow: 0 5px 0 #000;
+            z-index: 200;
+        }
+        .btn-start:active { transform: translateX(-50%) translateY(5px); box-shadow: 0 0 0 #000; }
+
+        /* 1:1 PREVIEW ARENA */
+        #preview-container {
+            width: 700px; height: 700px; background: #fff; border: 2px solid #000;
+            position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.1);
+        }
+        
+        /* --- GAME VIEW (Overlay) --- */
+        #game-view { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: #fdfaf0; flex-direction: column; align-items: center; z-index: 200; }
+        #top-bar { width: 800px; text-align: center; font-size: 2rem; font-weight: 900; margin: 20px 0; height: 60px; text-transform: uppercase; }
+        #arena { width: 700px; height: 700px; background: #fff; border: 2px solid #000; position: relative; overflow: hidden; }
+        
+        /* BALL STYLES */
+        .ball-render { position: absolute; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+        .b-target { background: #cbcbcb; border: 1px solid #555; z-index: 5; }
+        .b-hero { border: 3px solid #000; font-weight: 900; z-index: 10; color: #000; }
+        
+        #target-text { color: #fff; font-weight: 900; text-align: center; text-shadow: 2px 2px 0 #000; padding: 10%; font-family: 'Share Tech Mono', monospace; line-height: 0.9; }
+
+        /* EFFECTS & STATS */
+        .dmg-float { position: absolute; font-size: 32px; font-weight: 900; color: #ff4757; -webkit-text-stroke: 1.5px #000; pointer-events: none; z-index: 50; animation: floatUp 1.5s ease-out forwards; }
+        @keyframes floatUp { 0%{opacity:1; transform:scale(0.8);} 100%{opacity:0; transform:translateY(-120px) scale(1.1);} }
         .shard { position: absolute; border-radius: 50%; pointer-events: none; z-index: 20; }
-</style>
+        
+        #stats-bar { width: 700px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .stat-card { background: #000; color: #fff; padding: 15px; border: 3px solid #000; text-align: center; }
+        .stat-num { font-size: 1.6rem; font-weight: 900; color: var(--accent); }
+
+    </style>
 </head>
 <body>
 
 <div id="setup-dashboard">
-<div class="col-config">
-<h2>Laboratory</h2>
-        <div class="input-group"><label>Target HP</label><input type="text" id="inp-hp" value="10^63"></div>
-        <div class="input-group"><label>Target HP</label><input type="text" id="inp-hp" value="10^100"></div>
-<div id="basic-modes">
-<div class="input-group"><label>Mode</label>
-<select id="sel-mode" style="width:100%; padding:10px; border:3px solid #000; font-weight:900;" onchange="updateModeUI()">
-@@ -73,9 +68,8 @@ <h2>Laboratory</h2>
-</div>
-<div class="input-group" id="grp-time"><label>Time Limit (s)</label><input type="number" id="inp-time" value="30"></div>
-</div>
-        <div class="input-group"><label>Choose Ball</label><div id="hero-grid" class="ball-grid"></div></div>
-        <div class="input-group"><label>Hero Size: <span id="lbl-h-size">60</span>px</label><input type="range" id="sl-hero" min="30" max="100" value="60" oninput="updatePreview()"></div>
-        <div class="input-group"><label>Target Size: <span id="lbl-t-size">180</span>px</label><input type="range" id="sl-target" min="100" max="250" value="180" oninput="updatePreview()"></div>
-        <div class="input-group"><label>The Math Roster</label><div id="hero-grid" class="ball-grid"></div></div>
-        <div class="input-group"><label>Hero Size</label><input type="range" id="sl-hero" min="30" max="100" value="60" oninput="updatePreview()"></div>
+    
+    <div class="col-config">
+        <h2>Laboratory</h2>
+        <div class="input-group">
+            <label>Target HP</label>
+            <input type="text" id="inp-hp" value="10^126">
+        </div>
+
+        <div id="basic-modes">
+            <div class="input-group">
+                <label>Mode</label>
+                <select id="sel-mode" style="width:100%; padding:10px; border:3px solid #000; font-weight:900;" onchange="updateModeUI()">
+                    <option value="timer">Time Attack</option>
+                    <option value="stopwatch">Stopwatch</option>
+                </select>
+            </div>
+            <div class="input-group" id="grp-time">
+                <label>Time Limit (s)</label>
+                <input type="number" id="inp-time" value="60">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Hero Roster</label>
+            <div id="hero-grid" class="ball-grid"></div>
+        </div>
+
+        <div class="input-group">
+            <label>Hero Size: <span id="lbl-h-size">60</span>px</label>
+            <input type="range" id="sl-hero" min="30" max="100" value="60" oninput="updatePreview()">
+        </div>
+        <div class="input-group">
+            <label>Target Size: <span id="lbl-t-size">180</span>px</label>
+            <input type="range" id="sl-target" min="100" max="250" value="180" oninput="updatePreview()">
+        </div>
+    </div>
+
+    <div class="col-arena">
+        <div style="margin-bottom:10px; font-weight:900; color:#555;">PREVIEW (1:1 SCALE - 700x700)</div>
+        <div id="preview-container">
+            <div id="prev-target" class="ball-render b-target"></div>
+            <div id="prev-hero" class="ball-render b-hero"></div>
+        </div>
+        <button class="btn-start" onclick="launchGame()">INITIATE BATTLE</button>
+    </div>
+
+    <div class="col-script">
+        <h2 class="h-dark">Script Engine</h2>
+        <div class="toggle-box">
+            <input type="checkbox" id="chk-script" class="chk-big" onchange="toggleScriptMode()">
+            <label style="margin:0; color:#fff;">Enable Script</label>
+        </div>
+        
+        <div id="script-panel" style="opacity: 0.5; pointer-events: none;">
+            <p style="font-size:0.9rem; color:#ccc; margin-bottom:10px;">Construct the victory condition:</p>
+            
+            <div class="mad-lib">
+                Big Ball must die 
+                <select id="sl-cond-type" class="mad-select" onchange="updateScriptUI()">
+                    <option value="time">at exact time</option>
+                    <option value="wall">after wall hits</option>
+                </select>
+            </div>
+
+            <div id="cond-time" style="margin-top:10px;">
+                <div class="mad-lib">
+                    Between <input type="number" id="sc-t1" class="mad-input" value="10">s and <input type="number" id="sc-t2" class="mad-input" value="12">s.
+                </div>
+            </div>
+
+            <div id="cond-wall" style="display:none; margin-top:10px;">
+                <div class="mad-lib">
+                    Within <input type="number" id="sc-delay" class="mad-input" value="3">s after hitting the wall <input type="number" id="sc-hits" class="mad-input" value="5"> times.
+                </div>
+            </div>
+
+            <button class="btn-calc" onclick="calculateFeasibility()">Calculate Feasibility</button>
+            <div id="calc-result">Waiting for data...</div>
+        </div>
+    </div>
 </div>
 
-<div class="col-arena">
-@@ -92,14 +86,13 @@ <h2 style="color:var(--accent); border-color:var(--accent);">Script Engine</h2>
-<input type="checkbox" id="chk-script" style="width:22px; height:22px;" onchange="toggleScriptUI()"><label style="margin:0; color:#fff; font-size:1rem;">Enable Scripting</label>
-</div>
-
-        <div id="script-options" style="opacity: 0.3; pointer-events: none; transition: 0.3s;">
-        <div id="script-options" style="opacity: 0.3; pointer-events: none;">
-<div style="display:flex; align-items:center; gap:10px; margin-bottom:15px; background:rgba(0,255,136,0.1); padding:10px; border:1px solid #00ff88;">
-<input type="checkbox" id="chk-last-sec" style="width:18px; height:18px;" onchange="toggleLSH()"><label style="margin:0; color:#00ff88;">Last Second Heroics</label>
-</div>
-
-            <div id="madlib-container" style="transition: 0.3s;">
-                <p style="font-size:0.8rem; color:#888; margin-bottom:5px;">PHYSICS OVERRIDE:</p>
-                <div class="mad-lib">Big Ball must die 
-            <div id="madlib-container">
-                <div class="mad-lib">Target must die 
-<select id="sl-cond-type" class="mad-select" onchange="updateScriptSubUI()">
-<option value="time">at exact time</option>
-<option value="wall">after wall hits</option>
-@@ -109,7 +102,6 @@ <h2 style="color:var(--accent); border-color:var(--accent);">Script Engine</h2>
-<div id="cond-wall" style="display:none;"><div class="mad-lib">Within <input type="number" id="sc-delay" class="mad-input" value="2">s after hitting the wall <input type="number" id="sc-hits" class="mad-input" value="10"> times.</div></div>
-</div>
-</div>
-        <p id="hint-text" style="font-size:0.75rem; color:#666; font-style:italic;">Note: If scripting is off, all physics will be randomized.</p>
-</div>
-</div>
-
-@@ -126,28 +118,27 @@ <h2 style="color:var(--accent); border-color:var(--accent);">Script Engine</h2>
+<div id="game-view">
+    <div id="top-bar"></div>
+    <div id="arena">
+        <div id="target" class="ball-render b-target"><div id="target-text"></div></div>
+        <div id="hero" class="ball-render b-hero"></div>
+    </div>
+    <div id="stats-bar">
+        <div class="stat-card"><span style="font-size:10px;">LAST HIT (ABBR)</span><span id="val-last" class="stat-num">---</span></div>
+        <div class="stat-card"><span style="font-size:10px;">NEXT HIT (ABBR)</span><span id="val-next" class="stat-num">---</span></div>
+    </div>
 </div>
 
 <script>
-// NEW ROSTER IMPLEMENTATION
+/* --- DATA --- */
 const HEROES = [
-    {n:"Rooter", t:"root", v:0n, l:"√", c:"#d92d20"}, {n:"Doubler", t:"mult", v:2n, l:"2x", c:"#e67e22"},
-    {n:"Tripler", t:"mult", v:3n, l:"3x", c:"#f1c40f"}, {n:"Quadrupler", t:"mult", v:4n, l:"4x", c:"#2ecc71"},
-    {n:"Quintupler", t:"mult", v:5n, l:"5x", c:"#1abc9c"}, {n:"Sextupler", t:"mult", v:6n, l:"6x", c:"#3498db"},
-    {n:"Septupler", t:"mult", v:7n, l:"7x", c:"#9b59b6"}, {n:"Octupler", t:"mult", v:8n, l:"8x", c:"#34495e"},
-    {n:"Nonupler", t:"mult", v:9n, l:"9x", c:"#574b90"}, {n:"Decupler", t:"mult", v:10n, l:"10x", c:"#30336b"},
-    {n:"Squarer", t:"exp", v:2n, l:"x²", c:"#44bd32"}, {n:"Cuber", t:"exp", v:3n, l:"x³", c:"#0097e6"},
-    {n:"Halver", t:"half", v:0n, l:"x/2", c:"#7f8c8d"}, {n:"Quarter", t:"quarter", v:0n, l:"x/4", c:"#2c3e50"},
+    {n:"Rooter", t:"root", v:0n, l:"√", c:"#d92d20"},
+    {n:"Doubler", t:"mult", v:2n, l:"2x", c:"#e67e22"},
+    {n:"Tripler", t:"mult", v:3n, l:"3x", c:"#f1c40f"},
+    {n:"Quadrupler", t:"mult", v:4n, l:"4x", c:"#2ecc71"},
+    {n:"Quintupler", t:"mult", v:5n, l:"5x", c:"#1abc9c"},
+    {n:"Sextupler", t:"mult", v:6n, l:"6x", c:"#3498db"},
+    {n:"Septupler", t:"mult", v:7n, l:"7x", c:"#9b59b6"},
+    {n:"Octupler", t:"mult", v:8n, l:"8x", c:"#34495e"},
+    {n:"Nonupler", t:"mult", v:9n, l:"9x", c:"#574b90"}, /* NEW */
+    {n:"Decupler", t:"mult", v:10n, l:"10x", c:"#30336b"}, /* NEW */
+    {n:"Squarer", t:"exp", v:2n, l:"x²", c:"#44bd32"},
+    {n:"Cuber", t:"exp", v:3n, l:"x³", c:"#0097e6"},
+    {n:"Halver", t:"half", v:0n, l:"x/2", c:"#7f8c8d"},
+    {n:"Quarter", t:"quarter", v:0n, l:"x/4", c:"#2c3e50"},
     {n:"Reverser", t:"rev", v:0n, l:"x/y", c:"#8e44ad"}
-    {n:"Primorum", t:"prim", l:"#", c:"#9b59b6", hist: [1n]},
-    {n:"Power", t:"pow", l:"⚡️", c:"#f1c40f"},
-    {n:"Factorial", t:"fact", l:"!", c:"#e67e22", hist: [1n]},
-    {n:"Randomizer", t:"rand", l:"?", c:"#1abc9c", hist: [10n]},
-    {n:"Fibonacci", t:"fib", l:"Φ", c:"#3498db", hist: [0n, 1n]},
-    {n:"Tribonacci", t:"tri", l:"Tb", c:"#2980b9", hist: [0n, 0n, 1n]},
-    {n:"Quadrinacci", t:"quad", l:"Qd", c:"#2c3e50", hist: [0n, 0n, 0n, 1n]},
-    {n:"Gamblinacci", t:"gamb", l:"???", c:"#d35400", hist: [0n, 1n], a: 1.5}
 ];
 
-const NAMES_FULL = ["", "Thousand", "Million", "Billion", "Trillion", "Quadrillion", "Quintillion", "Sextillion", "Septillion", "Octillion", "Nonillion", "Decillion", "Undecillion", "Duodecillion", "Tredecillion", "Quattuordecillion", "Quindecillion", "Sexdecillion", "Septendecillion", "Octodecillion", "Novemdecillion", "Vigintillion", "Unvigintillion", "Duovigintillion", "Trestrigintillion", "Quattuorvigintillion", "Quinvigintillion", "Sexvigintillion", "Septenvigintillion", "Octovigintillion", "Novemvigintillion", "Trigintillion", "Untrigintillion", "Duotrigintillion", "Trestrigintillion", "Quadragintillion", "Quinquagintillion", "Sexagintillion", "Septuagintillion", "Octogintillion", "Nonagintillion", "Centillion"];
-const NAMES_ABBR = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Od", "Nd", "Vg", "Uvg", "Dvg", "Tvg", "Qvg", "Qivg", "Sxg", "Spg", "Ovg", "Nvg", "Tg", "Utg", "Dtg", "Ttg", "Qtg", "Uq", "Dq", "Tq", "Qq", "Qiq", "Sxq", "Spq", "Oq", "Nq", "Qing"];
+const NAMES_S = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Od", "Nd", "Vg", "Uvg", "Dvg", "Tvg", "Qvg", "Qivg", "Sxg", "Spg", "Ovg", "Nvg", "Tg", "Utg", "Dtg", "Ttg", "Qtg", "Uq", "Dq", "Tq", "Qq", "Qiq", "Sxq", "Spq", "Oq", "Nq", "Qing"];
 
-let conf = { hero: {...HEROES[0], r:60}, target: {r:180, mass:30}, mode: "timer", scriptEnabled: false, lsh: false };
-let conf = { hero: JSON.parse(JSON.stringify(HEROES[0])), target: {r:180, mass:30}, mode: "timer", scriptEnabled: false, lsh: false };
-let sim = { active: false, hp: 0n, initHP: 0n, elapsed: 0, wallHits: 0, lastWallTime: 0, lastTs: 0 };
-
-const SFX = {
-ctx: null, init(){ if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); },
-    hit(){ this.play(120,'sine',0.1,0.2); }, 
-    clack(){ this.play(600,'square',0.03,0.05); }, 
-    boom(){ this.play(55,'sawtooth',0.8,0.3,1); },
-    hit(){ this.play(120,'sine',0.1,0.2); }, clack(){ this.play(600,'square',0.03,0.05); }, boom(){ this.play(55,'sawtooth',0.8,0.3,1); },
-play(f,t,d,v,s=0){ this.init(); const o=this.ctx.createOscillator(), g=this.ctx.createGain(); o.type=t; o.frequency.setValueAtTime(f, this.ctx.currentTime); if(s) o.frequency.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+d); g.gain.setValueAtTime(v, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime+d); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+d); }
+/* --- STATE --- */
+let config = {
+    hero: { ...HEROES[0], r: 60, x:50, y:50, vx:12, vy:10 },
+    target: { r: 180, mass: 30, x:0, y:0, vx:-4, vy:3 },
+    hpRaw: "10^126",
+    hp: 0n,
+    mode: "timer", // timer, stopwatch, script
+    timeLimit: 60,
+    script: { enabled: false, type: 'time', t1: 10, t2: 12, hits: 5, delay: 3 }
 };
 
-@@ -161,70 +152,54 @@ <h2 style="color:var(--accent); border-color:var(--accent);">Script Engine</h2>
-return base.toString() + " " + (arr[tier] || "Cosmic");
-}
+let sim = { active: false, elapsed: 0, wallHits: 0, lastWallHitTime: 0, hits: 0, lastTs: 0 };
 
+/* --- UI SETUP --- */
 function init() {
     const g = document.getElementById('hero-grid');
     HEROES.forEach((h, i) => {
-        const d = document.createElement('div'); d.className = `ball-opt ${i===0?'selected':''}`;
+        const d = document.createElement('div');
+        d.className = `ball-opt ${i===0?'selected':''}`;
         d.style.background = h.c; d.innerText = h.l;
         d.onclick = () => {
             document.querySelectorAll('.ball-opt').forEach(b => b.classList.remove('selected'));
-            d.classList.add('selected'); Object.assign(conf.hero, h); updatePreview();
-        };
-        g.appendChild(d);
-    });
-    updatePreview();
-}
-
-function updatePreview() {
-    conf.hero.r = parseInt(document.getElementById('sl-hero').value);
-    conf.target.r = parseInt(document.getElementById('sl-target').value);
-    document.getElementById('lbl-h-size').innerText = conf.hero.r;
-    document.getElementById('lbl-t-size').innerText = conf.target.r;
-    const pt = document.getElementById('prev-target'), ph = document.getElementById('prev-hero');
-    pt.style.width = pt.style.height = (conf.target.r*2)+"px"; pt.style.left = (350-conf.target.r)+"px"; pt.style.top = (350-conf.target.r)+"px";
-    ph.style.width = ph.style.height = (conf.hero.r*2)+"px"; ph.style.background = conf.hero.c; ph.innerText = conf.hero.l;
-    ph.style.fontSize = (conf.hero.r*0.7)+"px"; ph.style.left = "50px"; ph.style.top = "50px";
-function isPrime(num) {
-    for(let i = 2, s = Math.sqrt(num); i <= s; i++) if(num % i === 0) return false;
-    return num > 1;
-}
-
-/* --- UI CONTROLS --- */
-function toggleScriptUI() {
-    conf.scriptEnabled = document.getElementById('chk-script').checked;
-    const opt = document.getElementById('script-options');
-    opt.style.opacity = conf.scriptEnabled ? "1" : "0.3";
-    opt.style.pointerEvents = conf.scriptEnabled ? "all" : "none";
-    document.getElementById('basic-modes').style.opacity = conf.scriptEnabled ? "0.4" : "1";
-    toggleLSH(); // Refresh LSH state
-function getNthPrime(n) {
-    let count = 0; let num = 2;
-    while (count < n) { if(isPrime(num)) count++; if(count < n) num++; }
-    return BigInt(num);
-}
-
-function toggleLSH() {
-    conf.lsh = document.getElementById('chk-last-sec').checked;
-    const mad = document.getElementById('madlib-container');
-    if(conf.lsh && conf.scriptEnabled) {
-        mad.style.opacity = "0.2";
-        mad.style.pointerEvents = "none";
-    } else {
-        mad.style.opacity = "1";
-        mad.style.pointerEvents = "all";
-function getDmg(h, n) {
-    n = n + 1; // n is current hit count starting from 0
-    switch(h.t) {
-        case 'prim':
-            let p = getNthPrime(n);
-            h.hist[0] *= p;
-            return h.hist[0];
-        case 'pow':
-            return BigInt(n) ** BigInt(n);
-        case 'fact':
-            h.hist[0] *= BigInt(n);
-            return h.hist[0];
-        case 'rand':
-            let r = BigInt(Math.floor(Math.random() * 100) + 1);
-            h.hist[0] *= r;
-            return h.hist[0];
-        case 'fib':
-            let nextFib = h.hist[h.hist.length-1] + h.hist[h.hist.length-2];
-            h.hist.push(nextFib);
-            return nextFib;
-        case 'tri':
-            let nextTri = h.hist[h.hist.length-1] + h.hist[h.hist.length-2] + h.hist[h.hist.length-3];
-            h.hist.push(nextTri);
-            return nextTri;
-        case 'quad':
-            let nextQuad = h.hist[h.hist.length-1] + h.hist[h.hist.length-2] + h.hist[h.hist.length-3] + h.hist[h.hist.length-4];
-            h.hist.push(nextQuad);
-            return nextQuad;
-        case 'gamb':
-            let aVal = h.a; 
-            let nextGamb = BigInt(Math.floor(Number(h.hist[h.hist.length-1]) * aVal)) + h.hist[h.hist.length-2];
-            h.hist.push(nextGamb);
-            return nextGamb;
-        default: return 1n;
-}
-}
-
-function updateModeUI() { conf.mode = document.getElementById('sel-mode').value; }
-function updateScriptSubUI() {
-    document.getElementById('cond-time').style.display = document.getElementById('sl-cond-type').value==='time'?'block':'none'; 
-    document.getElementById('cond-wall').style.display = document.getElementById('sl-cond-type').value==='wall'?'block':'none'; 
-}
-
-/* --- PHYSICS --- */
-function getDmg(h, currHP) {
-    let d = 1n;
-    if(h.t==='root') { let s = currHP.toString(); d = currHP - (BigInt(Math.floor(Math.sqrt(Number(s.substring(0,14))))) * 10n**BigInt(Math.max(0, s.length-14))); }
-    else if(h.t==='mult'||h.t==='exp') d = h.pwr;
-    else if(h.t==='half') d = currHP / 2n;
-    else if(h.t==='quarter') d = (currHP * 3n) / 4n;
-    else if(h.t==='rev') d = currHP - (currHP / BigInt(h.hits + 2));
-    return d > 0n ? d : 1n;
-}
-
-function physicsStep(state, h, t, isSim) {
-h.x += h.vx; h.y += h.vy; t.x += t.vx; t.y += t.vy;
-let hitW = false; const sz = 700;
-@@ -237,9 +212,8 @@ <h2 style="color:var(--accent); border-color:var(--accent);">Script Engine</h2>
-let dx = (h.x+h.r)-(t.x+t.r), dy = (h.y+h.r)-(t.y+t.r), dist = Math.sqrt(dx*dx+dy*dy);
-if(dist < h.r+t.r) {
-if(!isSim) SFX.hit();
-        let dmg = getDmg(h, state.hp);
-        let dmg = getDmg(h, h.hits);
-
-        // MOVIE LOGIC (Last Second Heroics)
-if(!isSim && conf.scriptEnabled && conf.lsh) {
-let limit = parseFloat(document.getElementById('inp-time').value);
-if (state.elapsed >= limit - 0.8) dmg = state.hp; 
-@@ -251,8 +225,6 @@ <h2 style="color:var(--accent); border-color:var(--accent);">Script Engine</h2>
-document.getElementById('val-last').innerText = format(dmg);
-spawnDmg(h.x, h.y, dmg);
-}
-        if(h.t==='mult') h.pwr *= h.v;
-        if(h.t==='exp' && h.pwr.toString().length < 400) h.pwr = h.pwr ** h.v;
-h.hits++;
-let nx=dx/dist, ny=dy/dist, pV = 2*(h.vx*nx + h.vy*ny - t.vx*nx - t.vy*ny)/(1 + t.mass);
-h.vx -= pV*t.mass*nx; h.vy -= pV*t.mass*ny; t.vx += pV*nx; t.vy += pV*ny;
-@@ -268,33 +240,32 @@ <h2 style="color:var(--accent); border-color:var(--accent);">Script Engine</h2>
-sim.initHP = sim.hp; sim.elapsed = 0; sim.wallHits = 0; sim.active = true; sim.lastTs = performance.now();
-
-conf.hero.hits = 0;
-    conf.hero.pwr = (conf.hero.t==='root') ? 0n : conf.hero.v;
-    // Reset history buffers for fresh run
-    if(conf.hero.t === 'prim' || conf.hero.t === 'fact') conf.hero.hist = [1n];
-    if(conf.hero.t === 'rand') conf.hero.hist = [10n];
-    if(conf.hero.t === 'fib') conf.hero.hist = [0n, 1n];
-    if(conf.hero.t === 'tri') conf.hero.hist = [0n, 0n, 1n];
-    if(conf.hero.t === 'quad') conf.hero.hist = [0n, 0n, 0n, 1n];
-    if(conf.hero.t === 'gamb') { conf.hero.hist = [0n, 1n]; conf.hero.a = 0.5 + Math.random() * 1.5; }
-
-    // RANDOMNESS LOGIC
-if (!conf.scriptEnabled) {
-        // Random Start Positions
-        conf.hero.x = Math.random() * 200; 
-        conf.hero.y = Math.random() * 200;
-        conf.target.x = 300 + Math.random() * 200;
-        conf.target.y = 300 + Math.random() * 200;
-        // Random Velocities
-        conf.hero.vx = (Math.random() > 0.5 ? 1 : -1) * (8 + Math.random() * 8);
-        conf.hero.vy = (Math.random() > 0.5 ? 1 : -1) * (8 + Math.random() * 8);
-        conf.target.vx = (Math.random() > 0.5 ? 1 : -1) * (3 + Math.random() * 4);
-        conf.target.vy = (Math.random() > 0.5 ? 1 : -1) * (3 + Math.random() * 4);
-        conf.hero.x = Math.random() * 200; conf.hero.y = Math.random() * 200;
-        conf.target.x = 300 + Math.random() * 200; conf.target.y = 300 + Math.random() * 200;
-        conf.hero.vx = (Math.random() > 0.5 ? 1 : -1) * (10 + Math.random() * 5);
-        conf.hero.vy = (Math.random() > 0.5 ? 1 : -1) * (10 + Math.random() * 5);
-        conf.target.vx = (Math.random() > 0.5 ? 1 : -1) * 4; conf.target.vy = (Math.random() > 0.5 ? 1 : -1) * 3;
-} else {
-        // Consistent physics for scripted runs
-conf.hero.x = 50; conf.hero.y = 50; conf.hero.vx = 12; conf.hero.vy = 10;
-conf.target.x = 350-conf.target.r; conf.target.y = 350-conf.target.r; conf.target.vx = -4; conf.target.vy = 3;
-}
-
-document.getElementById('setup-dashboard').style.display = 'none';
-document.getElementById('game-view').style.display = 'flex';
-    const hEl = document.getElementById('hero'), tEl = document.getElementById('target');
-    hEl.style.background = conf.hero.c; hEl.innerText = conf.hero.l;
-    hEl.style.width = hEl.style.height = (conf.hero.r*2)+"px";
-    tEl.style.width = tEl.style.height = (conf.target.r*2)+"px";
-    hEl.style.display = tEl.style.display = 'flex';
-    document.getElementById('hero').style.background = conf.hero.c;
-    document.getElementById('hero').innerText = conf.hero.l;
-    document.getElementById('hero').style.width = document.getElementById('hero').style.height = (conf.hero.r*2)+"px";
-    document.getElementById('target').style.width = document.getElementById('target').style.height = (conf.target.r*2)+"px";
-    document.getElementById('hero').style.display = document.getElementById('target').style.display = 'flex';
-requestAnimationFrame(gameLoop);
-}
-
-@@ -318,21 +289,20 @@ <h2 style="color:var(--accent); border-color:var(--accent);">Script Engine</h2>
-
-const title = document.getElementById('arena-title'), hName = `<span style="color:${conf.hero.c}">${conf.hero.n}</span>`, goal = format(sim.initHP, true);
-
-    // TITLE LOGIC
-if (conf.scriptEnabled && !conf.lsh) {
-        title.innerHTML = `Scripted Run: ${sim.wallHits} Hits | ${sim.elapsed.toFixed(1)}s`;
-        title.innerHTML = `Script: ${sim.wallHits} Wall Hits | ${sim.elapsed.toFixed(1)}s`;
-} else {
-        // Standard Time Attack Title
-if(conf.mode === 'timer' || conf.lsh) {
-let rem = parseFloat(document.getElementById('inp-time').value) - sim.elapsed;
-            title.innerHTML = `Can ${hName} deal ${goal} damage in ${Math.max(0, rem).toFixed(1)} seconds?`;
-            title.innerHTML = `Can ${hName} deal ${goal} damage in ${Math.max(0, rem).toFixed(1)}s?`;
-if(rem <= 0 && !killed) endGame(false);
-} else {
-            title.innerHTML = `Stopwatch: ${sim.elapsed.toFixed(1)}s<br>Goal: ${goal}`;
-            title.innerHTML = `${hName} vs ${goal}<br>${sim.elapsed.toFixed(1)}s Elapsed`;
-}
-}
-
-    document.getElementById('val-next').innerText = format(getDmg(conf.hero, sim.hp));
-    // Next hit preview needs a non-destructive check, but since we modify history on call, we just approximate or show current
-    document.getElementById('val-next').innerText = "Scaling...";
-if(killed) endGame(true); else requestAnimationFrame(gameLoop);
-}
-
-@@ -355,7 +325,45 @@ <h2 style="color:var(--accent); border-color:var(--accent);">Script Engine</h2>
-const a=Math.random()*6.28, v=Math.random()*12; let vx=Math.cos(a)*v, vy=Math.sin(a)*v, l=1, px=x, py=y;
-const anim = () => { if(l<=0){s.remove();return;} px+=vx; py+=vy; l-=0.02; s.style.left=px+"px"; s.style.top=py+"px"; s.style.opacity=l; requestAnimationFrame(anim); }; anim();
-}
-    setTimeout(() => { alert(isWin ? "GOAL ACHIEVED" : "GAME OVER"); location.reload(); }, 2000);
-    setTimeout(() => { alert(isWin ? "GOAL ACHIEVED" : "MISSION FAILED"); location.reload(); }, 2000);
-}
-
-function toggleScriptUI() {
-    conf.scriptEnabled = document.getElementById('chk-script').checked;
-    const opt = document.getElementById('script-options');
-    opt.style.opacity = conf.scriptEnabled ? "1" : "0.3";
-    opt.style.pointerEvents = conf.scriptEnabled ? "all" : "none";
-    document.getElementById('basic-modes').style.opacity = conf.scriptEnabled ? "0.4" : "1";
-    toggleLSH();
-}
-
-function toggleLSH() {
-    conf.lsh = document.getElementById('chk-last-sec').checked;
-    const mad = document.getElementById('madlib-container');
-    mad.style.opacity = (conf.lsh && conf.scriptEnabled) ? "0.2" : "1";
-    mad.style.pointerEvents = (conf.lsh && conf.scriptEnabled) ? "none" : "all";
-}
-
-function updateModeUI() { conf.mode = document.getElementById('sel-mode').value; }
-function updateScriptSubUI() {
-    document.getElementById('cond-time').style.display = document.getElementById('sl-cond-type').value==='time'?'block':'none'; 
-    document.getElementById('cond-wall').style.display = document.getElementById('sl-cond-type').value==='wall'?'block':'none'; 
-}
-
-function init() {
-    const g = document.getElementById('hero-grid');
-    HEROES.forEach((h, i) => {
-        const d = document.createElement('div'); d.className = `ball-opt ${i===0?'selected':''}`;
-        d.style.background = h.c; d.innerText = h.l;
-        d.onclick = () => {
-            document.querySelectorAll('.ball-opt').forEach(b => b.classList.remove('selected'));
-            d.classList.add('selected'); 
-            conf.hero = JSON.parse(JSON.stringify(h)); 
+            d.classList.add('selected');
+            Object.assign(config.hero, h);
             updatePreview();
         };
         g.appendChild(d);
@@ -370,4 +275,353 @@ function init() {
     updatePreview();
 }
 
+function updatePreview() {
+    config.hero.r = parseInt(document.getElementById('sl-hero').value);
+    config.target.r = parseInt(document.getElementById('sl-target').value);
+    document.getElementById('lbl-h-size').innerText = config.hero.r;
+    document.getElementById('lbl-t-size').innerText = config.target.r;
+
+    // Render Preview 1:1
+    const pt = document.getElementById('prev-target');
+    const ph = document.getElementById('prev-hero');
+    
+    pt.style.width = pt.style.height = (config.target.r * 2) + "px";
+    // Center target in 700x700
+    pt.style.left = (350 - config.target.r) + "px";
+    pt.style.top = (350 - config.target.r) + "px";
+
+    ph.style.width = ph.style.height = (config.hero.r * 2) + "px";
+    ph.style.backgroundColor = config.hero.c;
+    ph.innerText = config.hero.l;
+    ph.style.fontSize = (config.hero.r * 0.7) + "px";
+    ph.style.left = "50px"; ph.style.top = "50px";
+}
+
+function toggleScriptMode() {
+    config.script.enabled = document.getElementById('chk-script').checked;
+    const panel = document.getElementById('script-panel');
+    const basic = document.getElementById('basic-modes');
+    
+    if (config.script.enabled) {
+        panel.style.opacity = "1"; panel.style.pointerEvents = "all";
+        basic.style.opacity = "0.3"; basic.style.pointerEvents = "none";
+        config.mode = "script";
+    } else {
+        panel.style.opacity = "0.5"; panel.style.pointerEvents = "none";
+        basic.style.opacity = "1"; basic.style.pointerEvents = "all";
+        config.mode = document.getElementById('sel-mode').value;
+    }
+}
+
+function updateScriptUI() {
+    const type = document.getElementById('sl-cond-type').value;
+    document.getElementById('cond-time').style.display = type === 'time' ? 'block' : 'none';
+    document.getElementById('cond-wall').style.display = type === 'wall' ? 'block' : 'none';
+    config.script.type = type;
+}
+
+function updateModeUI() {
+    if(!config.script.enabled) {
+        config.mode = document.getElementById('sel-mode').value;
+        document.getElementById('grp-time').style.display = config.mode === 'timer' ? 'block' : 'none';
+    }
+}
+
+/* --- MATH & AUDIO --- */
+function parseHP(s) {
+    try { return s.includes('^') ? BigInt(s.split('^')[0])**BigInt(s.split('^')[1]) : BigInt(s); } 
+    catch(e) { return 1000n; }
+}
+
+function format(n) {
+    if(n===0n) return "0";
+    let s = n.toString();
+    if(s.length > 120) return (n/10n**BigInt(s.length-1))+"e"+(s.length-1);
+    let t = Math.floor((s.length-1)/3);
+    if(t < NAMES_S.length) return (n/10n**BigInt(t*3)) + NAMES_S[t];
+    return s.substring(0,4)+"...";
+}
+
+const SFX = {
+    ctx: null,
+    init(){ if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); },
+    hit(){ this.play(100, 'sine', 0.1); },
+    clack(){ this.play(600, 'square', 0.05); }, // Wall sound
+    boom(){ this.play(50, 'sawtooth', 0.6, 10); },
+    play(f,t,d,s=0){
+        this.init(); const o=this.ctx.createOscillator(), g=this.ctx.createGain();
+        o.type=t; o.frequency.setValueAtTime(f, this.ctx.currentTime);
+        if(s>0) o.frequency.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+0.5);
+        g.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime+d);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(); o.stop(this.ctx.currentTime+d);
+    }
+};
+
+/* --- SIMULATION CORE (Used for Live Game & Calculations) --- */
+function runPhysicsStep(s, cHero, cTarg, isSim = false) {
+    // Movement
+    cHero.x += cHero.vx; cHero.y += cHero.vy;
+    cTarg.x += cTarg.vx; cTarg.y += cTarg.vy;
+
+    let hitWall = false;
+    const sz = 700;
+    
+    // Wall Checks
+    [cHero, cTarg].forEach(b => {
+        if(b.x < 0) { b.x = 0; b.vx *= -1; hitWall=true; }
+        if(b.x > sz - b.r*2) { b.x = sz - b.r*2; b.vx *= -1; hitWall=true; }
+        if(b.y < 0) { b.y = 0; b.vy *= -1; hitWall=true; }
+        if(b.y > sz - b.r*2) { b.y = sz - b.r*2; b.vy *= -1; hitWall=true; }
+    });
+
+    if(hitWall) {
+        s.wallHits++;
+        s.lastWallHitTime = s.elapsed;
+        if(!isSim) SFX.clack();
+    }
+
+    // Collision
+    let dx = (cHero.x + cHero.r) - (cTarg.x + cTarg.r);
+    let dy = (cHero.y + cHero.r) - (cTarg.y + cTarg.r);
+    let dist = Math.sqrt(dx*dx + dy*dy);
+
+    if (dist < (cHero.r + cTarg.r)) {
+        if(!isSim) SFX.hit();
+        
+        let dmg = 1n;
+        if(cHero.type === 'root') {
+            let hpS = s.hp.toString();
+            let sub = BigInt(Math.floor(Math.sqrt(Number(hpS.substring(0,14))))) * 10n**BigInt(Math.max(0,hpS.length-14));
+            dmg = s.hp - sub;
+        } 
+        else if (cHero.type === 'mult' || cHero.type === 'exp') dmg = cHero.pwr;
+        else if (cHero.type === 'half') dmg = s.hp / 2n;
+        else if (cHero.type === 'quarter') dmg = (s.hp * 3n) / 4n;
+        else if (cHero.type === 'rev') dmg = s.hp - (s.hp / BigInt(cHero.hits + 2));
+        
+        if (dmg < 1n) dmg = 1n;
+        s.hp = dmg >= s.hp ? 0n : s.hp - dmg;
+
+        if(!isSim) {
+            spawnDmg(cHero.x, cHero.y, dmg);
+            document.getElementById('val-last').innerText = format(dmg);
+        }
+
+        // Hero Growth
+        if(cHero.type==='mult') cHero.pwr *= cHero.val;
+        if(cHero.type==='exp' && cHero.pwr.toString().length < 500) cHero.pwr = cHero.pwr ** cHero.val;
+        cHero.hits++;
+
+        // Bounce
+        let nx = dx/dist, ny = dy/dist;
+        let pV = 2 * (cHero.vx*nx + cHero.vy*ny - cTarg.vx*nx - cTarg.vy*ny) / (1 + cTarg.mass);
+        cHero.vx -= pV * cTarg.mass * nx; cHero.vy -= pV * cTarg.mass * ny;
+        cTarg.vx += pV * nx; cTarg.vy += pV * ny;
+        
+        let overlap = (cHero.r + cTarg.r) - dist;
+        cHero.x += nx*(overlap+1); cHero.y += ny*(overlap+1);
+
+        if(s.hp <= 0n) return true; // Killed
+    }
+    return false;
+}
+
+/* --- THE "CALCULATOR" (Ghost Sim) --- */
+function calculateFeasibility() {
+    const res = document.getElementById('calc-result');
+    res.style.color = "yellow"; res.innerText = "Simulating...";
+    
+    // Grab inputs
+    config.script.t1 = parseFloat(document.getElementById('sc-t1').value);
+    config.script.t2 = parseFloat(document.getElementById('sc-t2').value);
+    config.script.hits = parseInt(document.getElementById('sc-hits').value);
+    config.script.delay = parseFloat(document.getElementById('sc-delay').value);
+
+    setTimeout(() => {
+        // Clone state
+        let s = { hp: parseHP(document.getElementById('inp-hp').value), elapsed: 0, wallHits: 0, lastWallHitTime: -999, hits: 0 };
+        let ch = { ...config.hero, x:50, y:50, vx:12, vy:10, pwr: config.hero.v };
+        if(config.hero.t==='root') ch.pwr = 2n; 
+        let ct = { ...config.target, x: 350-config.target.r, y: 350-config.target.r, vx:-4, vy:3 };
+        
+        let killed = false;
+        // Run 2000 frames (approx 33 seconds of gameplay) or until kill
+        for(let i=0; i<3600; i++) {
+            s.elapsed += 0.0166;
+            if(runPhysicsStep(s, ch, ct, true)) {
+                killed = true;
+                break;
+            }
+        }
+        
+        if(!killed) {
+            res.style.color = "#e74c3c"; res.innerText = "FAIL: Target didn't die in 60s.";
+        } else {
+            // Check Conditions
+            let success = false;
+            if(config.script.type === 'time') {
+                if(s.elapsed >= config.script.t1 && s.elapsed <= config.script.t2) success = true;
+                else res.innerText = `FAIL: Died at ${s.elapsed.toFixed(2)}s (Target: ${config.script.t1}-${config.script.t2}s)`;
+            } else {
+                let timeSinceHit = s.elapsed - s.lastWallHitTime;
+                if(s.wallHits >= config.script.hits && timeSinceHit <= config.script.delay) success = true;
+                else res.innerText = `FAIL: Hits: ${s.wallHits}, Delay: ${timeSinceHit.toFixed(2)}s`;
+            }
+
+            if(success) {
+                res.style.color = "#2ecc71"; res.innerText = `POSSIBLE! Died at ${s.elapsed.toFixed(2)}s`;
+            } else if (!res.innerText.includes("FAIL")) {
+                res.style.color = "#e74c3c"; res.innerText = "FAIL: Conditions not met.";
+            }
+        }
+    }, 50);
+}
+
+/* --- LIVE GAME LOOP --- */
+function launchGame() {
+    config.hpRaw = document.getElementById('inp-hp').value;
+    config.timeLimit = parseFloat(document.getElementById('inp-time').value);
+    
+    // Script inputs update
+    config.script.t1 = parseFloat(document.getElementById('sc-t1').value);
+    config.script.t2 = parseFloat(document.getElementById('sc-t2').value);
+    config.script.hits = parseInt(document.getElementById('sc-hits').value);
+    config.script.delay = parseFloat(document.getElementById('sc-delay').value);
+
+    sim.hp = parseHP(config.hpRaw);
+    config.initHP = sim.hp;
+    sim.elapsed = 0; sim.wallHits = 0; sim.lastWallHitTime = -999; sim.active = true;
+    sim.lastTs = performance.now();
+    
+    // Reset Physics Positions
+    config.hero.x = 50; config.hero.y = 50;
+    config.hero.vx = 12; config.hero.vy = 10; 
+    config.hero.pwr = config.hero.v;
+    if(config.hero.t==='root') config.hero.pwr = 2n;
+
+    config.target.x = 350 - config.target.r; 
+    config.target.y = 350 - config.target.r;
+    config.target.vx = -4; config.target.vy = 3;
+
+    // UI Swap
+    document.getElementById('setup-dashboard').style.display = 'none';
+    document.getElementById('game-view').style.display = 'flex';
+    
+    const h = document.getElementById('hero');
+    h.style.background = config.hero.c; h.innerText = config.hero.l; 
+    h.style.width = h.style.height = (config.hero.r*2)+"px";
+    h.style.fontSize = (config.hero.r*0.7)+"px";
+
+    const t = document.getElementById('target');
+    t.style.width = t.style.height = (config.target.r*2)+"px";
+
+    requestAnimationFrame(loop);
+}
+
+function spawnDmg(x, y, v) {
+    const el = document.createElement('div'); el.className = 'dmg-float';
+    el.innerText = v.toString(); el.style.left = x+"px"; el.style.top = y+"px";
+    document.getElementById('arena').appendChild(el);
+    setTimeout(()=>el.remove(), 1500);
+}
+
+function loop(ts) {
+    if(!sim.active) return;
+    const dt = (ts - sim.lastTs) / 1000;
+    sim.lastTs = ts;
+    sim.elapsed += dt;
+
+    // Physics
+    const killed = runPhysicsStep(sim, config.hero, config.target, false);
+
+    // Render Logic
+    const h = document.getElementById('hero');
+    const t = document.getElementById('target');
+    h.style.transform = `translate(${config.hero.x}px, ${config.hero.y}px)`;
+    t.style.transform = `translate(${config.target.x}px, ${config.target.y}px)`;
+    
+    const hpStr = sim.hp.toString();
+    const txt = document.getElementById('target-text');
+    txt.innerText = hpStr;
+    const len = hpStr.length;
+    if(len < 10) txt.style.fontSize = (config.target.r*0.8)+"px";
+    else txt.style.fontSize = Math.min((config.target.r*2.2)/Math.sqrt(len*1.5), config.target.r*0.6)+"px";
+
+    // Title / Win Logic
+    const title = document.getElementById('top-bar');
+    if(config.mode === 'script') {
+        if(config.script.type === 'time') {
+            title.innerHTML = `Script: Die between ${config.script.t1}-${config.script.t2}s | Time: ${sim.elapsed.toFixed(2)}`;
+        } else {
+            let delay = sim.elapsed - sim.lastWallHitTime;
+            title.innerHTML = `Script: Hits ${sim.wallHits}/${config.script.hits} | Delay: ${delay<100?delay.toFixed(1):'--'}s`;
+        }
+    } else if(config.mode === 'timer') {
+        let rem = config.timeLimit - sim.elapsed;
+        title.innerHTML = `Time Left: ${rem.toFixed(1)}s`;
+        if(rem <= 0) { endGame(false); return; }
+    } else {
+        title.innerHTML = `Stopwatch: ${sim.elapsed.toFixed(1)}s`;
+    }
+
+    if(killed) endGame(true);
+    else requestAnimationFrame(loop);
+}
+
+function endGame(victory) {
+    sim.active = false;
+    let win = victory;
+    
+    // Script Validation
+    if(config.mode === 'script' && victory) {
+        if(config.script.type === 'time') {
+            win = (sim.elapsed >= config.script.t1 && sim.elapsed <= config.script.t2);
+        } else {
+            let delay = sim.elapsed - sim.lastWallHitTime;
+            win = (sim.wallHits >= config.script.hits && delay <= config.script.delay);
+        }
+    }
+
+    if(victory) {
+        SFX.boom();
+        document.getElementById('target').style.display = 'none';
+        explode(config.target.x, config.target.y, '#ccc');
+    } else {
+        SFX.boom();
+        document.getElementById('hero').style.display = 'none';
+        explode(config.hero.x, config.hero.y, config.hero.c);
+    }
+    
+    setTimeout(() => {
+        if(win) alert("MISSION ACCOMPLISHED");
+        else alert("FAILURE");
+        location.reload();
+    }, 2000);
+}
+
+function explode(x, y, c) {
+    for(let i=0; i<60; i++) {
+        const s = document.createElement('div'); s.className = 'shard';
+        const z = Math.random()*20+5;
+        s.style.width=s.style.height=z+"px"; s.style.background=c;
+        s.style.left=x+"px"; s.style.top=y+"px";
+        document.getElementById('arena').appendChild(s);
+        const a = Math.random()*6.28; const v = Math.random()*15;
+        let vx=Math.cos(a)*v, vy=Math.sin(a)*v;
+        let px=x, py=y, l=1;
+        const tick = ()=>{
+            if(l<=0){s.remove();return;}
+            px+=vx; py+=vy; l-=0.02;
+            s.style.left=px+"px"; s.style.top=py+"px"; s.style.opacity=l;
+            requestAnimationFrame(tick);
+        };
+        tick();
+    }
+}
+
 init();
+</script>
+</body>
+</html>
