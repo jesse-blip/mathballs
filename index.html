@@ -3,349 +3,437 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Square Arena: Script-Master Edition</title>
+    <title>Square Arena: True Scripting & Full Roster</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #1a1a2e; --panel-light: #f4f4f9; --panel-dark: #16213e;
-            --accent: #e94560; --border-thick: 4px solid #000;
-        }
+        :root { --bg: #f4f4f9; --text: #000; --accent: #e94560; }
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { background-color: var(--bg); font-family: 'Roboto Condensed', sans-serif; height: 100vh; overflow: hidden; color: #fff; }
+        body { background-color: var(--bg); font-family: 'Roboto Condensed', sans-serif; color: var(--text); height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 
-        /* --- SETUP DASHBOARD --- */
-        #setup-dashboard {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #fff; z-index: 100; display: flex; padding: 20px; gap: 20px; color: #000;
-        }
-        .col-config { flex: 0 0 300px; display: flex; flex-direction: column; gap: 15px; background: var(--panel-light); padding: 20px; border: var(--border-thick); box-shadow: 10px 10px 0 rgba(0,0,0,0.1); overflow-y: auto; }
-        .col-arena { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #ddd; border: var(--border-thick); position: relative; }
-        .col-script { flex: 0 0 340px; display: flex; flex-direction: column; gap: 15px; background: var(--panel-dark); color: #fff; padding: 20px; border: var(--border-thick); box-shadow: 10px 10px 0 rgba(0,0,0,0.4); }
+        /* --- DASHBOARD --- */
+        #dashboard { display: flex; gap: 30px; background: #fff; padding: 30px; border: 6px solid #000; box-shadow: 15px 15px 0 rgba(0,0,0,0.1); z-index: 100; position: absolute; }
+        .col { display: flex; flex-direction: column; gap: 15px; width: 320px; }
         
-        h2 { text-transform: uppercase; font-weight: 900; border-bottom: 3px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
-        .h-dark { border-color: var(--accent); color: var(--accent); }
-        .input-group { margin-bottom: 10px; }
-        label { display: block; font-size: 0.8rem; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
-        input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 3px solid #000; font-family: 'Share Tech Mono', monospace; font-size: 1.1rem; }
+        h2 { font-size: 1.8rem; text-transform: uppercase; border-bottom: 4px solid #000; padding-bottom: 5px; }
+        label { font-size: 0.9rem; font-weight: 900; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 10px; border: 3px solid #000; font-family: 'Share Tech Mono', monospace; font-size: 1.2rem; font-weight: bold; }
         
-        .ball-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .ball-opt { aspect-ratio: 1/1; border-radius: 50%; border: 2px solid transparent; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 900; cursor: pointer; transition: 0.1s; }
-        .ball-opt.selected { border-color: #000; transform: scale(1.1); box-shadow: 0 0 0 2px #fff, 4px 4px 0 #000; z-index: 2; }
+        .roster-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: #eee; padding: 10px; border: 3px solid #000; }
+        .hero-btn { aspect-ratio: 1/1; border-radius: 50%; border: 3px solid transparent; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; cursor: pointer; font-size: 14px; text-shadow: 1px 1px 0 #000; transition: transform 0.1s; }
+        .hero-btn.active { border-color: #000; transform: scale(1.15); box-shadow: 0 0 0 3px #fff, 0 5px 0 #000; z-index: 2; }
 
-        .mad-lib { font-size: 1rem; line-height: 1.6; margin-bottom: 10px; }
-        .mad-input { width: 60px; padding: 4px; border: 2px solid var(--accent); background: #0f3460; color: #fff; font-family: monospace; text-align: center; }
-        .mad-select { padding: 4px; border: 2px solid var(--accent); background: #0f3460; color: #fff; font-weight: bold; }
-        
-        .btn-calc { background: var(--accent); color: white; border: 2px solid #fff; padding: 10px; font-weight: 900; cursor: pointer; text-transform: uppercase; }
-        #calc-result { min-height: 40px; background: rgba(255,255,255,0.05); border: 1px dashed #555; display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 0.8rem; text-align: center; padding: 5px; margin-top: 5px; }
+        .btn-start { background: #00ff88; color: #000; padding: 15px; border: 4px solid #000; font-size: 1.5rem; font-weight: 900; cursor: pointer; box-shadow: 0 5px 0 #000; text-transform: uppercase; margin-top: auto; }
+        .btn-start:active { transform: translateY(5px); box-shadow: 0 0 0 #000; }
 
-        #preview-container { width: 700px; height: 700px; background: #fff; border: 2px solid #000; position: relative; overflow: hidden; }
-        .btn-start { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: #00ff88; color: #000; padding: 15px 50px; border: 4px solid #000; font-size: 2rem; font-weight: 900; cursor: pointer; z-index: 200; box-shadow: 0 5px 0 #000; }
-        .btn-start:active { transform: translateX(-50%) translateY(4px); box-shadow: 0 1px 0 #000; }
+        /* Scripting Box */
+        .script-box { background: #222; color: #fff; padding: 15px; border: 4px solid #000; }
+        .script-box label { color: #00ff88; }
+        .script-box input[type="checkbox"] { transform: scale(1.5); margin-right: 10px; cursor: pointer; }
+        .script-details { margin-top: 15px; }
+        .locked { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
 
-        /* --- ARENA VIEW --- */
-        #game-view { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: #fdfaf0; flex-direction: column; align-items: center; justify-content: center; z-index: 200; color: #000; }
-        #arena-title { width: 950px; text-align: center; font-size: 2.2rem; font-weight: 900; margin-bottom: 20px; text-transform: uppercase; line-height: 1.1; min-height: 100px; }
-        #arena { width: 700px; height: 700px; background: #fff; border: 6px solid #000; position: relative; }
+        /* --- ARENA --- */
+        #game-view { display: none; flex-direction: column; align-items: center; justify-content: center; position: absolute; inset: 0; background: #e0e0e0; }
+        #title-bar { font-size: 2.5rem; font-weight: 900; text-transform: uppercase; margin-bottom: 20px; text-align: center; }
         
-        .ball-render { position: absolute; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-        .b-target { background: #cbcbcb; border: 1px solid #555; z-index: 5; }
-        .b-hero { border: 3px solid #000; font-weight: 900; z-index: 10; color: #000; }
+        #arena { width: 750px; height: 750px; background: #fff; border: 8px solid #000; position: relative; box-shadow: 20px 20px 0 rgba(0,0,0,0.1); overflow: hidden; }
         
-        #target-text { color: #fff; font-weight: 900; text-align: center; text-shadow: 2px 2px 0 #000; padding: 8%; font-family: 'Share Tech Mono', monospace; line-height: 0.85; width: 100%; word-break: break-all; }
+        .ball { position: absolute; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 900; }
+        #hero { border: 4px solid #000; z-index: 10; color: #fff; text-shadow: 1px 1px 0 #000; }
+        #target { background: #ccc; border: 2px solid #555; z-index: 5; flex-direction: column; }
+        #target-hp { font-family: 'Share Tech Mono', monospace; font-size: 30px; line-height: 0.9; text-align: center; padding: 10px; word-break: break-all; color: #000; }
 
-        .dmg-float { position: absolute; font-size: 34px; font-weight: 900; color: #ff4757; -webkit-text-stroke: 1.5px #000; pointer-events: none; z-index: 100; animation: floatUp 1.2s ease-out forwards; }
-        @keyframes floatUp { 0%{opacity:1; transform:scale(0.7);} 100%{opacity:0; transform:translateY(-150px) scale(1.3);} }
-        .shard { position: absolute; border-radius: 50%; pointer-events: none; z-index: 20; }
-        
-        #stats-bar { width: 700px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .stat-card { background: #000; color: #fff; padding: 15px; border: 4px solid #000; text-align: center; }
-        .stat-num { font-size: 1.6rem; font-weight: 900; color: #00ff88; display: block; }
+        .dmg-text { position: absolute; font-size: 2rem; color: #ff0055; font-weight: 900; -webkit-text-stroke: 1px #000; z-index: 50; pointer-events: none; animation: floatUp 1s forwards ease-out; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(1.5); } }
     </style>
 </head>
 <body>
 
-<div id="setup-dashboard">
-    <div class="col-config">
-        <h2>Laboratory</h2>
-        <div class="input-group"><label>Target HP</label><input type="text" id="inp-hp" value="10^63"></div>
-        <div id="basic-modes">
-            <div class="input-group"><label>Mode</label>
-                <select id="sel-mode" style="width:100%; padding:10px; border:3px solid #000; font-weight:900;" onchange="updateModeUI()">
-                    <option value="timer">Time Attack</option>
-                    <option value="stopwatch">Stopwatch</option>
-                </select>
-            </div>
-            <div class="input-group" id="grp-time"><label>Time Limit (s)</label><input type="number" id="inp-time" value="30"></div>
-        </div>
-        <div class="input-group"><label>Choose Ball</label><div id="hero-grid" class="ball-grid"></div></div>
-        <div class="input-group"><label>Hero Size: <span id="lbl-h-size">60</span>px</label><input type="range" id="sl-hero" min="30" max="100" value="60" oninput="updatePreview()"></div>
-        <div class="input-group"><label>Target Size: <span id="lbl-t-size">180</span>px</label><input type="range" id="sl-target" min="100" max="250" value="180" oninput="updatePreview()"></div>
-    </div>
-
-    <div class="col-arena">
-        <div id="preview-container">
-            <div id="prev-target" class="ball-render b-target"></div>
-            <div id="prev-hero" class="ball-render b-hero"></div>
-        </div>
-        <button class="btn-start" onclick="launchGame()">START BATTLE</button>
-    </div>
-
-    <div class="col-script">
-        <h2 class="h-dark">Script Engine</h2>
-        <div style="display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.2); padding:10px; margin-bottom:5px;">
-            <input type="checkbox" id="chk-script" style="width:20px; height:20px;" onchange="toggleScriptMode()"><label style="margin:0; color:#fff;">Enable Script</label>
-        </div>
+<div id="dashboard">
+    <div class="col">
+        <h2>Game Setup</h2>
+        <label>Target HP</label>
+        <input type="text" id="inp-hp" value="10^25">
         
-        <div id="script-panel" style="opacity: 0.5; pointer-events: none;">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px; color: #00ff88;">
-                <input type="checkbox" id="chk-last-sec" style="width:18px; height:18px;"><label style="margin:0;">Last Second Heroics</label>
-            </div>
+        <label style="margin-top: 10px;">Time Limit (Seconds)</label>
+        <input type="number" id="inp-time" value="30">
+        
+        <label style="margin-top: 10px;">Hero Size</label>
+        <input type="range" id="inp-size" min="30" max="100" value="60">
 
-            <div class="mad-lib">Big Ball must die 
-                <select id="sl-cond-type" class="mad-select" onchange="updateScriptUI()">
-                    <option value="time">at exact time</option>
-                    <option value="wall">after wall hits</option>
-                </select>
+        <button class="btn-start" onclick="App.start()">Enter Arena</button>
+    </div>
+
+    <div class="col">
+        <h2>Full Roster</h2>
+        <div id="roster" class="roster-grid"></div>
+    </div>
+
+    <div class="col">
+        <h2>Director AI</h2>
+        <div class="script-box">
+            <div style="display:flex; align-items:center;">
+                <input type="checkbox" id="chk-script" onchange="App.toggleScript()">
+                <label style="margin:0;">Enable Trajectory Override</label>
             </div>
-            <div id="cond-time"><div class="mad-lib">Between <input type="number" id="sc-t1" class="mad-input" value="28">s and <input type="number" id="sc-t2" class="mad-input" value="30">s.</div></div>
-            <div id="cond-wall" style="display:none;"><div class="mad-lib">Within <input type="number" id="sc-delay" class="mad-input" value="2">s after hitting the wall <input type="number" id="sc-hits" class="mad-input" value="10"> times.</div></div>
-            <button class="btn-calc" onclick="calculateFeasibility()">Calculate Script</button>
-            <div id="calc-result">Waiting for parameters...</div>
+            <div id="script-ui" class="script-details locked">
+                <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 15px; font-weight: normal;">
+                    The engine will actively steer the Hero and Target's speeds and trajectories to ensure the lethal blow lands exactly in the final second of the timer.
+                </p>
+                <label>Target Timeframe</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    Kill at <input type="number" id="inp-target-time" value="29" style="width: 80px; padding: 5px;"> seconds
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <div id="game-view">
-    <div id="arena-title"></div>
+    <div id="title-bar"></div>
     <div id="arena">
-        <div id="target" class="ball-render b-target"><div id="target-text"></div></div>
-        <div id="hero" class="ball-render b-hero"></div>
-    </div>
-    <div id="stats-bar">
-        <div class="stat-card"><span style="font-size:10px; color:#888;">PREV HIT</span><span id="val-last" class="stat-num">---</span></div>
-        <div class="stat-card"><span style="font-size:10px; color:#888;">NEXT HIT</span><span id="val-next" class="stat-num">---</span></div>
+        <div id="target" class="ball"><div id="target-hp"></div></div>
+        <div id="hero" class="ball"></div>
     </div>
 </div>
 
 <script>
-const HEROES = [
-    {n:"Rooter", t:"root", v:0n, l:"√", c:"#d92d20"}, {n:"Doubler", t:"mult", v:2n, l:"2x", c:"#e67e22"},
-    {n:"Tripler", t:"mult", v:3n, l:"3x", c:"#f1c40f"}, {n:"Quadrupler", t:"mult", v:4n, l:"4x", c:"#2ecc71"},
-    {n:"Quintupler", t:"mult", v:5n, l:"5x", c:"#1abc9c"}, {n:"Sextupler", t:"mult", v:6n, l:"6x", c:"#3498db"},
-    {n:"Septupler", t:"mult", v:7n, l:"7x", c:"#9b59b6"}, {n:"Octupler", t:"mult", v:8n, l:"8x", c:"#34495e"},
-    {n:"Nonupler", t:"mult", v:9n, l:"9x", c:"#574b90"}, {n:"Decupler", t:"mult", v:10n, l:"10x", c:"#30336b"},
-    {n:"Squarer", t:"exp", v:2n, l:"x²", c:"#44bd32"}, {n:"Cuber", t:"exp", v:3n, l:"x³", c:"#0097e6"},
-    {n:"Halver", t:"half", v:0n, l:"x/2", c:"#7f8c8d"}, {n:"Quarter", t:"quarter", v:0n, l:"x/4", c:"#2c3e50"},
-    {n:"Reverser", t:"rev", v:0n, l:"x/y", c:"#8e44ad"}
+// --- THE FULL ROSTER ---
+const ROSTER = [
+    // Originals
+    { id: 'add10', sym: "+10", c: "#44bd32", t: "add", v: 10n },
+    { id: 'add100', sym: "+100", c: "#4cd137", t: "add", v: 100n },
+    { id: 'mult2', sym: "2x", c: "#fbc531", t: "mult", v: 2n },
+    { id: 'mult3', sym: "3x", c: "#e1b12c", t: "mult", v: 3n },
+    { id: 'mult4', sym: "4x", c: "#f39c12", t: "mult", v: 4n },
+    { id: 'sq', sym: "x²", c: "#00a8ff", t: "exp", v: 2n },
+    { id: 'cb', sym: "x³", c: "#0097e6", t: "exp", v: 3n },
+    { id: 'root', sym: "√", c: "#9c88ff", t: "root" },
+    { id: 'half', sym: "x/2", c: "#7f8fa6", t: "half" },
+    { id: 'rev', sym: "x/y", c: "#718093", t: "rev" },
+    
+    // The Sequence Expansion
+    { id: 'prim', sym: "#", c: "#e84118", t: "prim" },
+    { id: 'pow', sym: "⚡️", c: "#f5f6fa", t: "pow", txt: "#000" },
+    { id: 'fact', sym: "!", c: "#c23616", t: "fact" },
+    { id: 'rand', sym: "?", c: "#8c7ae6", t: "rand" },
+    { id: 'fib', sym: "Φ", c: "#e84393", t: "fib" },
+    { id: 'tri', sym: "Tb", c: "#fd79a8", t: "tri" },
+    { id: 'quad', sym: "Qd", c: "#6c5ce7", t: "quad" },
+    { id: 'gamb', sym: "???", c: "#b2bec3", t: "gamb", txt: "#000" }
 ];
 
-const NAMES_FULL = ["", "Thousand", "Million", "Billion", "Trillion", "Quadrillion", "Quintillion", "Sextillion", "Septillion", "Octillion", "Nonillion", "Decillion", "Undecillion", "Duodecillion", "Tredecillion", "Quattuordecillion", "Quindecillion", "Sexdecillion", "Septendecillion", "Octodecillion", "Novemdecillion", "Vigintillion", "Unvigintillion", "Duovigintillion", "Trestrigintillion", "Quattuorvigintillion", "Quinvigintillion", "Sexvigintillion", "Septenvigintillion", "Octovigintillion", "Novemvigintillion", "Trigintillion", "Untrigintillion", "Duotrigintillion", "Trestrigintillion", "Quadragintillion", "Quinquagintillion", "Sexagintillion", "Septuagintillion", "Octogintillion", "Nonagintillion", "Centillion"];
-const NAMES_ABBR = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Od", "Nd", "Vg", "Uvg", "Dvg", "Tvg", "Qvg", "Qivg", "Sxg", "Spg", "Ovg", "Nvg", "Tg", "Utg", "Dtg", "Ttg", "Qtg", "Uq", "Dq", "Tq", "Qq", "Qiq", "Sxq", "Spq", "Oq", "Nq", "Qing"];
+const PRIMES = [2n, 3n, 5n, 7n, 11n, 13n, 17n, 19n, 23n, 29n, 31n, 37n, 41n, 43n, 47n, 53n, 59n, 61n, 67n, 71n, 73n, 79n, 83n, 89n, 97n];
 
-let conf = { hero: {...HEROES[0], r:60}, target: {r:180, mass:30}, mode: "timer", script: {enabled: false, lastSec: false} };
-let sim = { active: false, hp: 0n, initHP: 0n, elapsed: 0, wallHits: 0, lastWallTime: 0, lastTs: 0 };
-
-/* --- FORMATTER (NO SCIENTIFIC NOTATION) --- */
-function format(n, full = false) {
-    if(n === 0n) return "0";
+// Formatter to handle large words, keeping UI clean
+function formatHP(n) {
+    if (n === 0n) return "0";
     let s = n.toString();
+    if (s.length < 7) return s;
+    let names = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "Qd", "Qnd", "Sxd", "Spd", "Ocd", "Nvd", "Vg"];
     let tier = Math.floor((s.length - 1) / 3);
-    let arr = full ? NAMES_FULL : NAMES_ABBR;
-    
-    if (tier === 0) return s;
-    let base = n / 10n**BigInt(tier * 3);
-    let name = arr[tier] || "Infinity";
-    return base.toString() + " " + name;
+    let lead = s.substring(0, s.length - (tier * 3));
+    let dec = s.substring(lead.length, lead.length + 2);
+    return `${lead}.${dec} ${names[tier] || "Max"}`;
 }
 
-const SFX = {
-    ctx: null, init(){ if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); },
-    hit(){ this.play(120,'sine',0.1,0.2); }, 
-    clack(){ this.play(600,'square',0.03,0.05); }, // Reduced Volume and Length
-    boom(){ this.play(55,'sawtooth',0.8,0.3,1); },
-    play(f,t,d,v,s=0){ this.init(); const o=this.ctx.createOscillator(), g=this.ctx.createGain(); o.type=t; o.frequency.setValueAtTime(f, this.ctx.currentTime); if(s) o.frequency.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+d); g.gain.setValueAtTime(v, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime+d); o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime+d); }
+const Audio = {
+    ctx: null,
+    play(freq, type, dur, vol) {
+        if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        let o = this.ctx.createOscillator(), g = this.ctx.createGain();
+        o.type = type; o.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        g.gain.setValueAtTime(vol, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(); o.stop(this.ctx.currentTime + dur);
+    }
 };
 
-function init() {
-    const g = document.getElementById('hero-grid');
-    HEROES.forEach((h, i) => {
-        const d = document.createElement('div'); d.className = `ball-opt ${i===0?'selected':''}`;
-        d.style.background = h.c; d.innerText = h.l;
-        d.onclick = () => {
-            document.querySelectorAll('.ball-opt').forEach(b => b.classList.remove('selected'));
-            d.classList.add('selected'); Object.assign(conf.hero, h); updatePreview();
-        };
-        g.appendChild(d);
-    });
-    updatePreview();
-}
+const Engine = {
+    active: false, elapsed: 0, lastTs: 0,
+    hp: 0n, startHp: 0n, targetHits: 0,
+    h: { x:0, y:0, vx:0, vy:0, r:0, hits:0, history:[], pwr:1n },
+    t: { x:0, y:0, vx:0, vy:0, r:100 },
+    
+    // Director AI tracking
+    reqHits: 0,
+    scripted: false,
+    killTime: 0,
 
-function updatePreview() {
-    conf.hero.r = parseInt(document.getElementById('sl-hero').value);
-    conf.target.r = parseInt(document.getElementById('sl-target').value);
-    document.getElementById('lbl-h-size').innerText = conf.hero.r;
-    document.getElementById('lbl-t-size').innerText = conf.target.r;
-    const pt = document.getElementById('prev-target'), ph = document.getElementById('prev-hero');
-    pt.style.width = pt.style.height = (conf.target.r*2)+"px"; pt.style.left = (350-conf.target.r)+"px"; pt.style.top = (350-conf.target.r)+"px";
-    ph.style.width = ph.style.height = (conf.hero.r*2)+"px"; ph.style.background = conf.hero.c; ph.innerText = conf.hero.l;
-    ph.style.fontSize = (conf.hero.r*0.7)+"px"; ph.style.left = "50px"; ph.style.top = "50px";
-}
-
-function toggleScriptMode() {
-    conf.script.enabled = document.getElementById('chk-script').checked;
-    document.getElementById('script-panel').style.opacity = conf.script.enabled ? "1" : "0.5";
-    document.getElementById('script-panel').style.pointerEvents = conf.script.enabled ? "all" : "none";
-    document.getElementById('basic-modes').style.opacity = conf.script.enabled ? "0.3" : "1";
-    conf.mode = conf.script.enabled ? "script" : document.getElementById('sel-mode').value;
-}
-
-function updateModeUI() { if(!conf.script.enabled) conf.mode = document.getElementById('sel-mode').value; }
-function updateScriptUI() { 
-    document.getElementById('cond-time').style.display = document.getElementById('sl-cond-type').value==='time'?'block':'none'; 
-    document.getElementById('cond-wall').style.display = document.getElementById('sl-cond-type').value==='wall'?'block':'none'; 
-}
-
-function getDmg(h, currHP) {
-    let d = 1n;
-    if(h.t==='root') { let s = currHP.toString(); d = currHP - (BigInt(Math.floor(Math.sqrt(Number(s.substring(0,14))))) * 10n**BigInt(Math.max(0, s.length-14))); }
-    else if(h.t==='mult'||h.t==='exp') d = h.pwr;
-    else if(h.t==='half') d = currHP / 2n;
-    else if(h.t==='quarter') d = (currHP * 3n) / 4n;
-    else if(h.t==='rev') d = currHP - (currHP / BigInt(h.hits + 2));
-    return d > 0n ? d : 1n;
-}
-
-function physicsStep(state, h, t, isSim) {
-    h.x += h.vx; h.y += h.vy; t.x += t.vx; t.y += t.vy;
-    let hitW = false; const sz = 700;
-    [h, t].forEach(b => {
-        if(b.x < 0 || b.x > sz-b.r*2) { b.vx*=-1; b.x = b.x<0?0:sz-b.r*2; hitW=true; }
-        if(b.y < 0 || b.y > sz-b.r*2) { b.vy*=-1; b.y = b.y<0?0:sz-b.r*2; hitW=true; }
-    });
-    if(hitW) { state.wallHits++; state.lastWallTime = state.elapsed; if(!isSim) SFX.clack(); }
-    let dx = (h.x+h.r)-(t.x+t.r), dy = (h.y+h.r)-(t.y+t.r), dist = Math.sqrt(dx*dx+dy*dy);
-    if(dist < h.r+t.r) {
-        if(!isSim) SFX.hit();
-        let dmg = getDmg(h, state.hp);
+    init(hpVal, timeVal, heroData, isScripted, killTimeVal) {
+        this.startHp = this.hp = hpVal;
+        this.elapsed = 0;
+        this.scripted = isScripted;
+        this.killTime = killTimeVal;
         
-        // SCRIPTED: LAST SECOND HEROICS LOGIC
-        if(!isSim && conf.script.enabled && conf.script.lastSec) {
-            let limit = parseFloat(document.getElementById('inp-time').value);
-            if (state.elapsed >= limit - 1.0) dmg = state.hp; // Force kill in last second
-            else if (dmg >= state.hp) dmg = state.hp / 2n; // Prevent early kill
+        this.h.data = heroData;
+        this.h.r = parseInt(document.getElementById('inp-size').value);
+        this.h.hits = 0;
+        
+        // Reset Histories
+        if(heroData.t === 'prim' || heroData.t === 'fact') this.h.history = [1n];
+        else if(heroData.t === 'rand') this.h.history = [10n];
+        else if(heroData.t === 'fib') this.h.history = [0n, 1n];
+        else if(heroData.t === 'tri') this.h.history = [0n, 0n, 1n];
+        else if(heroData.t === 'quad') this.h.history = [0n, 0n, 0n, 1n];
+        else if(heroData.t === 'gamb') this.h.history = [0n, 1n];
+        
+        this.h.pwr = (heroData.t === 'root' || heroData.t === 'rev' || heroData.t === 'half') ? 0n : (heroData.v || 1n);
+
+        // Pre-calculate required hits for AI Director
+        this.reqHits = this.calculateRequiredHits();
+
+        // Spawn Positions
+        this.h.x = 50; this.h.y = 50;
+        this.t.x = 750/2 - this.t.r; this.t.y = 750/2 - this.t.r;
+
+        // Base Speeds
+        this.h.vx = 8; this.h.vy = 8;
+        this.t.vx = -4; this.t.vy = -3;
+
+        this.active = true;
+        this.lastTs = performance.now();
+        requestAnimationFrame((ts) => this.loop(ts));
+    },
+
+    calculateRequiredHits() {
+        let tempHP = this.startHp;
+        let hits = 0;
+        let tempH = JSON.parse(JSON.stringify(this.h));
+        
+        // Safety loop to find how many hits it takes to kill
+        while (tempHP > 0n && hits < 1000) {
+            let dmg = this.getDamage(tempH, tempHP, hits);
+            tempHP = dmg >= tempHP ? 0n : tempHP - dmg;
+            hits++;
+            tempH.hits = hits;
+        }
+        return hits;
+    },
+
+    getDamage(heroState, currHp, hitIndex) {
+        let d = heroState.data;
+        let n = hitIndex + 1;
+        
+        switch(d.t) {
+            case 'add': heroState.pwr += d.v; return heroState.pwr;
+            case 'mult': heroState.pwr *= d.v; return heroState.pwr;
+            case 'exp': heroState.pwr = heroState.pwr ** d.v; return heroState.pwr;
+            case 'root': 
+                let s = currHp.toString(); 
+                let rootDmg = currHp - (BigInt(Math.floor(Math.sqrt(Number(s.substring(0,14))))) * 10n**BigInt(Math.max(0, s.length-14)));
+                return rootDmg || 1n;
+            case 'half': return currHp / 2n || 1n;
+            case 'rev': return currHp - (currHp / BigInt(hitIndex + 2));
+            case 'prim': let p = PRIMES[hitIndex] || 101n; heroState.history[0] *= p; return heroState.history[0];
+            case 'pow': return BigInt(n) ** BigInt(n);
+            case 'fact': heroState.history[0] *= BigInt(n); return heroState.history[0];
+            case 'rand': heroState.history[0] *= BigInt(50); return heroState.history[0]; // Average 50 for simulation
+            case 'fib': let f = heroState.history[heroState.history.length-1] + heroState.history[heroState.history.length-2]; heroState.history.push(f); return f;
+            case 'tri': let tr = heroState.history[heroState.history.length-1] + heroState.history[heroState.history.length-2] + heroState.history[heroState.history.length-3]; heroState.history.push(tr); return tr;
+            case 'quad': let q = heroState.history[heroState.history.length-1] + heroState.history[heroState.history.length-2] + heroState.history[heroState.history.length-3] + heroState.history[heroState.history.length-4]; heroState.history.push(q); return q;
+            case 'gamb': let g = BigInt(Math.floor(Number(heroState.history[heroState.history.length-1]) * 1.25)) + heroState.history[heroState.history.length-2]; heroState.history.push(g); return g;
+            default: return 1n;
+        }
+    },
+
+    loop(ts) {
+        if (!this.active) return;
+        let dt = (ts - this.lastTs) / 1000;
+        this.lastTs = ts;
+        this.elapsed += dt;
+
+        if (this.scripted) this.applyDirectorAI();
+
+        // Sub-steps to prevent phasing through walls
+        for(let i=0; i<3; i++) { this.updatePhysics(); }
+
+        this.render();
+
+        // Win/Loss Condition
+        if (this.hp <= 0n) {
+            this.active = false;
+            Audio.play(50, 'square', 0.5, 0.5);
+            setTimeout(() => { alert("TARGET ELIMINATED"); location.reload(); }, 100);
+        } else if (this.elapsed >= parseFloat(document.getElementById('inp-time').value)) {
+            this.active = false;
+            setTimeout(() => { alert("TIME UP - FAILED"); location.reload(); }, 100);
+        } else {
+            requestAnimationFrame((t) => this.loop(t));
+        }
+    },
+
+    applyDirectorAI() {
+        let timeRemaining = this.killTime - this.elapsed;
+        let hitsRemaining = this.reqHits - this.h.hits;
+        let mode = "normal";
+
+        if (hitsRemaining === 1 && timeRemaining > 0.5) {
+            mode = "avoid"; // Delay the final hit!
+        } else if (hitsRemaining === 1 && timeRemaining <= 0.5) {
+            mode = "seek"; // GO FOR THE KILL
+        } else if (hitsRemaining > 1) {
+            // Pace the hits based on required hits vs time available
+            let expectedHitTime = (this.h.hits + 1) * (this.killTime / this.reqHits);
+            if (this.elapsed > expectedHitTime) mode = "seek";
+            else if (this.elapsed < expectedHitTime - 0.5) mode = "avoid";
         }
 
-        state.hp = dmg >= state.hp ? 0n : state.hp - dmg;
-        if(!isSim) { 
-            document.getElementById('val-last').innerText = format(dmg);
-            spawnDmg(h.x, h.y, dmg);
+        // Steer Vectors
+        let dx = (this.t.x + this.t.r) - (this.h.x + this.h.r);
+        let dy = (this.t.y + this.t.r) - (this.h.y + this.h.r);
+        let dist = Math.sqrt(dx*dx + dy*dy) || 1;
+        let nx = dx/dist, ny = dy/dist;
+
+        let force = 0.5;
+
+        if (mode === "seek") {
+            this.h.vx += nx * force * 1.5; this.h.vy += ny * force * 1.5;
+            this.t.vx -= nx * force * 0.5; this.t.vy -= ny * force * 0.5; // Target is pulled in
+        } else if (mode === "avoid") {
+            // Apply slight rotation to avoid just bouncing linearly
+            this.h.vx -= (nx + 0.5) * force; this.h.vy -= (ny + 0.5) * force;
+            this.t.vx += nx * force; this.t.vy += ny * force; // Target runs away
         }
-        if(h.t==='mult') h.pwr *= h.v;
-        if(h.t==='exp' && h.pwr.toString().length < 400) h.pwr = h.pwr ** h.v;
-        h.hits++;
-        let nx=dx/dist, ny=dy/dist, pV = 2*(h.vx*nx + h.vy*ny - t.vx*nx - t.vy*ny)/(1 + t.mass);
-        h.vx -= pV*t.mass*nx; h.vy -= pV*t.mass*ny; t.vx += pV*nx; t.vy += pV*ny;
-        h.x += nx*2; h.y += ny*2;
-        if(state.hp <= 0n) return true;
+
+        // Clamp Speeds
+        const clamp = (b, min, max) => {
+            let s = Math.sqrt(b.vx**2 + b.vy**2) || 1;
+            if (s < min) { b.vx = (b.vx/s)*min; b.vy = (b.vy/s)*min; }
+            if (s > max) { b.vx = (b.vx/s)*max; b.vy = (b.vy/s)*max; }
+        };
+
+        clamp(this.h, 6, mode === "seek" ? 30 : 15);
+        clamp(this.t, 3, mode === "seek" ? 15 : 8);
+    },
+
+    updatePhysics() {
+        [this.h, this.t].forEach(b => {
+            b.x += b.vx; b.y += b.vy;
+            let bounds = 750 - b.r * 2;
+            if (b.x <= 0) { b.x = 0; b.vx *= -1; Audio.play(600, 'sine', 0.05, 0.05); }
+            if (b.x >= bounds) { b.x = bounds; b.vx *= -1; Audio.play(600, 'sine', 0.05, 0.05); }
+            if (b.y <= 0) { b.y = 0; b.vy *= -1; Audio.play(600, 'sine', 0.05, 0.05); }
+            if (b.y >= bounds) { b.y = bounds; b.vy *= -1; Audio.play(600, 'sine', 0.05, 0.05); }
+        });
+
+        // Collision
+        let dx = (this.h.x + this.h.r) - (this.t.x + this.t.r);
+        let dy = (this.h.y + this.h.r) - (this.t.y + this.t.r);
+        let dist = Math.sqrt(dx*dx + dy*dy);
+
+        if (dist < this.h.r + this.t.r) {
+            Audio.play(200, 'sawtooth', 0.1, 0.2);
+            let dmg = this.getDamage(this.h, this.hp, this.h.hits);
+            
+            // Re-apply true math random if it's the randomizer ball
+            if (this.h.data.t === 'rand') {
+                this.h.history[this.h.history.length-1] = this.h.history[this.h.history.length-2] * BigInt(Math.floor(Math.random()*100)+1);
+                dmg = this.h.history[this.h.history.length-1];
+            }
+
+            this.hp = dmg >= this.hp ? 0n : this.hp - dmg;
+            this.h.hits++;
+
+            // Spawn visual
+            const el = document.createElement('div');
+            el.className = 'dmg-text';
+            el.innerText = "-" + formatHP(dmg);
+            el.style.left = this.h.x + 'px'; el.style.top = this.h.y + 'px';
+            document.getElementById('arena').appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+
+            // Bounce math
+            let nx = dx/dist, ny = dy/dist;
+            let p = 2 * (this.h.vx * nx + this.h.vy * ny - this.t.vx * nx - this.t.vy * ny) / (1 + 10);
+            this.h.vx -= p * 10 * nx; this.h.vy -= p * 10 * ny;
+            this.t.vx += p * nx; this.t.vy += p * ny;
+            
+            // Separate to prevent sticking
+            this.h.x += nx * 2; this.h.y += ny * 2;
+        }
+    },
+
+    render() {
+        document.getElementById('title-bar').innerText = `Time: ${this.elapsed.toFixed(1)}s | Target HP: ${formatHP(this.hp)}`;
+        
+        let hEl = document.getElementById('hero');
+        let tEl = document.getElementById('target');
+        
+        hEl.style.transform = `translate(${this.h.x}px, ${this.h.y}px)`;
+        tEl.style.transform = `translate(${this.t.x}px, ${this.t.y}px)`;
+        
+        let hpTxt = document.getElementById('target-hp');
+        hpTxt.innerText = this.hp.toString();
+        
+        // Scale down huge numbers to fit inside target
+        let len = hpTxt.innerText.length;
+        if (len > 12) hpTxt.style.fontSize = Math.max(12, 40 - (len/2)) + "px";
+        else hpTxt.style.fontSize = "30px";
     }
-    return false;
-}
+};
 
-function launchGame() {
-    const rawHPStr = document.getElementById('inp-hp').value;
-    sim.hp = rawHPStr.includes('^') ? BigInt(rawHPStr.split('^')[0])**BigInt(rawHPStr.split('^')[1]) : BigInt(rawHPStr);
-    sim.initHP = sim.hp; sim.elapsed = 0; sim.wallHits = 0; sim.active = true; sim.lastTs = performance.now();
-    conf.hero.x = 50; conf.hero.y = 50; conf.hero.vx = 12; conf.hero.vy = 10; conf.hero.hits = 0;
-    conf.hero.pwr = (conf.hero.t==='root') ? 0n : conf.hero.v;
-    conf.target.x = 350-conf.target.r; conf.target.y = 350-conf.target.r; conf.target.vx = -4; conf.target.vy = 3;
-    conf.script.lastSec = document.getElementById('chk-last-sec').checked;
+const App = {
+    selectedHero: ROSTER[0],
 
-    document.getElementById('setup-dashboard').style.display = 'none';
-    document.getElementById('game-view').style.display = 'flex';
-    document.getElementById('hero').style.background = conf.hero.c;
-    document.getElementById('hero').innerText = conf.hero.l;
-    document.getElementById('hero').style.width = document.getElementById('hero').style.height = (conf.hero.r*2)+"px";
-    document.getElementById('target').style.width = document.getElementById('target').style.height = (conf.target.r*2)+"px";
-    document.getElementById('hero').style.display = 'flex'; document.getElementById('target').style.display = 'flex';
-    requestAnimationFrame(gameLoop);
-}
+    init() {
+        const grid = document.getElementById('roster');
+        ROSTER.forEach(h => {
+            let btn = document.createElement('div');
+            btn.className = 'hero-btn';
+            btn.style.background = h.c;
+            btn.style.color = h.txt || '#fff';
+            btn.innerText = h.sym;
+            btn.title = h.id;
+            btn.onclick = () => {
+                document.querySelectorAll('.hero-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.selectedHero = h;
+            };
+            if(h === this.selectedHero) btn.classList.add('active');
+            grid.appendChild(btn);
+        });
+    },
 
-function spawnDmg(x, y, v) {
-    const e = document.createElement('div'); e.className = 'dmg-float'; e.innerText = v.toString();
-    e.style.left = x+"px"; e.style.top = y+"px"; document.getElementById('arena').appendChild(e);
-    setTimeout(()=>e.remove(), 1200);
-}
+    toggleScript() {
+        const on = document.getElementById('chk-script').checked;
+        document.getElementById('script-ui').className = on ? "script-details" : "script-details locked";
+    },
 
-function gameLoop(ts) {
-    if(!sim.active) return;
-    const dt = (ts - sim.lastTs)/1000; sim.lastTs = ts; sim.elapsed += dt;
-    const killed = physicsStep(sim, conf.hero, conf.target, false);
-    
-    const h = document.getElementById('hero'), t = document.getElementById('target'), txt = document.getElementById('target-text');
-    h.style.transform = `translate(${conf.hero.x}px, ${conf.hero.y}px)`;
-    t.style.transform = `translate(${conf.target.x}px, ${conf.target.y}px)`;
-    
-    const hpStr = sim.hp.toString(); txt.innerText = hpStr;
-    if(hpStr.length < 10) txt.style.fontSize = (conf.target.r*0.8) + "px";
-    else txt.style.fontSize = Math.min((conf.target.r*2.2)/Math.sqrt(hpStr.length*1.5), conf.target.r*0.6) + "px";
+    start() {
+        let hpInp = document.getElementById('inp-hp').value;
+        let hpBig;
+        try {
+            if (hpInp.includes('^')) {
+                let parts = hpInp.split('^');
+                hpBig = BigInt(parts[0]) ** BigInt(parts[1]);
+            } else { hpBig = BigInt(hpInp); }
+        } catch(e) { hpBig = 1000000n; }
 
-    const title = document.getElementById('arena-title'), hName = `<span style="color:${conf.hero.c}">${conf.hero.n}</span>`, goal = format(sim.initHP, true);
-    
-    if(conf.script.enabled && conf.script.lastSec) {
-        // Last second heroics uses normal timer title
-        let rem = parseFloat(document.getElementById('inp-time').value) - sim.elapsed;
-        title.innerHTML = `Can ${hName} deal ${goal} damage in ${Math.max(0, rem).toFixed(1)} seconds?`;
-        if(rem <= 0 && !killed) endGame(false);
-    } else if(conf.mode === 'timer') {
-        let rem = parseFloat(document.getElementById('inp-time').value) - sim.elapsed;
-        title.innerHTML = `Can ${hName} deal ${goal} damage in ${Math.max(0, rem).toFixed(1)} seconds?`;
-        if(rem <= 0 && !killed) endGame(false);
-    } else if(conf.mode === 'stopwatch') {
-        title.innerHTML = `How long for ${hName} to deal ${goal}?<br>${sim.elapsed.toFixed(1)} Seconds`;
-    } else {
-        title.innerHTML = `Script: Hits ${sim.wallHits} | Time ${sim.elapsed.toFixed(1)}s`;
+        let timeVal = parseFloat(document.getElementById('inp-time').value);
+        let isScripted = document.getElementById('chk-script').checked;
+        let killTime = parseFloat(document.getElementById('inp-target-time').value);
+
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('game-view').style.display = 'flex';
+
+        // Setup DOM visual sizes
+        let size = parseInt(document.getElementById('inp-size').value);
+        let hEl = document.getElementById('hero');
+        hEl.style.width = hEl.style.height = (size * 2) + "px";
+        hEl.style.background = this.selectedHero.c;
+        hEl.style.color = this.selectedHero.txt || '#fff';
+        hEl.innerText = this.selectedHero.sym;
+
+        let tEl = document.getElementById('target');
+        tEl.style.width = tEl.style.height = "200px"; // Fixed target size
+
+        Engine.init(hpBig, timeVal, this.selectedHero, isScripted, killTime);
     }
+};
 
-    document.getElementById('val-next').innerText = format(getDmg(conf.hero, sim.hp));
-    if(killed) endGame(true); else requestAnimationFrame(gameLoop);
-}
-
-function endGame(victory) {
-    sim.active = false; SFX.boom();
-    let isWin = victory;
-    if(conf.script.enabled && !conf.script.lastSec && victory) {
-        const type = document.getElementById('sl-cond-type').value;
-        if(type === 'time') isWin = (sim.elapsed >= parseFloat(document.getElementById('sc-t1').value) && sim.elapsed <= parseFloat(document.getElementById('sc-t2').value));
-        else isWin = (sim.wallHits >= parseInt(document.getElementById('sc-hits').value) && (sim.elapsed - sim.lastWallTime) <= parseFloat(document.getElementById('sc-delay').value));
-    }
-    const ball = victory ? document.getElementById('target') : document.getElementById('hero');
-    const x = (victory ? conf.target.x+conf.target.r : conf.hero.x+conf.hero.r);
-    const y = (victory ? conf.target.y+conf.target.r : conf.hero.y+conf.hero.r);
-    ball.style.display = 'none';
-    for(let i=0; i<60; i++) {
-        const s = document.createElement('div'); s.className='shard'; s.style.width=s.style.height=(Math.random()*15+5)+"px";
-        s.style.background = victory ? '#ccc' : conf.hero.c; s.style.left=x+"px"; s.style.top=y+"px";
-        document.getElementById('arena').appendChild(s);
-        const a=Math.random()*6.28, v=Math.random()*12; let vx=Math.cos(a)*v, vy=Math.sin(a)*v, l=1, px=x, py=y;
-        const anim = () => { if(l<=0){s.remove();return;} px+=vx; py+=vy; l-=0.02; s.style.left=px+"px"; s.style.top=py+"px"; s.style.opacity=l; requestAnimationFrame(anim); }; anim();
-    }
-    setTimeout(() => { alert(isWin ? "GOAL ACHIEVED" : "GAME OVER"); location.reload(); }, 2000);
-}
-
-function calculateFeasibility() {
-    const r = document.getElementById('calc-result'); r.innerText = "Simulating Logic...";
-    setTimeout(() => {
-        let s = { hp: BigInt(10n**63n), elapsed: 0, wallHits: 0, lastWallTime: 0 };
-        let h = {...conf.hero, x:50, y:50, vx:12, vy:10, hits:0, pwr: conf.hero.t==='root'?0n:conf.hero.v };
-        let t = {...conf.target, x:350-conf.target.r, y:350-conf.target.r, vx:-4, vy:3 };
-        let k = false; for(let i=0; i<4000; i++){ s.elapsed += 0.016; if(physicsStep(s,h,t,true)){ k=true; break; } }
-        if(!k) r.innerText = "Fail: Target survives physics run.";
-        else r.innerText = `Physics Pass: Dies at ${s.elapsed.toFixed(2)}s. Hits: ${s.wallHits}`;
-    }, 100);
-}
-
-init();
+App.init();
 </script>
 </body>
 </html>
