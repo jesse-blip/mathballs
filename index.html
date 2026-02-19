@@ -3,130 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Square Arena: True Scripting & Full Roster</title>
+    <title>SQUARE ARENA</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #f4f4f9; --text: #000; --accent: #e94560; }
+        :root {
+            --bg: #1a1a2e;
+            --panel-light: #f4f4f9;
+            --panel-dark: #16213e;
+            --accent: #e94560;
+            --border: 4px solid #000;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { background-color: var(--bg); font-family: 'Roboto Condensed', sans-serif; color: var(--text); height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        body { background-color: var(--bg); font-family: 'Roboto Condensed', sans-serif; height: 100vh; overflow: hidden; color: #fff; }
 
-        /* --- DASHBOARD --- */
-        #dashboard { display: flex; gap: 30px; background: #fff; padding: 30px; border: 6px solid #000; box-shadow: 15px 15px 0 rgba(0,0,0,0.1); z-index: 100; position: absolute; }
-        .col { display: flex; flex-direction: column; gap: 15px; width: 320px; }
+        /* --- 3-PANEL DASHBOARD --- */
+        #dashboard { position: absolute; inset: 0; background: #fff; display: flex; padding: 20px; gap: 20px; color: #000; z-index: 100; }
         
-        h2 { font-size: 1.8rem; text-transform: uppercase; border-bottom: 4px solid #000; padding-bottom: 5px; }
-        label { font-size: 0.9rem; font-weight: 900; text-transform: uppercase; display: block; margin-bottom: 5px; }
-        input[type="text"], input[type="number"], select { width: 100%; padding: 10px; border: 3px solid #000; font-family: 'Share Tech Mono', monospace; font-size: 1.2rem; font-weight: bold; }
+        .panel-left { flex: 0 0 320px; background: var(--panel-light); padding: 20px; border: var(--border); box-shadow: 8px 8px 0 rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+        .panel-center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #ddd; border: var(--border); position: relative; gap: 20px; }
+        .panel-right { flex: 0 0 340px; background: var(--panel-dark); color: #fff; padding: 20px; border: var(--border); box-shadow: 10px 10px 0 rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 15px; }
+
+        h1 { font-size: 2.5rem; text-transform: uppercase; font-weight: 900; letter-spacing: 2px; color: #000; }
+        h2 { text-transform: uppercase; font-weight: 900; border-bottom: 3px solid #000; padding-bottom: 5px; font-size: 1.4rem; }
+        .panel-right h2 { border-color: var(--accent); color: var(--accent); }
         
-        .roster-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: #eee; padding: 10px; border: 3px solid #000; }
-        .hero-btn { aspect-ratio: 1/1; border-radius: 50%; border: 3px solid transparent; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; cursor: pointer; font-size: 14px; text-shadow: 1px 1px 0 #000; transition: transform 0.1s; }
-        .hero-btn.active { border-color: #000; transform: scale(1.15); box-shadow: 0 0 0 3px #fff, 0 5px 0 #000; z-index: 2; }
-
-        .btn-start { background: #00ff88; color: #000; padding: 15px; border: 4px solid #000; font-size: 1.5rem; font-weight: 900; cursor: pointer; box-shadow: 0 5px 0 #000; text-transform: uppercase; margin-top: auto; }
-        .btn-start:active { transform: translateY(5px); box-shadow: 0 0 0 #000; }
-
-        /* Scripting Box */
-        .script-box { background: #222; color: #fff; padding: 15px; border: 4px solid #000; }
-        .script-box label { color: #00ff88; }
-        .script-box input[type="checkbox"] { transform: scale(1.5); margin-right: 10px; cursor: pointer; }
-        .script-details { margin-top: 15px; }
-        .locked { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
-
-        /* --- ARENA --- */
-        #game-view { display: none; flex-direction: column; align-items: center; justify-content: center; position: absolute; inset: 0; background: #e0e0e0; }
-        #title-bar { font-size: 2.5rem; font-weight: 900; text-transform: uppercase; margin-bottom: 20px; text-align: center; }
+        label { display: block; font-size: 0.8rem; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; color: #444; }
+        .panel-right label { color: #ccc; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 3px solid #000; font-family: 'Share Tech Mono', monospace; font-size: 1.1rem; font-weight: bold; }
         
-        #arena { width: 750px; height: 750px; background: #fff; border: 8px solid #000; position: relative; box-shadow: 20px 20px 0 rgba(0,0,0,0.1); overflow: hidden; }
-        
-        .ball { position: absolute; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 900; }
-        #hero { border: 4px solid #000; z-index: 10; color: #fff; text-shadow: 1px 1px 0 #000; }
-        #target { background: #ccc; border: 2px solid #555; z-index: 5; flex-direction: column; }
-        #target-hp { font-family: 'Share Tech Mono', monospace; font-size: 30px; line-height: 0.9; text-align: center; padding: 10px; word-break: break-all; color: #000; }
+        /* ROSTER GRID */
+        .roster { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: #eee; border: 2px solid #ccc; padding: 6px; }
+        .ball-btn { aspect-ratio: 1/1; border-radius: 50%; border: 3px solid transparent; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 900; cursor: pointer; text-shadow: 1px 1px 0 #000; transition: transform 0.1s; }
+        .ball-btn.active { border-color: #000; transform: scale(1.15); box-shadow: 0 0 0 2px #fff, 3px 3px 0 #000; z-index: 2; }
 
-        .dmg-text { position: absolute; font-size: 2rem; color: #ff0055; font-weight: 900; -webkit-text-stroke: 1px #000; z-index: 50; pointer-events: none; animation: floatUp 1s forwards ease-out; }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(1.5); } }
+        /* 1:1 MAP PREVIEW */
+        #preview-map { width: 400px; height: 400px; background: #fff; border: 4px solid #000; position: relative; box-shadow: 10px 10px 0 rgba(0,0,0,0.1); overflow: hidden; }
+        .prev-target { position: absolute; width: 100px; height: 100px; background: #e0e0e0; border: 2px solid #999; border-radius: 50%; top: 150px; left: 150px; }
+        .prev-hero { position: absolute; border-radius: 50%; border: 3px solid #000; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; text-shadow: 1px 1px 0 #000; }
+
+        .btn-start { background: #00ff88; color: #000; padding: 15px 40px; border: 4px solid #000; font-size: 1.8rem; font-weight: 900; cursor: pointer; box-shadow: 0 6px 0 #000; text-transform: uppercase; }
+        .btn-start:active { transform: translateY(6px); box-shadow: 0 0 0 #000; }
+
+        /* SCRIPTING UI */
+        .script-box { background: rgba(0,0,0,0.2); padding: 15px; border: 2px solid #444; }
+        .script-box.locked { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
+
+        /* --- ARENA VIEW --- */
+        #game-view { display: none; position: absolute; inset: 0; background: #fdfaf0; flex-direction: column; align-items: center; justify-content: center; color: #000; z-index: 200; }
+        #arena-header { font-size: 2rem; font-weight: 900; text-transform: uppercase; margin-bottom: 20px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; }
+        
+        #arena { width: 750px; height: 750px; background: #fff; border: 8px solid #000; position: relative; box-shadow: 20px 20px 0 rgba(0,0,0,0.05); overflow: hidden; }
+        
+        .entity { position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
+        .e-hero { border: 4px solid #000; z-index: 10; color: #fff; text-shadow: 1px 1px 0 #000; }
+        .e-target { background: #e0e0e0; border: 2px solid #999; z-index: 5; box-shadow: inset 0 0 20px rgba(0,0,0,0.1); }
+        
+        #target-hp-text { font-family: 'Share Tech Mono', monospace; font-weight: 900; text-align: center; padding: 10px; word-break: break-all; line-height: 0.85; color: #222; }
+
+        .dmg-float { position: absolute; font-size: 2.5rem; color: #ff4757; font-weight: 900; -webkit-text-stroke: 1.5px #000; pointer-events: none; z-index: 100; animation: floatUp 1s ease-out forwards; }
+        @keyframes floatUp { 0% { opacity: 1; transform: scale(0.8) translateY(0); } 100% { opacity: 0; transform: scale(1.3) translateY(-100px); } }
     </style>
 </head>
 <body>
 
 <div id="dashboard">
-    <div class="col">
-        <h2>Game Setup</h2>
-        <label>Target HP</label>
-        <input type="text" id="inp-hp" value="10^25">
-        
-        <label style="margin-top: 10px;">Time Limit (Seconds)</label>
-        <input type="number" id="inp-time" value="30">
-        
-        <label style="margin-top: 10px;">Hero Size</label>
-        <input type="range" id="inp-size" min="30" max="100" value="60">
-
-        <button class="btn-start" onclick="App.start()">Enter Arena</button>
+    <div class="panel-left">
+        <h2>Laboratory</h2>
+        <div>
+            <label>Target HP</label>
+            <input type="text" id="inp-hp" value="10^25">
+        </div>
+        <div>
+            <label>Time Limit (s)</label>
+            <input type="number" id="inp-time" value="30">
+        </div>
+        <div>
+            <label>Hero Size: <span id="lbl-size">50</span>px</label>
+            <input type="range" id="inp-size" min="30" max="90" value="50" oninput="UI.updatePreview()">
+        </div>
+        <div>
+            <label>Select Hero</label>
+            <div id="roster" class="roster"></div>
+        </div>
     </div>
 
-    <div class="col">
-        <h2>Full Roster</h2>
-        <div id="roster" class="roster-grid"></div>
+    <div class="panel-center">
+        <h1>Square Arena</h1>
+        <div id="preview-map">
+            <div class="prev-target"></div>
+            <div id="prev-hero" class="prev-hero"></div>
+        </div>
+        <button class="btn-start" onclick="Engine.start()">Initiate Battle</button>
     </div>
 
-    <div class="col">
+    <div class="panel-right">
         <h2>Director AI</h2>
-        <div class="script-box">
-            <div style="display:flex; align-items:center;">
-                <input type="checkbox" id="chk-script" onchange="App.toggleScript()">
-                <label style="margin:0;">Enable Trajectory Override</label>
-            </div>
-            <div id="script-ui" class="script-details locked">
-                <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 15px; font-weight: normal;">
-                    The engine will actively steer the Hero and Target's speeds and trajectories to ensure the lethal blow lands exactly in the final second of the timer.
-                </p>
-                <label>Target Timeframe</label>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    Kill at <input type="number" id="inp-target-time" value="29" style="width: 80px; padding: 5px;"> seconds
-                </div>
-            </div>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom: 10px;">
+            <input type="checkbox" id="chk-script" style="width:20px; height:20px;" onchange="UI.toggleScript()">
+            <label style="margin:0; font-size:1rem; color:#fff;">Enable Steering</label>
+        </div>
+        
+        <div id="script-box" class="script-box locked">
+            <p style="font-size: 0.8rem; margin-bottom: 15px; color: #aaa; line-height: 1.4;">
+                The Director will actively repel the balls if a lethal hit is about to occur too early, and magnetic-lock them together at the exact target time.
+            </p>
+            <label>Target Kill Time (s)</label>
+            <input type="number" id="inp-target-time" value="29">
         </div>
     </div>
 </div>
 
 <div id="game-view">
-    <div id="title-bar"></div>
+    <div id="arena-header">
+        <div id="ui-time"></div>
+        <div id="ui-goal" style="font-size:1.2rem; color:#555;"></div>
+    </div>
     <div id="arena">
-        <div id="target" class="ball"><div id="target-hp"></div></div>
-        <div id="hero" class="ball"></div>
+        <div id="target" class="entity e-target"><div id="target-hp-text"></div></div>
+        <div id="hero" class="entity e-hero"></div>
     </div>
 </div>
 
 <script>
-// --- THE FULL ROSTER ---
+// --- EXACT 16 ROSTER ---
 const ROSTER = [
-    // Originals
-    { id: 'add10', sym: "+10", c: "#44bd32", t: "add", v: 10n },
-    { id: 'add100', sym: "+100", c: "#4cd137", t: "add", v: 100n },
-    { id: 'mult2', sym: "2x", c: "#fbc531", t: "mult", v: 2n },
-    { id: 'mult3', sym: "3x", c: "#e1b12c", t: "mult", v: 3n },
-    { id: 'mult4', sym: "4x", c: "#f39c12", t: "mult", v: 4n },
-    { id: 'sq', sym: "x²", c: "#00a8ff", t: "exp", v: 2n },
-    { id: 'cb', sym: "x³", c: "#0097e6", t: "exp", v: 3n },
-    { id: 'root', sym: "√", c: "#9c88ff", t: "root" },
-    { id: 'half', sym: "x/2", c: "#7f8fa6", t: "half" },
-    { id: 'rev', sym: "x/y", c: "#718093", t: "rev" },
-    
-    // The Sequence Expansion
-    { id: 'prim', sym: "#", c: "#e84118", t: "prim" },
-    { id: 'pow', sym: "⚡️", c: "#f5f6fa", t: "pow", txt: "#000" },
-    { id: 'fact', sym: "!", c: "#c23616", t: "fact" },
-    { id: 'rand', sym: "?", c: "#8c7ae6", t: "rand" },
-    { id: 'fib', sym: "Φ", c: "#e84393", t: "fib" },
-    { id: 'tri', sym: "Tb", c: "#fd79a8", t: "tri" },
-    { id: 'quad', sym: "Qd", c: "#6c5ce7", t: "quad" },
-    { id: 'gamb', sym: "???", c: "#b2bec3", t: "gamb", txt: "#000" }
+    // 8 Originals
+    { id: 'root', sym: "√", c: "#ff4757", t: "root" },
+    { id: 'mult2', sym: "2x", c: "#ffa502", t: "mult", v: 2n },
+    { id: 'mult3', sym: "3x", c: "#eccc68", t: "mult", v: 3n },
+    { id: 'mult4', sym: "4x", c: "#7bed9f", t: "mult", v: 4n },
+    { id: 'sq', sym: "x²", c: "#2ed573", t: "exp", v: 2n },
+    { id: 'cb', sym: "x³", c: "#1e90ff", t: "exp", v: 3n },
+    { id: 'half', sym: "x/2", c: "#747d8c", t: "half" },
+    { id: 'rev', sym: "x/y", c: "#57606f", t: "rev" },
+    // 8 Requested
+    { id: 'prim', sym: "#", c: "#a55eea", t: "prim" },
+    { id: 'pow', sym: "⚡️", c: "#f7b731", t: "pow", txt: "#000" },
+    { id: 'fact', sym: "!", c: "#eb4d4b", t: "fact" },
+    { id: 'rand', sym: "?", c: "#2bcbba", t: "rand" },
+    { id: 'fib', sym: "Φ", c: "#45aaf2", t: "fib" },
+    { id: 'tri', sym: "Tb", c: "#4b7bec", t: "tri" },
+    { id: 'quad', sym: "Qd", c: "#3867d6", t: "quad" },
+    { id: 'gamb', sym: "???", c: "#d1d8e0", t: "gamb", txt: "#000" }
 ];
 
 const PRIMES = [2n, 3n, 5n, 7n, 11n, 13n, 17n, 19n, 23n, 29n, 31n, 37n, 41n, 43n, 47n, 53n, 59n, 61n, 67n, 71n, 73n, 79n, 83n, 89n, 97n];
 
-// Formatter to handle large words, keeping UI clean
-function formatHP(n) {
+// Safe formatting
+function format(n) {
     if (n === 0n) return "0";
     let s = n.toString();
     if (s.length < 7) return s;
@@ -137,303 +161,289 @@ function formatHP(n) {
     return `${lead}.${dec} ${names[tier] || "Max"}`;
 }
 
-const Audio = {
+// OG Audio Controller
+const SFX = {
     ctx: null,
+    init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
     play(freq, type, dur, vol) {
-        if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this.init();
         let o = this.ctx.createOscillator(), g = this.ctx.createGain();
         o.type = type; o.frequency.setValueAtTime(freq, this.ctx.currentTime);
         g.gain.setValueAtTime(vol, this.ctx.currentTime);
         g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
         o.connect(g); g.connect(this.ctx.destination);
         o.start(); o.stop(this.ctx.currentTime + dur);
-    }
+    },
+    clack() { this.play(800, 'square', 0.03, 0.02); },
+    hit() { this.play(150, 'sine', 0.1, 0.1); },
+    boom() { this.play(60, 'sawtooth', 0.8, 0.3); }
 };
 
 const Engine = {
     active: false, elapsed: 0, lastTs: 0,
-    hp: 0n, startHp: 0n, targetHits: 0,
+    hp: 0n, initHP: 0n,
     h: { x:0, y:0, vx:0, vy:0, r:0, hits:0, history:[], pwr:1n },
     t: { x:0, y:0, vx:0, vy:0, r:100 },
-    
-    // Director AI tracking
-    reqHits: 0,
-    scripted: false,
-    killTime: 0,
+    script: { enabled: false, targetTime: 0 },
 
-    init(hpVal, timeVal, heroData, isScripted, killTimeVal) {
-        this.startHp = this.hp = hpVal;
-        this.elapsed = 0;
-        this.scripted = isScripted;
-        this.killTime = killTimeVal;
+    peekDamage(currentHp, hits) {
+        let d = this.h.data;
+        let n = hits + 1;
+        switch(d.t) {
+            case 'mult': return this.h.pwr * d.v;
+            case 'exp': return this.h.pwr ** d.v;
+            case 'root': 
+                let s = currentHp.toString(); 
+                let rootDmg = currentHp - (BigInt(Math.floor(Math.sqrt(Number(s.substring(0,14))))) * 10n**BigInt(Math.max(0, s.length-14)));
+                return rootDmg || 1n;
+            case 'half': return currentHp / 2n || 1n;
+            case 'rev': return currentHp - (currentHp / BigInt(hits + 2));
+            case 'prim': let p = PRIMES[hits] || 101n; return this.h.history[0] * p;
+            case 'pow': return BigInt(n) ** BigInt(n);
+            case 'fact': return this.h.history[0] * BigInt(n);
+            case 'rand': return this.h.history[0] * 50n; // Estimate for simulation
+            case 'fib': return this.h.history[this.h.history.length-1] + this.h.history[this.h.history.length-2];
+            case 'tri': return this.h.history[this.h.history.length-1] + this.h.history[this.h.history.length-2] + this.h.history[this.h.history.length-3];
+            case 'quad': return this.h.history[this.h.history.length-1] + this.h.history[this.h.history.length-2] + this.h.history[this.h.history.length-3] + this.h.history[this.h.history.length-4];
+            case 'gamb': return BigInt(Math.floor(Number(this.h.history[this.h.history.length-1]) * 1.25)) + this.h.history[this.h.history.length-2];
+            default: return 1n;
+        }
+    },
+
+    applyDamage() {
+        let d = this.h.data;
+        let n = this.h.hits + 1;
+        let dmg = 1n;
+
+        switch(d.t) {
+            case 'mult': this.h.pwr *= d.v; dmg = this.h.pwr; break;
+            case 'exp': this.h.pwr = this.h.pwr ** d.v; dmg = this.h.pwr; break;
+            case 'root': 
+                let s = this.hp.toString(); 
+                dmg = this.hp - (BigInt(Math.floor(Math.sqrt(Number(s.substring(0,14))))) * 10n**BigInt(Math.max(0, s.length-14)));
+                break;
+            case 'half': dmg = this.hp / 2n; break;
+            case 'rev': dmg = this.hp - (this.hp / BigInt(this.h.hits + 2)); break;
+            case 'prim': this.h.history[0] *= (PRIMES[this.h.hits] || 101n); dmg = this.h.history[0]; break;
+            case 'pow': dmg = BigInt(n) ** BigInt(n); break;
+            case 'fact': this.h.history[0] *= BigInt(n); dmg = this.h.history[0]; break;
+            case 'rand': this.h.history[0] *= BigInt(Math.floor(Math.random()*100)+1); dmg = this.h.history[0]; break;
+            case 'fib': dmg = this.h.history[this.h.history.length-1] + this.h.history[this.h.history.length-2]; this.h.history.push(dmg); break;
+            case 'tri': dmg = this.h.history[this.h.history.length-1] + this.h.history[this.h.history.length-2] + this.h.history[this.h.history.length-3]; this.h.history.push(dmg); break;
+            case 'quad': dmg = this.h.history[this.h.history.length-1] + this.h.history[this.h.history.length-2] + this.h.history[this.h.history.length-3] + this.h.history[this.h.history.length-4]; this.h.history.push(dmg); break;
+            case 'gamb': dmg = BigInt(Math.floor(Number(this.h.history[this.h.history.length-1]) * (0.5+Math.random()*1.5))) + this.h.history[this.h.history.length-2]; this.h.history.push(dmg); break;
+        }
         
-        this.h.data = heroData;
+        if(!dmg) dmg = 1n;
+        this.hp = dmg >= this.hp ? 0n : this.hp - dmg;
+        this.h.hits++;
+        return dmg;
+    },
+
+    start() {
+        let rawHp = document.getElementById('inp-hp').value;
+        try {
+            if (rawHp.includes('^')) {
+                let p = rawHp.split('^');
+                this.hp = BigInt(p[0]) ** BigInt(p[1]);
+            } else { this.hp = BigInt(rawHp); }
+        } catch(e) { this.hp = 1000000n; }
+
+        this.initHP = this.hp;
+        this.elapsed = 0;
+        this.h.data = UI.selectedHero;
         this.h.r = parseInt(document.getElementById('inp-size').value);
         this.h.hits = 0;
         
-        // Reset Histories
-        if(heroData.t === 'prim' || heroData.t === 'fact') this.h.history = [1n];
-        else if(heroData.t === 'rand') this.h.history = [10n];
-        else if(heroData.t === 'fib') this.h.history = [0n, 1n];
-        else if(heroData.t === 'tri') this.h.history = [0n, 0n, 1n];
-        else if(heroData.t === 'quad') this.h.history = [0n, 0n, 0n, 1n];
-        else if(heroData.t === 'gamb') this.h.history = [0n, 1n];
+        // Reset Histories based on ball type
+        let t = this.h.data.t;
+        if(t === 'prim' || t === 'fact') this.h.history = [1n];
+        else if(t === 'rand') this.h.history = [10n];
+        else if(t === 'fib') this.h.history = [0n, 1n];
+        else if(t === 'tri') this.h.history = [0n, 0n, 1n];
+        else if(t === 'quad') this.h.history = [0n, 0n, 0n, 1n];
+        else if(t === 'gamb') this.h.history = [0n, 1n];
         
-        this.h.pwr = (heroData.t === 'root' || heroData.t === 'rev' || heroData.t === 'half') ? 0n : (heroData.v || 1n);
+        this.h.pwr = (t==='root'||t==='rev'||t==='half') ? 0n : (this.h.data.v || 1n);
 
-        // Pre-calculate required hits for AI Director
-        this.reqHits = this.calculateRequiredHits();
+        this.script.enabled = document.getElementById('chk-script').checked;
+        this.script.targetTime = parseFloat(document.getElementById('inp-target-time').value);
 
-        // Spawn Positions
-        this.h.x = 50; this.h.y = 50;
-        this.t.x = 750/2 - this.t.r; this.t.y = 750/2 - this.t.r;
+        // Random Spawns
+        this.h.x = Math.random() * 200; this.h.y = Math.random() * 200;
+        this.h.vx = (Math.random()>0.5?1:-1)*(8+Math.random()*4);
+        this.h.vy = (Math.random()>0.5?1:-1)*(8+Math.random()*4);
+        
+        this.t.x = 400; this.t.y = 400;
+        this.t.vx = (Math.random()>0.5?1:-1)*4; this.t.vy = (Math.random()>0.5?1:-1)*4;
 
-        // Base Speeds
-        this.h.vx = 8; this.h.vy = 8;
-        this.t.vx = -4; this.t.vy = -3;
+        // UI Transition
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('game-view').style.display = 'flex';
+
+        let hEl = document.getElementById('hero');
+        hEl.style.width = hEl.style.height = (this.h.r * 2) + "px";
+        hEl.style.background = this.h.data.c;
+        hEl.style.color = this.h.data.txt || '#fff';
+        hEl.innerText = this.h.data.sym;
+
+        let tEl = document.getElementById('target');
+        tEl.style.width = tEl.style.height = (this.t.r * 2) + "px";
+
+        document.getElementById('ui-goal').innerText = `Goal: Deal ${format(this.initHP)} damage`;
 
         this.active = true;
         this.lastTs = performance.now();
         requestAnimationFrame((ts) => this.loop(ts));
     },
 
-    calculateRequiredHits() {
-        let tempHP = this.startHp;
-        let hits = 0;
-        let tempH = JSON.parse(JSON.stringify(this.h));
-        
-        // Safety loop to find how many hits it takes to kill
-        while (tempHP > 0n && hits < 1000) {
-            let dmg = this.getDamage(tempH, tempHP, hits);
-            tempHP = dmg >= tempHP ? 0n : tempHP - dmg;
-            hits++;
-            tempH.hits = hits;
-        }
-        return hits;
-    },
-
-    getDamage(heroState, currHp, hitIndex) {
-        let d = heroState.data;
-        let n = hitIndex + 1;
-        
-        switch(d.t) {
-            case 'add': heroState.pwr += d.v; return heroState.pwr;
-            case 'mult': heroState.pwr *= d.v; return heroState.pwr;
-            case 'exp': heroState.pwr = heroState.pwr ** d.v; return heroState.pwr;
-            case 'root': 
-                let s = currHp.toString(); 
-                let rootDmg = currHp - (BigInt(Math.floor(Math.sqrt(Number(s.substring(0,14))))) * 10n**BigInt(Math.max(0, s.length-14)));
-                return rootDmg || 1n;
-            case 'half': return currHp / 2n || 1n;
-            case 'rev': return currHp - (currHp / BigInt(hitIndex + 2));
-            case 'prim': let p = PRIMES[hitIndex] || 101n; heroState.history[0] *= p; return heroState.history[0];
-            case 'pow': return BigInt(n) ** BigInt(n);
-            case 'fact': heroState.history[0] *= BigInt(n); return heroState.history[0];
-            case 'rand': heroState.history[0] *= BigInt(50); return heroState.history[0]; // Average 50 for simulation
-            case 'fib': let f = heroState.history[heroState.history.length-1] + heroState.history[heroState.history.length-2]; heroState.history.push(f); return f;
-            case 'tri': let tr = heroState.history[heroState.history.length-1] + heroState.history[heroState.history.length-2] + heroState.history[heroState.history.length-3]; heroState.history.push(tr); return tr;
-            case 'quad': let q = heroState.history[heroState.history.length-1] + heroState.history[heroState.history.length-2] + heroState.history[heroState.history.length-3] + heroState.history[heroState.history.length-4]; heroState.history.push(q); return q;
-            case 'gamb': let g = BigInt(Math.floor(Number(heroState.history[heroState.history.length-1]) * 1.25)) + heroState.history[heroState.history.length-2]; heroState.history.push(g); return g;
-            default: return 1n;
-        }
-    },
-
     loop(ts) {
-        if (!this.active) return;
+        if(!this.active) return;
         let dt = (ts - this.lastTs) / 1000;
         this.lastTs = ts;
         this.elapsed += dt;
 
-        if (this.scripted) this.applyDirectorAI();
+        // --- MAGNETIC STEERING ENGINE ---
+        if (this.script.enabled) {
+            let nextDmg = this.peekDamage(this.hp, this.h.hits);
+            let isLethal = (nextDmg >= this.hp);
+            let timeLeft = this.script.targetTime - this.elapsed;
+            
+            let dx = (this.t.x + this.t.r) - (this.h.x + this.h.r);
+            let dy = (this.t.y + this.t.r) - (this.h.y + this.h.r);
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            let nx = dx/dist, ny = dy/dist;
 
-        // Sub-steps to prevent phasing through walls
-        for(let i=0; i<3; i++) { this.updatePhysics(); }
+            if (isLethal) {
+                if (timeLeft > 0.8 && dist < 300) {
+                    // Force Repel (Avoid early death)
+                    this.h.vx -= nx * 0.8; this.h.vy -= ny * 0.8;
+                    this.t.vx += nx * 0.4; this.t.vy += ny * 0.4;
+                } else if (timeLeft <= 0.8) {
+                    // Force Attract (Time to die)
+                    this.h.vx += nx * 2; this.h.vy += ny * 2;
+                    this.t.vx -= nx * 1; this.t.vy -= ny * 1;
+                }
+            } else {
+                if (timeLeft < 3.0) {
+                    // Need more hits quickly, pull together slightly
+                    this.h.vx += nx * 0.5; this.h.vy += ny * 0.5;
+                }
+            }
 
+            // Speed Limiters to prevent breaking out of bounds
+            let hs = Math.sqrt(this.h.vx**2 + this.h.vy**2);
+            if(hs > 25) { this.h.vx = (this.h.vx/hs)*25; this.h.vy = (this.h.vy/hs)*25; }
+        }
+
+        // Substep Physics
+        for(let i=0; i<3; i++) this.updatePhysics();
         this.render();
 
-        // Win/Loss Condition
+        let maxTime = parseFloat(document.getElementById('inp-time').value);
         if (this.hp <= 0n) {
-            this.active = false;
-            Audio.play(50, 'square', 0.5, 0.5);
+            this.active = false; SFX.boom();
             setTimeout(() => { alert("TARGET ELIMINATED"); location.reload(); }, 100);
-        } else if (this.elapsed >= parseFloat(document.getElementById('inp-time').value)) {
+        } else if (this.elapsed >= maxTime) {
             this.active = false;
-            setTimeout(() => { alert("TIME UP - FAILED"); location.reload(); }, 100);
+            setTimeout(() => { alert("TIME UP - BATTLE FAILED"); location.reload(); }, 100);
         } else {
             requestAnimationFrame((t) => this.loop(t));
         }
-    },
-
-    applyDirectorAI() {
-        let timeRemaining = this.killTime - this.elapsed;
-        let hitsRemaining = this.reqHits - this.h.hits;
-        let mode = "normal";
-
-        if (hitsRemaining === 1 && timeRemaining > 0.5) {
-            mode = "avoid"; // Delay the final hit!
-        } else if (hitsRemaining === 1 && timeRemaining <= 0.5) {
-            mode = "seek"; // GO FOR THE KILL
-        } else if (hitsRemaining > 1) {
-            // Pace the hits based on required hits vs time available
-            let expectedHitTime = (this.h.hits + 1) * (this.killTime / this.reqHits);
-            if (this.elapsed > expectedHitTime) mode = "seek";
-            else if (this.elapsed < expectedHitTime - 0.5) mode = "avoid";
-        }
-
-        // Steer Vectors
-        let dx = (this.t.x + this.t.r) - (this.h.x + this.h.r);
-        let dy = (this.t.y + this.t.r) - (this.h.y + this.h.r);
-        let dist = Math.sqrt(dx*dx + dy*dy) || 1;
-        let nx = dx/dist, ny = dy/dist;
-
-        let force = 0.5;
-
-        if (mode === "seek") {
-            this.h.vx += nx * force * 1.5; this.h.vy += ny * force * 1.5;
-            this.t.vx -= nx * force * 0.5; this.t.vy -= ny * force * 0.5; // Target is pulled in
-        } else if (mode === "avoid") {
-            // Apply slight rotation to avoid just bouncing linearly
-            this.h.vx -= (nx + 0.5) * force; this.h.vy -= (ny + 0.5) * force;
-            this.t.vx += nx * force; this.t.vy += ny * force; // Target runs away
-        }
-
-        // Clamp Speeds
-        const clamp = (b, min, max) => {
-            let s = Math.sqrt(b.vx**2 + b.vy**2) || 1;
-            if (s < min) { b.vx = (b.vx/s)*min; b.vy = (b.vy/s)*min; }
-            if (s > max) { b.vx = (b.vx/s)*max; b.vy = (b.vy/s)*max; }
-        };
-
-        clamp(this.h, 6, mode === "seek" ? 30 : 15);
-        clamp(this.t, 3, mode === "seek" ? 15 : 8);
     },
 
     updatePhysics() {
         [this.h, this.t].forEach(b => {
             b.x += b.vx; b.y += b.vy;
             let bounds = 750 - b.r * 2;
-            if (b.x <= 0) { b.x = 0; b.vx *= -1; Audio.play(600, 'sine', 0.05, 0.05); }
-            if (b.x >= bounds) { b.x = bounds; b.vx *= -1; Audio.play(600, 'sine', 0.05, 0.05); }
-            if (b.y <= 0) { b.y = 0; b.vy *= -1; Audio.play(600, 'sine', 0.05, 0.05); }
-            if (b.y >= bounds) { b.y = bounds; b.vy *= -1; Audio.play(600, 'sine', 0.05, 0.05); }
+            if (b.x <= 0) { b.x = 0; b.vx *= -1; SFX.clack(); }
+            if (b.x >= bounds) { b.x = bounds; b.vx *= -1; SFX.clack(); }
+            if (b.y <= 0) { b.y = 0; b.vy *= -1; SFX.clack(); }
+            if (b.y >= bounds) { b.y = bounds; b.vy *= -1; SFX.clack(); }
         });
 
-        // Collision
         let dx = (this.h.x + this.h.r) - (this.t.x + this.t.r);
         let dy = (this.h.y + this.h.r) - (this.t.y + this.t.r);
         let dist = Math.sqrt(dx*dx + dy*dy);
 
         if (dist < this.h.r + this.t.r) {
-            Audio.play(200, 'sawtooth', 0.1, 0.2);
-            let dmg = this.getDamage(this.h, this.hp, this.h.hits);
+            SFX.hit();
+            let dmg = this.applyDamage();
             
-            // Re-apply true math random if it's the randomizer ball
-            if (this.h.data.t === 'rand') {
-                this.h.history[this.h.history.length-1] = this.h.history[this.h.history.length-2] * BigInt(Math.floor(Math.random()*100)+1);
-                dmg = this.h.history[this.h.history.length-1];
-            }
-
-            this.hp = dmg >= this.hp ? 0n : this.hp - dmg;
-            this.h.hits++;
-
-            // Spawn visual
-            const el = document.createElement('div');
-            el.className = 'dmg-text';
-            el.innerText = "-" + formatHP(dmg);
+            const el = document.createElement('div'); el.className = 'dmg-float'; el.innerText = "-" + format(dmg);
             el.style.left = this.h.x + 'px'; el.style.top = this.h.y + 'px';
-            document.getElementById('arena').appendChild(el);
-            setTimeout(() => el.remove(), 1000);
+            document.getElementById('arena').appendChild(el); setTimeout(() => el.remove(), 1000);
 
-            // Bounce math
             let nx = dx/dist, ny = dy/dist;
             let p = 2 * (this.h.vx * nx + this.h.vy * ny - this.t.vx * nx - this.t.vy * ny) / (1 + 10);
             this.h.vx -= p * 10 * nx; this.h.vy -= p * 10 * ny;
             this.t.vx += p * nx; this.t.vy += p * ny;
             
-            // Separate to prevent sticking
+            // Unstick
             this.h.x += nx * 2; this.h.y += ny * 2;
         }
     },
 
     render() {
-        document.getElementById('title-bar').innerText = `Time: ${this.elapsed.toFixed(1)}s | Target HP: ${formatHP(this.hp)}`;
+        document.getElementById('ui-time').innerText = `TIME: ${this.elapsed.toFixed(1)}s`;
         
-        let hEl = document.getElementById('hero');
-        let tEl = document.getElementById('target');
-        
+        let hEl = document.getElementById('hero'), tEl = document.getElementById('target');
         hEl.style.transform = `translate(${this.h.x}px, ${this.h.y}px)`;
         tEl.style.transform = `translate(${this.t.x}px, ${this.t.y}px)`;
         
-        let hpTxt = document.getElementById('target-hp');
+        let hpTxt = document.getElementById('target-hp-text');
         hpTxt.innerText = this.hp.toString();
-        
-        // Scale down huge numbers to fit inside target
         let len = hpTxt.innerText.length;
-        if (len > 12) hpTxt.style.fontSize = Math.max(12, 40 - (len/2)) + "px";
-        else hpTxt.style.fontSize = "30px";
+        hpTxt.style.fontSize = Math.max(14, 45 - (len/2.5)) + "px";
     }
 };
 
-const App = {
+const UI = {
     selectedHero: ROSTER[0],
 
     init() {
         const grid = document.getElementById('roster');
         ROSTER.forEach(h => {
             let btn = document.createElement('div');
-            btn.className = 'hero-btn';
+            btn.className = 'ball-btn';
             btn.style.background = h.c;
             btn.style.color = h.txt || '#fff';
             btn.innerText = h.sym;
             btn.title = h.id;
             btn.onclick = () => {
-                document.querySelectorAll('.hero-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.ball-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 this.selectedHero = h;
+                this.updatePreview();
             };
             if(h === this.selectedHero) btn.classList.add('active');
             grid.appendChild(btn);
         });
+        this.updatePreview();
+    },
+
+    updatePreview() {
+        let r = parseInt(document.getElementById('inp-size').value);
+        document.getElementById('lbl-size').innerText = r;
+        
+        let p = document.getElementById('prev-hero');
+        p.style.width = p.style.height = (r * 2) + "px";
+        p.style.background = this.selectedHero.c;
+        p.style.color = this.selectedHero.txt || '#fff';
+        p.innerText = this.selectedHero.sym;
+        
+        // Center hero in the 400x400 preview
+        p.style.left = (200 - r) + "px";
+        p.style.top = (200 - r) + "px";
     },
 
     toggleScript() {
-        const on = document.getElementById('chk-script').checked;
-        document.getElementById('script-ui').className = on ? "script-details" : "script-details locked";
-    },
-
-    start() {
-        let hpInp = document.getElementById('inp-hp').value;
-        let hpBig;
-        try {
-            if (hpInp.includes('^')) {
-                let parts = hpInp.split('^');
-                hpBig = BigInt(parts[0]) ** BigInt(parts[1]);
-            } else { hpBig = BigInt(hpInp); }
-        } catch(e) { hpBig = 1000000n; }
-
-        let timeVal = parseFloat(document.getElementById('inp-time').value);
-        let isScripted = document.getElementById('chk-script').checked;
-        let killTime = parseFloat(document.getElementById('inp-target-time').value);
-
-        document.getElementById('dashboard').style.display = 'none';
-        document.getElementById('game-view').style.display = 'flex';
-
-        // Setup DOM visual sizes
-        let size = parseInt(document.getElementById('inp-size').value);
-        let hEl = document.getElementById('hero');
-        hEl.style.width = hEl.style.height = (size * 2) + "px";
-        hEl.style.background = this.selectedHero.c;
-        hEl.style.color = this.selectedHero.txt || '#fff';
-        hEl.innerText = this.selectedHero.sym;
-
-        let tEl = document.getElementById('target');
-        tEl.style.width = tEl.style.height = "200px"; // Fixed target size
-
-        Engine.init(hpBig, timeVal, this.selectedHero, isScripted, killTime);
+        let on = document.getElementById('chk-script').checked;
+        document.getElementById('script-box').className = on ? "script-box" : "script-box locked";
     }
 };
 
-App.init();
+UI.init();
 </script>
 </body>
 </html>
