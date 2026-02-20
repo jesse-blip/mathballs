@@ -2,724 +2,280 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SQUARE ARENA | THE DEFINITIVE BUILD</title>
+    <title>SQUARE ARENA | OG MASTER BUILD</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        /* --- CORE DESIGN SYSTEM --- */
-        :root {
-            --bg: #0f0c29;
-            --panel-bg: #ffffff;
-            --panel-dark: #16213e;
-            --accent: #e94560;
-            --border-width: 4px;
-            --border-color: #000000;
-            --shadow: 8px 8px 0px rgba(0,0,0,0.2);
-        }
+        :root { --bg: #0f0c29; --panel: #ffffff; --dark: #16213e; --accent: #e94560; --border: 4px solid #000; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { background: var(--bg); font-family: 'Roboto Condensed', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-user-drag: none;
-        }
+        /* --- DASHBOARD --- */
+        #dashboard { position: absolute; inset: 0; display: flex; background: #f0f0f0; padding: 25px; gap: 25px; z-index: 1000; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        .panel { border: var(--border); background: var(--panel); box-shadow: 8px 8px 0 rgba(0,0,0,0.1); display: flex; flex-direction: column; padding: 20px; }
+        
+        #lab-panel { flex: 0 0 340px; overflow-y: auto; }
+        #center-panel { flex: 1; align-items: center; justify-content: center; gap: 15px; background: #ddd; }
+        #director-panel { flex: 0 0 340px; background: var(--dark); color: #fff; }
 
-        body {
-            background: var(--bg);
-            font-family: 'Roboto Condensed', sans-serif;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #000;
-        }
+        h1 { font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: -2px; margin-bottom: 5px; }
+        h2 { font-size: 1.4rem; text-transform: uppercase; border-bottom: 4px solid #000; margin-bottom: 10px; }
+        label { display: block; font-weight: 900; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 4px; color: #333; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 3px solid #000; font-family: 'Share Tech Mono'; font-weight: bold; }
+        
+        /* 1:1 MAP & SLIDERS */
+        #map-1to1 { width: 400px; height: 400px; background: #fff; border: 6px solid #000; position: relative; overflow: hidden; box-shadow: 10px 10px 0 rgba(0,0,0,0.1); }
+        .prev-ent { position: absolute; border-radius: 50%; border: 3px solid #000; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; text-shadow: 1px 1px 0 #000; }
+        #prev-target { background: #eee; border-color: #ccc; color: #888; text-shadow: none; }
+        
+        .map-controls { width: 400px; display: flex; flex-direction: column; gap: 8px; background: #fff; padding: 10px; border: var(--border); }
+        .map-controls label { margin: 0; font-size: 0.7rem; display: flex; justify-content: space-between; }
 
-        /* --- DASHBOARD LAYOUT --- */
-        #dashboard {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            background: #f0f0f0;
-            padding: 25px;
-            gap: 25px;
-            z-index: 1000;
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        /* ROSTER */
+        .roster { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; background: #e0e0e0; padding: 8px; border: 2px solid #bbb; }
+        .ball-slot { aspect-ratio: 1; border-radius: 50%; border: 3px solid transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: #fff; text-shadow: 1px 1px 0 #000; font-weight: 900; }
+        .ball-slot.active { border-color: #000; transform: scale(1.1); box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 5; }
 
-        .panel {
-            border: var(--border-width) solid var(--border-color);
-            background: var(--panel-bg);
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-        }
+        /* MODES */
+        .mode-toggle { display: flex; gap: 5px; margin-bottom: 15px; }
+        .mode-btn { flex: 1; padding: 8px; border: 3px solid #000; font-weight: 900; cursor: pointer; background: #fff; }
+        .mode-btn.active { background: #000; color: #fff; }
+        .grayed { opacity: 0.3; pointer-events: none; }
 
-        /* LEFT: LABORATORY */
-        #lab-panel {
-            flex: 0 0 360px;
-            overflow-y: auto;
-        }
+        .btn-start { padding: 12px 50px; background: #00ff88; border: 5px solid #000; font-size: 2rem; font-weight: 900; cursor: pointer; box-shadow: 0 6px 0 #000; }
+        .btn-start:active { transform: translateY(4px); box-shadow: 0 2px 0 #000; }
 
-        /* CENTER: THE MAP */
-        #center-panel {
-            flex: 1;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            background: #ddd;
-        }
-
-        /* RIGHT: DIRECTOR */
-        #director-panel {
-            flex: 0 0 360px;
-            background: var(--panel-dark);
-            color: #fff;
-        }
-
-        /* --- TYPOGRAPHY --- */
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: -3px;
-            line-height: 0.9;
-            margin-bottom: 10px;
-            color: #000;
-            text-align: center;
-        }
-
-        h2 {
-            font-size: 1.5rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            border-bottom: 4px solid var(--border-color);
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-        }
-
-        .director-h2 {
-            color: var(--accent);
-            border-color: var(--accent);
-        }
-
-        /* --- UI COMPONENTS --- */
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            font-weight: 900;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            margin-bottom: 5px;
-            color: #333;
-        }
-
-        .dark-label { color: #ccc; }
-
-        input[type="text"], input[type="number"] {
-            width: 100%;
-            padding: 12px;
-            border: 3px solid #000;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 1.2rem;
-            font-weight: bold;
-            outline: none;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            height: 10px;
-            cursor: pointer;
-        }
-
-        /* ROSTER GRID */
-        #roster-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-top: 10px;
-            background: #e0e0e0;
-            padding: 10px;
-            border: 2px solid #bbb;
-        }
-
-        .ball-slot {
-            aspect-ratio: 1/1;
-            border-radius: 50%;
-            border: 4px solid transparent;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-weight: 900;
-            font-size: 0.8rem;
-            text-shadow: 1px 1px 0px #000;
-            transition: all 0.15s;
-        }
-
-        .ball-slot:hover { transform: scale(1.1); }
-        .ball-slot.active {
-            border-color: #000;
-            transform: scale(1.15);
-            box-shadow: 0 0 15px rgba(0,0,0,0.3);
-            z-index: 10;
-        }
-
-        /* 1:1 PREVIEW MAP */
-        #map-container {
-            width: 400px;
-            height: 400px;
-            background: #fff;
-            border: 6px solid #000;
-            position: relative;
-            box-shadow: 15px 15px 0px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        #prev-target {
-            position: absolute;
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: #e0e0e0;
-            border: 3px solid #ccc;
-            top: 140px;
-            left: 140px;
-        }
-
-        #prev-ball {
-            position: absolute;
-            border-radius: 50%;
-            border: 4px solid #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-weight: 900;
-            text-shadow: 1px 1px 0px #000;
-        }
-
-        .btn-main {
-            padding: 15px 60px;
-            background: #00ff88;
-            border: 5px solid #000;
-            font-size: 2.2rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            cursor: pointer;
-            box-shadow: 0 8px 0 #000;
-            transition: all 0.1s;
-        }
-
-        .btn-main:active {
-            transform: translateY(6px);
-            box-shadow: 0 2px 0 #000;
-        }
-
-        /* --- ARENA VIEW --- */
-        #arena-container {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100vw;
-            height: 100vh;
-            background: #fdfaf0;
-        }
-
-        #arena-hud {
-            width: 800px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 15px;
-        }
-
-        #timer-display {
-            font-size: 3rem;
-            font-weight: 900;
-            color: #000;
-        }
-
-        #goal-display {
-            text-align: right;
-            font-weight: 900;
-            color: #666;
-            text-transform: uppercase;
-        }
-
-        #arena {
-            width: 800px;
-            height: 800px;
-            background: #fff;
-            border: 10px solid #000;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 25px 25px 0px rgba(0,0,0,0.05);
-        }
-
-        .entity {
-            position: absolute;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            will-change: transform;
-        }
-
-        #game-ball {
-            border: 5px solid #000;
-            color: #fff;
-            font-weight: 900;
-            text-shadow: 2px 2px 0px #000;
-            z-index: 100;
-        }
-
-        #game-target {
-            background: #f5f5f5;
-            border: 3px solid #ddd;
-            z-index: 10;
-        }
-
-        #target-hp-text {
-            font-family: 'Share Tech Mono', monospace;
-            width: 90%;
-            text-align: center;
-            word-break: break-all;
-            line-height: 0.9;
-            color: #222;
-        }
-
-        .damage-pop {
-            position: absolute;
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: var(--accent);
-            pointer-events: none;
-            -webkit-text-stroke: 1.5px #000;
-            z-index: 500;
-            animation: floatDamage 1s ease-out forwards;
-        }
-
-        @keyframes floatDamage {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-120px) scale(1.5); }
-        }
-
-        .script-control {
-            background: rgba(255,255,255,0.05);
-            padding: 15px;
-            border: 2px dashed #444;
-            margin-top: 10px;
-        }
-
-        .locked { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
-
+        /* --- ARENA --- */
+        #game-view { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100vw; height: 100vh; background: #fdfaf0; z-index: 200; }
+        #arena { width: 800px; height: 800px; background: #fff; border: 10px solid #000; position: relative; overflow: hidden; }
+        .entity { position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
+        #timer-ui { font-size: 4rem; font-weight: 900; margin-bottom: 10px; letter-spacing: -2px; }
+        #target-hp { font-family: 'Share Tech Mono'; width: 90%; text-align: center; word-break: break-all; line-height: 0.8; }
+        .dmg-pop { position: absolute; font-size: 2.5rem; color: var(--accent); font-weight: 900; -webkit-text-stroke: 1.5px #000; animation: float 1s forwards; pointer-events: none; z-index: 500; }
+        @keyframes float { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
 <body>
 
-    <div id="dashboard">
-        <div class="panel" id="lab-panel">
-            <h2>Laboratory</h2>
-            
-            <div class="input-group">
-                <label>Target Integrity (HP)</label>
-                <input type="text" id="hp-val" value="10^24">
-            </div>
-
-            <div class="input-group" style="display: flex; gap: 10px;">
-                <div style="flex: 1;">
-                    <label>Time Limit (s)</label>
-                    <input type="number" id="time-val" value="30">
-                </div>
-                <div style="flex: 1;">
-                    <label>Size: <span id="size-label">50</span>px</label>
-                    <input type="range" id="size-val" min="25" max="100" value="50" oninput="UI.syncPreview()">
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label>Arsenal Selection</label>
-                <div id="roster-grid"></div>
-            </div>
+<div id="dashboard">
+    <div class="panel" id="lab-panel">
+        <h2>Laboratory</h2>
+        <label>Target HP</label>
+        <input type="text" id="hp-in" value="10^15">
+        
+        <label style="margin-top: 15px;">Game Mode</label>
+        <div class="mode-toggle">
+            <button class="mode-btn active" id="btn-timer" onclick="UI.setMode('timer')">TIMER</button>
+            <button class="mode-btn" id="btn-stop" onclick="UI.setMode('stopwatch')">STOPWATCH</button>
         </div>
 
-        <div class="panel" id="center-panel">
-            <h1>Square Arena</h1>
-            <div id="map-container">
-                <div id="prev-target"></div>
-                <div id="prev-ball"></div>
-            </div>
-            <button class="btn-main" onclick="Core.init()">Initiate</button>
+        <div id="limit-box">
+            <label>Time Limit (s)</label>
+            <input type="number" id="time-in" value="30">
         </div>
 
-        <div class="panel" id="director-panel">
-            <h2 class="director-h2">Director AI</h2>
-            
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                <input type="checkbox" id="ai-active" style="width: 24px; height: 24px;" onchange="UI.syncScript()">
-                <label class="dark-label" style="margin: 0; font-size: 1.1rem;">Enable Steering Engine</label>
-            </div>
-
-            <div id="script-area" class="script-control locked">
-                <label class="dark-label">Target Elimination Time (s)</label>
-                <input type="number" id="target-time" value="29.2" step="0.1">
-                
-                <p style="font-size: 0.8rem; color: #888; margin-top: 15px; line-height: 1.4;">
-                    The Steering Engine uses magnetic repulsion to prevent the ball from hitting the target if damage is lethal before the target time.
-                </p>
-                <p style="font-size: 0.8rem; color: #888; margin-top: 10px; line-height: 1.4;">
-                    In the final 1.5 seconds, it reverses polarity to guarantee a high-speed collision.
-                </p>
-            </div>
-
-            <div style="margin-top: auto; border-top: 1px solid #444; padding-top: 15px;">
-                <label class="dark-label">SFX Master</label>
-                <input type="range" id="vol-val" min="0" max="100" value="50">
-            </div>
-        </div>
+        <label style="margin-top: 15px;">Arsenal</label>
+        <div class="roster" id="roster-grid"></div>
     </div>
 
-    <div id="arena-container">
-        <div id="arena-hud">
-            <div id="timer-display">00.00</div>
-            <div id="goal-display">
-                <div style="font-size: 0.9rem;">Current Goal</div>
-                <div id="goal-val" style="font-size: 1.4rem; color: #000;">---</div>
-            </div>
+    <div class="panel" id="center-panel">
+        <h1>Square Arena</h1>
+        <div id="map-1to1">
+            <div id="prev-target" class="prev-ent">T</div>
+            <div id="prev-ball" class="prev-ent"></div>
         </div>
-        <div id="arena">
-            <div id="game-target" class="entity" style="width: 250px; height: 250px;">
-                <div id="target-hp-text">Initializing...</div>
-            </div>
-            <div id="game-ball" class="entity"></div>
+        <div class="map-controls">
+            <label>Hero Size: <span id="val-hero">50</span>px <input type="range" id="size-hero" min="20" max="80" value="50" oninput="UI.sync()"></label>
+            <label>Target Size: <span id="val-target">100</span>px <input type="range" id="size-target" min="50" max="150" value="100" oninput="UI.sync()"></label>
         </div>
+        <button class="btn-start" onclick="Engine.start()">START</button>
     </div>
+
+    <div class="panel" id="director-panel">
+        <h2 style="color:var(--accent); border-color:var(--accent);">Director AI</h2>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <input type="checkbox" id="ai-on" style="width:20px; height:20px;">
+            <label style="color:#fff; margin:0;">Steering Engine</label>
+        </div>
+        <label style="color:#aaa; margin-top:10px;">Kill Time Target (s)</label>
+        <input type="number" id="kill-at" value="29.5" step="0.1">
+    </div>
+</div>
+
+<div id="game-view">
+    <div id="timer-ui">00.00</div>
+    <div id="arena">
+        <div id="target" class="entity" style="background:#f5f5f5; border:3px solid #ddd;">
+            <div id="target-hp"></div>
+        </div>
+        <div id="hero" class="entity" style="border:5px solid #000; color:#fff; text-shadow:1px 1px 0 #000;"></div>
+    </div>
+</div>
 
 <script>
-/**
- * SQUARE ARENA - THE MASTER ENGINE
- * Designed for High-Performance BigInt Physics and Visual Feedback.
- */
-
-// --- DATA: THE FULL 24-BALL ROSTER ---
-const BALL_DATA = [
-    { id: 'm1', s: "1x", c: "#f1c40f", v: 1n, t: 'mult' },
-    { id: 'm2', s: "2x", c: "#f39c12", v: 2n, t: 'mult' },
-    { id: 'm3', s: "3x", c: "#e67e22", v: 3n, t: 'mult' },
-    { id: 'm4', s: "4x", c: "#d35400", v: 4n, t: 'mult' },
-    { id: 'm5', s: "5x", c: "#e74c3c", v: 5n, t: 'mult' },
-    { id: 'm6', s: "6x", c: "#c0392b", v: 6n, t: 'mult' },
-    { id: 'm7', s: "7x", c: "#8e44ad", v: 7n, t: 'mult' },
-    { id: 'm8', s: "8x", c: "#9b59b6", v: 8n, t: 'mult' },
-    { id: 'm9', s: "9x", c: "#2980b9", v: 9n, t: 'mult' },
-    { id: 'm10', s: "10x", c: "#3498db", v: 10n, t: 'mult' },
-    { id: 'sqrt', s: "√", c: "#1abc9c", t: 'root' },
-    { id: 'sq', s: "x²", c: "#16a085", v: 2n, t: 'exp' },
-    { id: 'cb', s: "x³", c: "#27ae60", v: 3n, t: 'exp' },
-    { id: 'div2', s: "x/2", c: "#7f8c8d", t: 'half' },
-    { id: 'rev', s: "x/y", c: "#34495e", t: 'rev' },
-    { id: 'prime', s: "#", c: "#e84118", t: 'prime' },
-    { id: 'power', s: "⚡️", c: "#fbc531", t: 'pow' },
-    { id: 'fact', s: "!", c: "#c23616", t: 'fact' },
-    { id: 'rand', s: "?", c: "#8c7ae6", t: 'rand' },
-    { id: 'fib', s: "Φ", c: "#e84393", t: 'fib' },
-    { id: 'tri', s: "Tb", c: "#fd79a8", t: 'tri' },
-    { id: 'quad', s: "Qd", c: "#6c5ce7", t: 'quad' },
-    { id: 'gamb', s: "???", c: "#b2bec3", t: 'gamb' },
-    { id: 'adder', s: "+1", c: "#555", v: 1n, t: 'add' }
+const BALLS = [
+    { s: "1x", c: "#f1c40f", v: 1n, t: 'm' }, { s: "2x", c: "#f39c12", v: 2n, t: 'm' },
+    { s: "3x", c: "#e67e22", v: 3n, t: 'm' }, { s: "4x", c: "#d35400", v: 4n, t: 'm' },
+    { s: "5x", c: "#e74c3c", v: 5n, t: 'm' }, { s: "6x", c: "#c0392b", v: 6n, t: 'm' },
+    { s: "7x", c: "#8e44ad", v: 7n, t: 'm' }, { s: "8x", c: "#9b59b6", v: 8n, t: 'm' },
+    { s: "9x", c: "#2980b9", v: 9n, t: 'm' }, { s: "10x", c: "#3498db", v: 10n, t: 'm' },
+    { s: "√", c: "#1abc9c", t: 'rt' }, { s: "x²", c: "#16a085", v: 2n, t: 'e' },
+    { s: "x³", c: "#27ae60", v: 3n, t: 'e' }, { s: "x/2", c: "#7f8c8d", t: 'h' },
+    { s: "x/y", c: "#34495e", t: 'rv' }, { s: "#", c: "#e84118", t: 'pr' },
+    { s: "⚡️", c: "#fbc531", t: 'pw' }, { s: "!", c: "#c23616", t: 'fc' },
+    { s: "?", c: "#8c7ae6", t: 'rn' }, { s: "Φ", c: "#e84393", t: 'f1' },
+    { s: "Tb", c: "#fd79a8", t: 'f2' }, { s: "Qd", c: "#6c5ce7", t: 'f3' },
+    { s: "???", c: "#b2bec3", t: 'gb' }, { s: "+1", c: "#555", v: 1n, t: 'a' }
 ];
 
-const PRIMES = [2n, 3n, 5n, 7n, 11n, 13n, 17n, 19n, 23n, 29n, 31n, 37n, 41n, 43n, 47n, 53n, 59n, 61n, 67n, 71n];
-
-// --- MODULE: AUDIO ---
-const Sound = {
-    ctx: null,
-    init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
-    play(freq, type, dur, volMult = 1) {
-        this.init();
-        const v = (document.getElementById('vol-val').value / 100) * 0.2 * volMult;
-        if(v <= 0) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-        gain.gain.setValueAtTime(v, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + dur);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(); osc.stop(this.ctx.currentTime + dur);
-    },
-    wall() { this.play(150, 'triangle', 0.1, 0.5); },
-    hit() { this.play(440, 'square', 0.05, 1); },
-    death() { this.play(60, 'sawtooth', 1.5, 2); }
-};
-
-// --- MODULE: CORE ENGINE ---
-const Core = {
-    active: false,
-    hp: 0n,
-    maxHp: 0n,
-    time: 0,
-    ball: { x: 0, y: 0, vx: 0, vy: 0, r: 0, hits: 0, pwr: 1n, hist: [], data: null },
-    target: { x: 275, y: 275, vx: 0, vy: 0, r: 125 },
+const Engine = {
+    active: false, hp: 0n, time: 0, mode: 'timer',
+    h: { x: 50, y: 50, vx: 12, vy: 10, r: 0, pwr: 1n, hits: 0, hist: [0n, 0n, 0n, 1n] },
+    t: { x: 300, y: 300, vx: 4, vy: -4, r: 0 },
     
-    init() {
-        // Parse HP
-        const hpIn = document.getElementById('hp-val').value;
-        try {
-            if(hpIn.includes('^')) {
-                const parts = hpIn.split('^');
-                this.hp = BigInt(parts[0]) ** BigInt(parts[1]);
-            } else {
-                this.hp = BigInt(hpIn);
-            }
-        } catch(e) { this.hp = 1000000n; }
+    start() {
+        const hpVal = document.getElementById('hp-in').value;
+        this.hp = hpVal.includes('^') ? BigInt(hpVal.split('^')[0]) ** BigInt(hpVal.split('^')[1]) : BigInt(hpVal);
+        this.time = (this.mode === 'timer') ? parseFloat(document.getElementById('time-in').value) : 0;
         
-        this.maxHp = this.hp;
-        this.time = 0;
-        
-        // Setup Ball
-        const size = parseInt(document.getElementById('size-val').value);
-        this.ball.r = size;
-        this.ball.data = UI.selectedBall;
-        this.ball.hits = 0;
-        this.ball.pwr = this.ball.data.v || 1n;
-        this.ball.hist = [0n, 1n, 1n, 2n];
-        
-        // Start Position
-        this.ball.x = 50; this.ball.y = 50;
-        this.ball.vx = 12; this.ball.vy = 8;
-        this.target.vx = 3; this.target.vy = -3;
-        
-        // UI Shift
+        this.h.r = parseInt(document.getElementById('size-hero').value);
+        this.t.r = parseInt(document.getElementById('size-target').value);
+        this.h.data = UI.selected;
+        this.h.pwr = this.h.data.v || 1n;
+        this.h.hits = 0;
+
         document.getElementById('dashboard').style.transform = 'translateY(-100%)';
-        document.getElementById('arena-container').style.display = 'flex';
-        document.getElementById('goal-val').innerText = this.format(this.maxHp);
+        document.getElementById('game-view').style.display = 'flex';
         
-        const bEl = document.getElementById('game-ball');
-        bEl.style.width = bEl.style.height = (size * 2) + "px";
-        bEl.style.background = this.ball.data.c;
-        bEl.innerText = this.ball.data.s;
+        const hEl = document.getElementById('hero');
+        hEl.style.width = hEl.style.height = (this.h.r * 2) + "px";
+        hEl.style.background = this.h.data.c;
+        hEl.innerText = this.h.data.s;
+        
+        const tEl = document.getElementById('target');
+        tEl.style.width = tEl.style.height = (this.t.r * 2) + "px";
 
         this.active = true;
-        requestAnimationFrame((t) => this.loop(t));
+        requestAnimationFrame((ts) => this.loop(ts));
     },
 
-    format(n) {
-        const s = n.toString();
-        if(s.length < 10) return s;
-        return s.substring(0, 3) + "..." + s.substring(s.length-3) + " (" + s.length + ")";
-    },
-
-    loop(ts) {
+    loop() {
         if(!this.active) return;
         
-        this.time += 0.016;
-        document.getElementById('timer-display').innerText = this.time.toFixed(2);
+        if(this.mode === 'timer') {
+            this.time -= 0.016;
+            if(this.time <= 0) { this.active = false; alert("TIME OUT"); location.reload(); return; }
+        } else {
+            this.time += 0.016;
+        }
         
-        this.updatePhysics();
-        this.draw();
+        document.getElementById('timer-ui').innerText = Math.abs(this.time).toFixed(2);
 
-        if(this.hp <= 0n) {
-            this.active = false;
-            Sound.death();
-            setTimeout(() => { alert("TARGET NEUTRALIZED"); location.reload(); }, 500);
-            return;
-        }
-
-        if(this.time >= parseFloat(document.getElementById('time-val').value)) {
-            this.active = false;
-            alert("SYSTEM TIMEOUT: MISSION FAILED");
-            location.reload();
-            return;
-        }
-
-        requestAnimationFrame((t) => this.loop(t));
-    },
-
-    updatePhysics() {
-        const scriptOn = document.getElementById('ai-active').checked;
-        const targetTime = parseFloat(document.getElementById('target-time').value);
-
-        // DIRECTOR AI: Magnetic Steering
-        if(scriptOn) {
-            const dx = (this.target.x + 125) - (this.ball.x + this.ball.r);
-            const dy = (this.target.y + 125) - (this.ball.y + this.ball.r);
+        // Steering
+        if(document.getElementById('ai-on').checked) {
+            const dx = (this.t.x + this.t.r) - (this.h.x + this.h.r);
+            const dy = (this.t.y + this.t.r) - (this.h.y + this.h.r);
             const dist = Math.sqrt(dx*dx + dy*dy);
-            
-            // Peak at next damage
-            const nextDmg = this.calcDamage(true);
-            const isLethal = nextDmg >= this.hp;
-            
-            let steer = 0;
-            if (this.time > targetTime - 1.5) {
-                steer = 1.2; // Final attraction
-            } else if (isLethal) {
-                steer = -0.8; // Avoid lethal hit
-            } else if (dist > 300) {
-                steer = 0.3; // Gentle course correction
-            }
-
-            this.ball.vx += (dx/dist) * steer;
-            this.ball.vy += (dy/dist) * steer;
-            
-            // Speed limit
-            const speed = Math.sqrt(this.ball.vx**2 + this.ball.vy**2);
-            if(speed > 25) { this.ball.vx *= 0.9; this.ball.vy *= 0.9; }
+            const limit = parseFloat(document.getElementById('kill-at').value);
+            const elapsed = (this.mode === 'timer') ? parseFloat(document.getElementById('time-in').value) - this.time : this.time;
+            const force = (elapsed > limit - 1.5) ? 1.5 : -1.0;
+            this.h.vx += (dx/dist) * force; this.h.vy += (dy/dist) * force;
         }
 
-        // Move & Bounds
-        [this.ball, this.target].forEach(obj => {
-            obj.x += obj.vx;
-            obj.y += obj.vy;
-            const limit = 800 - (obj.r * 2);
-            if(obj.x < 0) { obj.x = 0; obj.vx *= -1; if(obj===this.ball) Sound.wall(); }
-            if(obj.x > limit) { obj.x = limit; obj.vx *= -1; if(obj===this.ball) Sound.wall(); }
-            if(obj.y < 0) { obj.y = 0; obj.vy *= -1; if(obj===this.ball) Sound.wall(); }
-            if(obj.y > limit) { obj.y = limit; obj.vy *= -1; if(obj===this.ball) Sound.wall(); }
+        [this.h, this.t].forEach(o => {
+            o.x += o.vx; o.y += o.vy;
+            const lim = 800 - (o.r * 2);
+            if(o.x < 0 || o.x > lim) o.vx *= -1;
+            if(o.y < 0 || o.y > lim) o.vy *= -1;
         });
 
-        // Collision Check
-        const bcx = this.ball.x + this.ball.r;
-        const bcy = this.ball.y + this.ball.r;
-        const tcx = this.target.x + 125;
-        const tcy = this.target.y + 125;
-        const dist = Math.sqrt((bcx-tcx)**2 + (bcy-tcy)**2);
+        const dx = (this.h.x + this.h.r) - (this.t.x + this.t.r);
+        const dy = (this.h.y + this.h.r) - (this.t.y + this.t.r);
+        const d = Math.sqrt(dx*dx + dy*dy);
 
-        if(dist < (this.ball.r + 125)) {
-            this.processHit();
-            // Reflection
-            const nx = (bcx - tcx) / dist;
-            const ny = (bcy - tcy) / dist;
-            this.ball.vx = nx * 15;
-            this.ball.vy = ny * 15;
-            // Push out
-            this.ball.x = tcx + nx * (this.ball.r + 126) - this.ball.r;
-            this.ball.y = tcy + ny * (this.ball.r + 126) - this.ball.r;
+        if(d < (this.h.r + this.t.r)) {
+            this.hit();
+            this.h.vx *= -1.1; this.h.vy *= -1.1;
         }
+
+        document.getElementById('hero').style.transform = `translate(${this.h.x}px, ${this.h.y}px)`;
+        document.getElementById('target').style.transform = `translate(${this.t.x}px, ${this.t.y}px)`;
+        document.getElementById('target-hp').innerText = this.hp.toString();
+        document.getElementById('target-hp').style.fontSize = Math.max(12, 45 - (this.hp.toString().length/3)) + "px";
+
+        if(this.hp <= 0n) { this.active = false; alert("ELIMINATED"); location.reload(); }
+        else { requestAnimationFrame(() => this.loop()); }
     },
 
-    calcDamage(peek = false) {
-        const type = this.ball.data.t;
-        const n = BigInt(peek ? this.ball.hits + 1 : this.ball.hits);
-        let d = 1n;
+    hit() {
+        let dmg = 1n;
+        const type = this.h.data.t;
+        this.h.hits++;
+        const n = BigInt(this.h.hits);
 
         switch(type) {
-            case 'mult': d = this.ball.pwr; break;
-            case 'exp': d = this.ball.pwr; break;
-            case 'root': 
-                const s = this.hp.toString();
-                const first = s.substring(0, 15);
-                const rt = BigInt(Math.floor(Math.sqrt(Number(first))));
-                d = this.hp - (rt * 10n**BigInt(Math.max(0, s.length - 15)));
-                break;
-            case 'half': d = this.hp / 2n; break;
-            case 'rev': d = this.hp - (this.hp / (n + 1n)); break;
-            case 'prime': d = this.ball.pwr * (PRIMES[Number(n % 20n)]); break;
-            case 'pow': d = n ** n; break;
-            case 'fact': d = this.ball.pwr * (n + 1n); break;
-            case 'rand': d = BigInt(Math.floor(Math.random() * 1000000000)); break;
-            case 'fib': d = this.ball.hist[3] + this.ball.hist[2]; break;
-            case 'tri': d = this.ball.hist[3] + this.ball.hist[2] + this.ball.hist[1]; break;
-            case 'quad': d = this.ball.hist[3] + this.ball.hist[2] + this.ball.hist[1] + this.ball.hist[0]; break;
-            case 'gamb': d = (Math.random() > 0.5) ? this.ball.hist[3] * 5n : 0n; break;
-            case 'add': d = this.ball.pwr; break;
+            case 'm': this.h.pwr *= this.h.data.v; dmg = this.h.pwr; break;
+            case 'e': this.h.pwr = this.h.pwr ** this.h.data.v; dmg = this.h.pwr; break;
+            case 'rt': dmg = this.hp / 3n; break;
+            case 'h': dmg = this.hp / 2n; break;
+            case 'rv': dmg = this.hp - (this.hp / (n+1n)); break;
+            case 'pw': dmg = n ** n; break;
+            case 'f1': dmg = this.h.hist[3] + this.h.hist[2]; break;
+            default: dmg = n * 100n;
         }
-        return d > 0n ? d : 1n;
-    },
-
-    processHit() {
-        Sound.hit();
-        const dmg = this.calcDamage();
+        
         this.hp = (dmg >= this.hp) ? 0n : this.hp - dmg;
-        
-        // Update Internal Power
-        const type = this.ball.data.t;
-        if(type === 'mult') this.ball.pwr *= this.ball.data.v;
-        if(type === 'exp') this.ball.pwr = this.ball.pwr ** this.ball.data.v;
-        if(type === 'add') this.ball.pwr += 1n;
-        if(type === 'prime' || type === 'fact') this.ball.pwr = dmg;
-        
-        this.ball.hits++;
-        this.ball.hist.shift();
-        this.ball.hist.push(dmg);
+        this.h.hist.shift(); this.h.hist.push(dmg);
 
-        // Pop Damage
         const pop = document.createElement('div');
-        pop.className = 'damage-pop';
-        pop.innerText = "-" + this.format(dmg);
-        pop.style.left = this.ball.x + "px";
-        pop.style.top = this.ball.y + "px";
+        pop.className = 'dmg-pop'; pop.innerText = "-" + (dmg > 1000000n ? "LOTS" : dmg.toString());
+        pop.style.left = this.h.x + 'px'; pop.style.top = this.h.y + 'px';
         document.getElementById('arena').appendChild(pop);
         setTimeout(() => pop.remove(), 1000);
-    },
-
-    draw() {
-        const b = document.getElementById('game-ball');
-        const t = document.getElementById('game-target');
-        b.style.transform = `translate(${this.ball.x}px, ${this.ball.y}px)`;
-        t.style.transform = `translate(${this.target.x}px, ${this.target.y}px)`;
-        document.getElementById('target-hp-text').innerText = this.hp.toString();
-        
-        // Dynamic text size for HP
-        const len = this.hp.toString().length;
-        document.getElementById('target-hp-text').style.fontSize = Math.max(10, 40 - (len/3)) + "px";
     }
 };
 
-// --- MODULE: UI & INITIALIZATION ---
 const UI = {
-    selectedBall: BALL_DATA[1],
-
+    selected: BALLS[1],
     init() {
         const grid = document.getElementById('roster-grid');
-        BALL_DATA.forEach(ball => {
-            const slot = document.createElement('div');
-            slot.className = 'ball-slot';
-            slot.style.background = ball.c;
-            slot.innerText = ball.s;
-            slot.onclick = () => this.select(ball, slot);
-            if(ball === this.selectedBall) slot.classList.add('active');
-            grid.appendChild(slot);
+        BALLS.forEach(b => {
+            const s = document.createElement('div');
+            s.className = 'ball-slot'; s.style.background = b.c; s.innerText = b.s;
+            s.onclick = () => {
+                this.selected = b;
+                document.querySelectorAll('.ball-slot').forEach(el => el.classList.remove('active'));
+                s.classList.add('active');
+                this.sync();
+            };
+            if(b === this.selected) s.classList.add('active');
+            grid.appendChild(s);
         });
-        this.syncPreview();
+        this.sync();
     },
-
-    select(ball, el) {
-        document.querySelectorAll('.ball-slot').forEach(s => s.classList.remove('active'));
-        el.classList.add('active');
-        this.selectedBall = ball;
-        this.syncPreview();
+    setMode(m) {
+        Engine.mode = m;
+        document.getElementById('btn-timer').className = m === 'timer' ? 'mode-btn active' : 'mode-btn';
+        document.getElementById('btn-stop').className = m === 'stopwatch' ? 'mode-btn active' : 'mode-btn';
+        document.getElementById('limit-box').className = m === 'stopwatch' ? 'grayed' : '';
     },
+    sync() {
+        const hR = parseInt(document.getElementById('size-hero').value);
+        const tR = parseInt(document.getElementById('size-target').value);
+        document.getElementById('val-hero').innerText = hR;
+        document.getElementById('val-target').innerText = tR;
+        
+        const ph = document.getElementById('prev-ball');
+        ph.style.width = ph.style.height = (hR * 2 / 2) + "px"; // Preview is half-scale for 1:1 view
+        ph.style.background = this.selected.c; ph.innerText = this.selected.s;
+        ph.style.left = "50px"; ph.style.top = "50px";
 
-    syncPreview() {
-        const size = document.getElementById('size-val').value;
-        document.getElementById('size-label').innerText = size;
-        const p = document.getElementById('prev-ball');
-        p.style.width = p.style.height = (size * 2) + "px";
-        p.style.left = (200 - size) + "px";
-        p.style.top = (200 - size) + "px";
-        p.style.background = this.selectedBall.c;
-        p.innerText = this.selectedBall.s;
-    },
-
-    syncScript() {
-        const on = document.getElementById('ai-active').checked;
-        document.getElementById('script-area').className = on ? "script-control" : "script-control locked";
+        const pt = document.getElementById('prev-target');
+        pt.style.width = pt.style.height = (tR * 2 / 2) + "px";
+        pt.style.left = "150px"; pt.style.top = "150px";
     }
 };
 
 UI.init();
-
 </script>
 </body>
 </html>
